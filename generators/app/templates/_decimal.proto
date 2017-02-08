@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "<%=packageName%>.grpc";
+option java_outer_classname = "DecimalProto";
+
+package util;
+
+message Decimal {
+    int64 unscaledVal = 1;
+    int32 scale = 2;
+}
