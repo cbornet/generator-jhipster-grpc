@@ -56,18 +56,21 @@ module.exports = yeoman.Base.extend({
 
         this.prompt(prompts, function (props) {
             this.props = props;
-            // To access props later use this.props.someOption;
-
+            this.grpcService = this.props.grpcService;
             done();
         }.bind(this));
     },
     writing: {
         updateFiles: function () {
+            if (!this.grpcService) {
+                return;
+            }
             this.baseName = jhipsterVar.baseName;
             this.packageName = jhipsterVar.packageName;
             this.entityClass = this.entityConfig.entityClass;
             this.entityClassPlural = pluralize(this.entityClass);
             this.entityInstance = this.entityConfig.entityInstance;
+            this.entityInstancePlural = pluralize(this.entityInstance);
             this.entityUnderscoredName = _.snakeCase(this.entityClass).toLowerCase();
             this.javadoc = this.entityConfig.javadoc;
             this.fields = this.entityConfig.data.fields;
@@ -76,9 +79,13 @@ module.exports = yeoman.Base.extend({
         },
 
         writeFiles: function () {
-            let javaDir = jhipsterVar.javaDir;
+            if (!this.grpcService) {
+                return;
+            }
+            let grpcEntityDir = jhipsterVar.javaDir + '/grpc/entity/' + this.entityUnderscoredName ;
             this.template('_entity.proto', 'src/main/proto/' + jhipsterVar.packageFolder + '/entity/' + this.entityUnderscoredName + '.proto', this, {});
-            this.template('_entityProtoMapper.java', javaDir + '/grpc/entity/' + this.entityUnderscoredName + '/'+ this.entityClass + 'ProtoMapper.java', this, {});
+            this.template('_entityProtoMapper.java', grpcEntityDir + '/'+ this.entityClass + 'ProtoMapper.java', this, {});
+            this.template('_entityGrpcService.java', grpcEntityDir + '/'+ this.entityClass + 'GrpcService.java', this, {});
         },
 
         updateConfig: function () {
@@ -87,8 +94,8 @@ module.exports = yeoman.Base.extend({
     },
 
     end: function () {
-        if (this.yourOptionKey) {
-            this.log('\n' + chalk.bold.green('grpc enabled'));
+        if (this.grpcService) {
+            this.log('\n' + chalk.bold.green('grpc enabled for this entity'));
         }
     }
 });
