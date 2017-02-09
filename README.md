@@ -35,19 +35,22 @@ If you want to add CRUD gRPC services for an entity, just (re)generate it and co
 Current limitations:
 * Maven only
 * only entities with DTOs and serviceClass
-* cassandra and mongo not tested but should work
+* cassandra needs netty-handler resolution to v4.1. Otherwise not tested but should work
+* mongo not tested but should work
 * no relationships
+* no security
 
 TODOs:
 - [ ] Support Gradle
 - [ ] Entities without DTOs
 - [ ] Entities with serviceImpl
 - [ ] Entities without service
-- [ ] Test with cassandra
+- [ ] Support Cassandra
 - [ ] Test with Mongo
 - [ ] Entity javadoc
 - [ ] Field javadoc
 - [ ] Support relationships
+- [ ] Add security (at least JWT)
 - [ ] Management endpoints (account, audits, logs, ...)
 - [ ] Support streaming from the DB (Stream<> in repository)
 - [ ] Support streaming back-pressure (reactive streams with rxJava2 or Reactor)
