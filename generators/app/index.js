@@ -26,18 +26,17 @@ module.exports = yeoman.Base.extend({
             );
         },
         displayLogo: function () {
-            // Have Yeoman greet the user.
             this.log('Welcome to the ' + chalk.red('JHipster grpc') + ' generator! ' + chalk.yellow('v' + packagejs.version + '\n'));
         }
     },
 
-    prompting: function () {
+    /*prompting: function () {
         var done = this.async();
 
         var prompts = [{
-            type: 'input',
-            name: 'message',
-            message: 'Please put something',
+            type: 'confirm',
+            name: 'confirm',
+            message: 'This will configure your project for gRPC' ,
             default: 'hello world!'
         }];
 
@@ -47,16 +46,13 @@ module.exports = yeoman.Base.extend({
 
             done();
         }.bind(this));
-    },
+    },*/
 
     writing: {
         writeTemplates: function () {
             this.baseName = jhipsterVar.baseName;
             this.packageName = jhipsterVar.packageName;
-            this.angularAppName = jhipsterVar.angularAppName;
             var javaDir = jhipsterVar.javaDir;
-
-            this.message = this.props.message;
 
             this.template('_date.proto', PROTO_DIR + '/util/date.proto', this, {});
             this.template('_decimal.proto', PROTO_DIR + '/util/decimal.proto', this, {});
@@ -104,7 +100,7 @@ module.exports = yeoman.Base.extend({
 
         registering: function () {
             try {
-                jhipsterFunc.registerModule('generator-jhipster-grpc', 'entity', 'post', 'entity', 'Adds support for gRPC and generates gRPC CRUD endpoints');
+                jhipsterFunc.registerModule('generator-jhipster-grpc', 'entity', 'post', 'entity', 'Adds support for gRPC and generates gRPC CRUD services');
             } catch (err) {
                 this.log(chalk.red.bold('WARN!') + ' Could not register as a jhipster entity post creation hook...\n');
             }
