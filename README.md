@@ -6,6 +6,8 @@
 
 This is a [JHipster](http://jhipster.github.io/) module, that is meant to be used in a JHipster application.
 
+WARN : Under developpement. See list of limitatins and TODOs
+
 # Prerequisites
 
 As this is a [JHipster](http://jhipster.github.io/) module, we expect you have JHipster and its related tools already installed:
@@ -17,15 +19,40 @@ As this is a [JHipster](http://jhipster.github.io/) module, we expect you have J
 To install this module:
 
 ```bash
-npm install -g generator-jhipster-grpc
-```
-
-To update this module:
-```bash
-npm update -g generator-jhipster-grpc
+yarn add global generator-jhipster-grpc
 ```
 
 # Usage
+
+At the root of your project directory:
+```bash
+yo jhipster-grpc
+```
+This will configure [grpc-java](https://github.com/grpc/grpc-java) and [grpc-spring-boot-starter](https://github.com/LogNet/grpc-spring-boot-starter) 
+so that the proto files present in `src/main/proto` are compiled.
+If you want to add CRUD gRPC services for an entity, just (re)generate it and confirm when the question is asked.
+
+Current limitations:
+* Maven only
+* only entities with DTOs and serviceClass
+* cassandra and mongo not tested but should work
+* no relationships
+
+TODOs:
+- [ ] Support Gradle
+- [ ] Entities without DTOs
+- [ ] Entities with serviceImpl
+- [ ] Entities without service
+- [ ] Test with cassandra
+- [ ] Test with Mongo
+- [ ] Entity javadoc
+- [ ] Field javadoc
+- [ ] Support relationships
+- [ ] Management endpoints (account, audits, logs, ...)
+- [ ] Support streaming from the DB (Stream<> in repository)
+- [ ] Support streaming back-pressure (reactive streams with rxJava2 or Reactor)
+- [ ] Client-side configuration (micro-services)
+- [ ] Client-side load-balancing with service discovery (micro-services)
 
 # License
 
