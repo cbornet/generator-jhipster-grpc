@@ -2,7 +2,8 @@ package <%=packageName%>.grpc.entity.<%=entityUnderscoredName%>;
 
 
 import com.google.protobuf.Empty;
-import com.google.protobuf.<%=idProtoWrappedType%>;
+import com.google.protobuf.<%=idProtoWrappedType%>;<% if (authenticationType === 'jwt') { %>
+import <%=packageName%>.grpc.AuthenticationInterceptor;<% } %>
 import <%=packageName%>.repository.<%=entityClass%>Repository;
 import <%=packageName%>.service.<%=entityClass%>Service;
 import <%=packageName%>.service.dto.<%=entityClass%>DTO;
@@ -15,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * gRPC service providing CRUD methods for entity <%=entityClass%>.
  */
-@GRpcService
+@GRpcService<% if (authenticationType === 'jwt') { %>(interceptors = {AuthenticationInterceptor.class})<% } %>
 public class <%=entityClass%>GrpcService extends <%=entityClass%>ServiceGrpc.<%=entityClass%>ServiceImplBase{
 
     private final <%=entityClass%>Service <%=entityInstance%>Service;

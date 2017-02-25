@@ -47,7 +47,9 @@ TODOs:
 - [ ] Support Cassandra
 - [x] ~~Test with Mongo~~
 - [ ] Support relationships
-- [ ] Add security (at least JWT)
+- [x] ~~JWT security~~
+- [ ] OAuth2 security
+- [ ] Http session security
 - [ ] Entity javadoc
 - [ ] Field javadoc
 - [ ] Management endpoints (account, audits, logs, ...)
@@ -58,6 +60,7 @@ TODOs:
 - [ ] Generator tests
 - [ ] Sample/demo project
 - [ ] Generated code tests
+- [ ] CI
 
 Mappings:
 
