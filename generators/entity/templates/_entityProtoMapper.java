@@ -6,14 +6,12 @@ import com.google.protobuf.ByteString;
 import <%=packageName%>.domain.enumeration.SomeEnum;
 import <%=packageName%>.service.dto.<%=entityClass%>DTO;
 import <%=packageName%>.grpc.ProtobufUtil;
-//import com.mycompany.myapp.web.grpc.entities.foo.FooProto;
-//import com.mycompany.myapp.web.grpc.entities.foo.SomeEnumProto;
 
 import java.util.List;
 
 //@Mapper(componentModel = "spring")
 public abstract class <%=entityClass%>ProtoMapper {
-    public <%=entityClass%>DTO <%=entityInstance%>ProtoTo<%=entityClass%>DTO(<%=entityClass%>Proto <%=entityInstance%>Proto) {
+    public static <%=entityClass%>DTO <%=entityInstance%>ProtoTo<%=entityClass%>DTO(<%=entityClass%>Proto <%=entityInstance%>Proto) {
         if ( <%=entityInstance%>Proto == null ) {
             return null;
         }
@@ -50,7 +48,7 @@ public abstract class <%=entityClass%>ProtoMapper {
 
     //public abstract List<FooDTO> fooProtosToFooDTOs(List<FooProto> fooProtos);
 
-    public <%=entityClass%>Proto <%=entityInstance%>DTOTo<%=entityClass%>Proto(<%=entityClass%>DTO <%=entityInstance%>DTO) {
+    public static <%=entityClass%>Proto <%=entityInstance%>DTOTo<%=entityClass%>Proto(<%=entityClass%>DTO <%=entityInstance%>DTO) {
         if ( <%=entityInstance%>DTO == null ) {
 
             return null;

@@ -1,7 +1,7 @@
 {
   "name": "generator-jhipster-grpc",
   "version": "0.0.0",
-  "description": "Adds support for gRPC and generates gRPC CRUD endpoints",
+  "description": "Adds support for gRPC and generates gRPC CRUD services",
   "keywords": [
     "yeoman-generator",
     "jhipster-module",

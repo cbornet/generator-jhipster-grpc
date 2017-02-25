@@ -1,6 +1,6 @@
 # generator-jhipster-grpc
 [![NPM version][npm-image]][npm-url] [![Build Status][travis-image]][travis-url] [![Dependency Status][daviddm-image]][daviddm-url]
-> JHipster module, Adds support for gRPC and generates gRPC CRUD endpoints
+> JHipster module, Adds support for gRPC and generates gRPC CRUD services
 
 # Introduction
 

@@ -12,11 +12,31 @@ import "google/protobuf/empty.proto";
 import "util/date.proto";
 import "util/decimal.proto";
 
+
+// gRPC service providing CRUD methods for entity <%=entityClass%>
 service <%=entityClass%>Service {
+    // Create a new <%=entityInstance%>.
+    // request : the <%=entityInstance%>Proto to create
+    // response : the created <%=entityInstance%>Proto or a ALREADY_EXISTS error
     rpc Create<%=entityClass%> (<%=entityClass%>Proto) returns (<%=entityClass%>Proto);
+
+    // Update or create a <%=entityInstance%>.
+    // request : the <%=entityInstance%>Proto to update or create
+    // response : the updated <%=entityInstance%>Proto
     rpc Update<%=entityClass%> (<%=entityClass%>Proto) returns (<%=entityClass%>Proto);
+
+    // Get all the <%=entityInstancePlural%>.
+    // response : the list of <%=entityInstance%>Protos
     rpc GetAll<%=entityClassPlural%> (google.protobuf.Empty) returns (stream <%=entityClass%>Proto);
+
+    // Get a <%=entityInstance%> from it's id.
+    // request : the id of the <%=entityInstance%>Proto to retrieve
+    // response : the <%=entityInstance%>Proto or a NOT_FOUND error
     rpc Get<%=entityClass%> (google.protobuf.Int64Value) returns (<%=entityClass%>Proto);
+
+    // Delete a <%=entityInstance%> from it's id.
+    // request : the id of the <%=entityInstance%>Proto to delete
+    // response : empty or a NOT_FOUND error
     rpc Delete<%=entityClass%> (google.protobuf.Int64Value) returns (google.protobuf.Empty);
 }
 
