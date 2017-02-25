@@ -78,8 +78,8 @@ module.exports = yeoman.Base.extend({
                 '    </execution>' + '\n                ' +
                 '</executions>'
             );
-            jhipsterFunc.replaceContent('pom.xml', '</defaultGoal>\n        <plugins>',
-                '</defaultGoal>' + '\n        ' +
+            jhipsterFunc.replaceContent('pom.xml', '<build>\n        <defaultGoal>',
+                '<build>' + '\n        ' +
                 '<extensions>' + '\n        ' +
                 '    <extension>' + '\n        ' +
                 '        <groupId>kr.motd.maven</groupId>' + '\n        ' +
@@ -87,14 +87,20 @@ module.exports = yeoman.Base.extend({
                 '        <version>1.4.1.Final</version>' + '\n        ' +
                 '    </extension>' + '\n        ' +
                 '</extensions>' + '\n        ' +
-                '<plugins>'
+                '<defaultGoal>'
             );
-            /*<repositories>
-                <repository>
-                    <id>jcenter</id>
-                    <url>http://jcenter.bintray.com </url>
-                </repository>
-            </repositories>*/
+
+            // TODO: Remove when grpc-spring-boot-starter is available on repo.maven.apache.org
+            jhipsterFunc.replaceContent('pom.xml', '</profiles>\n</project>',
+                '</profiles>' + '\n    ' +
+                '<repositories>' + '\n    ' +
+                '    <repository>' + '\n    ' +
+                '        <id>jcenter</id>' + '\n    ' +
+                '        <url>http://jcenter.bintray.com </url>' + '\n    ' +
+                '    </repository>' + '\n    ' +
+                '</repositories>' + '\n' +
+                '</project>'
+            );
 
         },
 
