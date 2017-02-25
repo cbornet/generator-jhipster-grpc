@@ -6,7 +6,7 @@
 
 This is a [JHipster](http://jhipster.github.io/) module, that is meant to be used in a JHipster application.
 
-WARN : Under developpement. See list of limitatins and TODOs
+WARN : Under developpement. See list of limitations and TODOs
 
 # Prerequisites
 
@@ -47,15 +47,34 @@ TODOs:
 - [ ] Entities without service
 - [ ] Support Cassandra
 - [ ] Test with Mongo
-- [ ] Entity javadoc
-- [ ] Field javadoc
 - [ ] Support relationships
 - [ ] Add security (at least JWT)
+- [ ] Entity javadoc
+- [ ] Field javadoc
 - [ ] Management endpoints (account, audits, logs, ...)
 - [ ] Support streaming from the DB (Stream<> in repository)
 - [ ] Support streaming back-pressure (reactive streams with rxJava2 or Reactor)
 - [ ] Client-side configuration (micro-services)
 - [ ] Client-side load-balancing with service discovery (micro-services)
+
+Mappings:
+
+| JHipster | Protobuf      | 
+|:--------:|:-------------:|
+| Integer  | sint32 |
+| Long     | sint64 |
+| String   | string |
+| Float   | float |
+| Double   | double |
+| Boolean   | bool |
+| Blob (byte[]) | bytes |
+| ZonedDateTime | google.protobuf.Timestamp |
+| LocalDate | util.Date |
+| BigDecimal | util.Decimal |
+| enum | enum |
+
+util.Date and util.Decimal are custom definitions. 
+Non-required protobuf scalar types and enums are wrapped in OneOf types to provide nullability.
 
 # License
 
