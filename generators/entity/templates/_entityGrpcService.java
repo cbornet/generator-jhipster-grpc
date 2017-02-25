@@ -2,7 +2,7 @@ package <%=packageName%>.grpc.entity.<%=entityUnderscoredName%>;
 
 
 import com.google.protobuf.Empty;
-import com.google.protobuf.Int64Value;
+import com.google.protobuf.<%=idProtoWrappedType%>;
 import <%=packageName%>.repository.<%=entityClass%>Repository;
 import <%=packageName%>.service.<%=entityClass%>Service;
 import <%=packageName%>.service.dto.<%=entityClass%>DTO;
@@ -61,7 +61,7 @@ public class <%=entityClass%>GrpcService extends <%=entityClass%>ServiceGrpc.<%=
         responseObserver.onCompleted();
     }
 
-    public void get<%=entityClass%>(Int64Value request, StreamObserver<<%=entityClass%>Proto> responseObserver) {
+    public void get<%=entityClass%>(<%=idProtoWrappedType%> request, StreamObserver<<%=entityClass%>Proto> responseObserver) {
         <%=entityClass%>DTO <%=entityInstance%>DTO = <%=entityInstance%>Service.findOne(request.getValue());
         if( <%=entityInstance%>DTO != null) {
             responseObserver.onNext(<%=entityClass%>ProtoMapper.<%=entityInstance%>DTOTo<%=entityClass%>Proto(<%=entityInstance%>DTO));
@@ -71,7 +71,7 @@ public class <%=entityClass%>GrpcService extends <%=entityClass%>ServiceGrpc.<%=
         responseObserver.onCompleted();
     }
 
-    public void delete<%=entityClass%>(Int64Value request, StreamObserver<Empty> responseObserver) {
+    public void delete<%=entityClass%>(<%=idProtoWrappedType%> request, StreamObserver<Empty> responseObserver) {
         <%=entityInstance%>Service.delete(request.getValue());
         responseObserver.onNext(Empty.newBuilder().build());
         responseObserver.onCompleted();

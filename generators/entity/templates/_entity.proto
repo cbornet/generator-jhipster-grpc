@@ -32,12 +32,12 @@ service <%=entityClass%>Service {
     // Get a <%=entityInstance%> from it's id.
     // request : the id of the <%=entityInstance%>Proto to retrieve
     // response : the <%=entityInstance%>Proto or a NOT_FOUND error
-    rpc Get<%=entityClass%> (google.protobuf.Int64Value) returns (<%=entityClass%>Proto);
+    rpc Get<%=entityClass%> (google.protobuf.<%=idProtoWrappedType%>) returns (<%=entityClass%>Proto);
 
     // Delete a <%=entityInstance%> from it's id.
     // request : the id of the <%=entityInstance%>Proto to delete
     // response : empty or a NOT_FOUND error
-    rpc Delete<%=entityClass%> (google.protobuf.Int64Value) returns (google.protobuf.Empty);
+    rpc Delete<%=entityClass%> (google.protobuf.<%=idProtoWrappedType%>) returns (google.protobuf.Empty);
 }
 
 <%_ for (field of fields) {
@@ -52,7 +52,7 @@ enum <%=field.fieldType %>Proto {
 <%_ } _%>
 
 message <%=entityClass%>Proto {
-    oneof id_oneof { uint64 id = 1; }
+    oneof id_oneof { <%=idProtoType%> id = 1; }
 <%_ for (idx in fields) {
     var isOneOf = false;
     var fieldValidate = fields[idx].fieldValidate;

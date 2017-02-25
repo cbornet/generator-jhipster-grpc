@@ -45,7 +45,7 @@ TODOs:
 - [ ] Entities without DTOs
 - [ ] Entities without service
 - [ ] Support Cassandra
-- [ ] Test with Mongo
+- [x] ~~Test with Mongo~~
 - [ ] Support relationships
 - [ ] Add security (at least JWT)
 - [ ] Entity javadoc
