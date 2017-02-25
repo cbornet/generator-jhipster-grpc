@@ -1,7 +1,7 @@
-package com.mycompany.myapp.grpc;
+package <%=packageName%>.grpc;
 
-import com.mycompany.myapp.security.AuthoritiesConstants;
-import com.mycompany.myapp.security.jwt.TokenProvider;
+import <%=packageName%>.security.AuthoritiesConstants;
+import <%=packageName%>.security.jwt.TokenProvider;
 import io.grpc.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
