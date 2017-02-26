@@ -50,13 +50,13 @@ module.exports = yeoman.Base.extend({
 
     writing: {
         writeTemplates: function () {
-            this.baseName = jhipsterVar.baseName;
             this.packageName = jhipsterVar.packageName;
+            this.authenticationType = jhipsterVar.authenticationType;
             var javaDir = jhipsterVar.javaDir;
 
             this.template('_date.proto', PROTO_DIR + '/util/date.proto', this, {});
             this.template('_decimal.proto', PROTO_DIR + '/util/decimal.proto', this, {});
-            if (jhipsterVar.authenticationType === 'jwt') {
+            if (['jwt', 'oauth2'].includes(jhipsterVar.authenticationType)) {
                 this.template('_AuthenticationInterceptor.java', javaDir + '/grpc/AuthenticationInterceptor.java');
             }
             this.template('_ProtobufUtil.java', javaDir + '/grpc/ProtobufUtil.java');

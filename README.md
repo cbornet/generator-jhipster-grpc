@@ -48,7 +48,7 @@ TODOs:
 - [x] ~~Test with Mongo~~
 - [ ] Support relationships
 - [x] ~~JWT security~~
-- [ ] OAuth2 security
+- [x] ~~OAuth2 security~~
 - [ ] Http session security
 - [ ] Entity javadoc
 - [ ] Field javadoc
