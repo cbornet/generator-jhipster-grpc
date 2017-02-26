@@ -58,50 +58,62 @@ module.exports = yeoman.Base.extend({
             this.template('_decimal.proto', PROTO_DIR + '/util/decimal.proto', this, {});
             this.template('_AuthenticationInterceptor.java', javaDir + '/grpc/AuthenticationInterceptor.java');
             this.template('_ProtobufUtil.java', javaDir + '/grpc/ProtobufUtil.java');
-            jhipsterFunc.addMavenDependency('org.lognet', 'grpc-spring-boot-starter', '2.0.0');
-            // Resolve conflict with springfox
-            jhipsterFunc.addMavenDependency('com.google.guava', 'guava', '20.0');
-            jhipsterFunc.addMavenDependency('io.grpc', 'grpc-protobuf', '1.1.1');
-            jhipsterFunc.addMavenDependency('io.grpc', 'grpc-stub', '1.1.1');
-            jhipsterFunc.addMavenPlugin('org.xolstice.maven.plugins', 'protobuf-maven-plugin', '0.5.0',
-                '                ' +
-                '<configuration>' + '\n                ' +
-                '    <protocArtifact>com.google.protobuf:protoc:3.1.0:exe:${os.detected.classifier}</protocArtifact>' + '\n                ' +
-                '    <pluginId>grpc-java</pluginId>' + '\n                ' +
-                '    <pluginArtifact>io.grpc:protoc-gen-grpc-java:1.1.1:exe:${os.detected.classifier}</pluginArtifact>' + '\n                ' +
-                '</configuration>' + '\n                ' +
-                '<executions>' + '\n                ' +
-                '    <execution>' + '\n                ' +
-                '        <goals>' + '\n                ' +
-                '            <goal>compile</goal>' + '\n                ' +
-                '            <goal>compile-custom</goal>' + '\n                ' +
-                '        </goals>' + '\n                ' +
-                '    </execution>' + '\n                ' +
-                '</executions>'
-            );
-            jhipsterFunc.replaceContent('pom.xml', '<build>\n        <defaultGoal>',
-                '<build>' + '\n        ' +
-                '<extensions>' + '\n        ' +
-                '    <extension>' + '\n        ' +
-                '        <groupId>kr.motd.maven</groupId>' + '\n        ' +
-                '        <artifactId>os-maven-plugin</artifactId>' + '\n        ' +
-                '        <version>1.4.1.Final</version>' + '\n        ' +
-                '    </extension>' + '\n        ' +
-                '</extensions>' + '\n        ' +
-                '<defaultGoal>'
-            );
 
-            // TODO: Remove when grpc-spring-boot-starter is available on repo.maven.apache.org
-            jhipsterFunc.replaceContent('pom.xml', '</profiles>\n</project>',
-                '</profiles>' + '\n    ' +
-                '<repositories>' + '\n    ' +
-                '    <repository>' + '\n    ' +
-                '        <id>jcenter</id>' + '\n    ' +
-                '        <url>http://jcenter.bintray.com </url>' + '\n    ' +
-                '    </repository>' + '\n    ' +
-                '</repositories>' + '\n' +
-                '</project>'
-            );
+            if(jhipsterVar.buildTool === 'maven') {
+                jhipsterFunc.addMavenDependency('org.lognet', 'grpc-spring-boot-starter', '2.0.0');
+                // Resolve conflict with springfox
+                jhipsterFunc.addMavenDependency('com.google.guava', 'guava', '20.0');
+                jhipsterFunc.addMavenDependency('io.grpc', 'grpc-protobuf', '1.1.1');
+                jhipsterFunc.addMavenDependency('io.grpc', 'grpc-stub', '1.1.1');
+                jhipsterFunc.addMavenPlugin('org.xolstice.maven.plugins', 'protobuf-maven-plugin', '0.5.0',
+                    '                ' +
+                    '<configuration>' + '\n                ' +
+                    '    <protocArtifact>com.google.protobuf:protoc:3.1.0:exe:${os.detected.classifier}</protocArtifact>' + '\n                ' +
+                    '    <pluginId>grpc-java</pluginId>' + '\n                ' +
+                    '    <pluginArtifact>io.grpc:protoc-gen-grpc-java:1.1.1:exe:${os.detected.classifier}</pluginArtifact>' + '\n                ' +
+                    '</configuration>' + '\n                ' +
+                    '<executions>' + '\n                ' +
+                    '    <execution>' + '\n                ' +
+                    '        <goals>' + '\n                ' +
+                    '            <goal>compile</goal>' + '\n                ' +
+                    '            <goal>compile-custom</goal>' + '\n                ' +
+                    '        </goals>' + '\n                ' +
+                    '    </execution>' + '\n                ' +
+                    '</executions>'
+                );
+                jhipsterFunc.replaceContent('pom.xml', '<build>\n        <defaultGoal>',
+                    '<build>' + '\n        ' +
+                    '<extensions>' + '\n        ' +
+                    '    <extension>' + '\n        ' +
+                    '        <groupId>kr.motd.maven</groupId>' + '\n        ' +
+                    '        <artifactId>os-maven-plugin</artifactId>' + '\n        ' +
+                    '        <version>1.4.1.Final</version>' + '\n        ' +
+                    '    </extension>' + '\n        ' +
+                    '</extensions>' + '\n        ' +
+                    '<defaultGoal>'
+                );
+
+                // TODO: Remove when grpc-spring-boot-starter is available on repo.maven.apache.org
+                jhipsterFunc.replaceContent('pom.xml', '</profiles>\n</project>',
+                    '</profiles>' + '\n    ' +
+                    '<repositories>' + '\n    ' +
+                    '    <repository>' + '\n    ' +
+                    '        <id>jcenter</id>' + '\n    ' +
+                    '        <url>http://jcenter.bintray.com </url>' + '\n    ' +
+                    '    </repository>' + '\n    ' +
+                    '</repositories>' + '\n' +
+                    '</project>'
+                );
+            } else {
+                this.template('_grpc.gradle', 'gradle/grpc.gradle');
+                jhipsterFunc.addGradleDependency('compile', 'org.lognet', 'grpc-spring-boot-starter', '2.0.0');
+                // Resolve conflict with springfox
+                jhipsterFunc.addGradleDependency('compile', 'com.google.guava', 'guava', '20.0');
+                jhipsterFunc.addGradleDependency('compile', 'io.grpc', 'grpc-protobuf', '1.1.1');
+                jhipsterFunc.addGradleDependency('compile', 'io.grpc', 'grpc-stub', '1.1.1');
+                jhipsterFunc.addGradlePlugin('com.google.protobuf', 'protobuf-gradle-plugin', '0.8.1');
+                jhipsterFunc.applyFromGradleScript('gradle/grpc');
+            }
 
         },
 
