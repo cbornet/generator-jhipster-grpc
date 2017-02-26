@@ -56,9 +56,7 @@ module.exports = yeoman.Base.extend({
 
             this.template('_date.proto', PROTO_DIR + '/util/date.proto', this, {});
             this.template('_decimal.proto', PROTO_DIR + '/util/decimal.proto', this, {});
-            if (['jwt', 'oauth2'].includes(jhipsterVar.authenticationType)) {
-                this.template('_AuthenticationInterceptor.java', javaDir + '/grpc/AuthenticationInterceptor.java');
-            }
+            this.template('_AuthenticationInterceptor.java', javaDir + '/grpc/AuthenticationInterceptor.java');
             this.template('_ProtobufUtil.java', javaDir + '/grpc/ProtobufUtil.java');
             jhipsterFunc.addMavenDependency('org.lognet', 'grpc-spring-boot-starter', '2.0.0');
             // Resolve conflict with springfox

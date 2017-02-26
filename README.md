@@ -37,9 +37,9 @@ Current limitations:
 * only entities with DTOs and service
 * no Cassandra (needs datastax driver 3.2 release because of Guava incompatibility)
 * no relationships
-* no security
 
 TODOs:
+- [ ] Generate existing entities
 - [ ] Support Gradle
 - [ ] Entities without DTOs
 - [ ] Entities without service
@@ -48,7 +48,7 @@ TODOs:
 - [ ] Support relationships
 - [x] ~~JWT security~~
 - [x] ~~OAuth2 security~~
-- [ ] Http session security
+- [x] ~~Basic auth security~~ (used for session auth option)
 - [ ] Entity javadoc
 - [ ] Field javadoc
 - [ ] Management endpoints (account, audits, logs, ...)

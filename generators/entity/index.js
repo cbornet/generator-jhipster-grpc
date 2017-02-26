@@ -66,7 +66,6 @@ module.exports = yeoman.Base.extend({
                 return;
             }
             this.packageName = jhipsterVar.packageName;
-            this.authenticationType = jhipsterVar.authenticationType;
             this.entityClass = this.entityConfig.entityClass;
             this.entityClassPlural = pluralize(this.entityClass);
             this.entityInstance = this.entityConfig.entityInstance;

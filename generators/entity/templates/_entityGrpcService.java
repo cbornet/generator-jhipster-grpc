@@ -2,8 +2,8 @@ package <%=packageName%>.grpc.entity.<%=entityUnderscoredName%>;
 
 
 import com.google.protobuf.Empty;
-import com.google.protobuf.<%=idProtoWrappedType%>;<% if (['jwt', 'oauth2'].includes(authenticationType)) { %>
-import <%=packageName%>.grpc.AuthenticationInterceptor;<% } %>
+import com.google.protobuf.<%=idProtoWrappedType%>;
+import <%=packageName%>.grpc.AuthenticationInterceptor;
 import <%=packageName%>.repository.<%=entityClass%>Repository;
 import <%=packageName%>.service.<%=entityClass%>Service;
 import <%=packageName%>.service.dto.<%=entityClass%>DTO;
@@ -16,7 +16,7 @@ import org.lognet.springboot.grpc.GRpcService;
 /**
  * gRPC service providing CRUD methods for entity <%=entityClass%>.
  */
-@GRpcService<% if (['jwt', 'oauth2'].includes(authenticationType)) { %>(interceptors = {AuthenticationInterceptor.class})<% } %>
+@GRpcService(interceptors = {AuthenticationInterceptor.class})
 public class <%=entityClass%>GrpcService extends <%=entityClass%>ServiceGrpc.<%=entityClass%>ServiceImplBase{
 
     private final <%=entityClass%>Service <%=entityInstance%>Service;
