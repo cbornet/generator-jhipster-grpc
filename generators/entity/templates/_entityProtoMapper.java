@@ -3,7 +3,10 @@ package <%=packageName%>.grpc.entity.<%=entityUnderscoredName%>;
 import com.google.protobuf.ByteString;
 //import org.mapstruct.Mapper;
 
-import <%=packageName%>.domain.enumeration.SomeEnum;
+<%_ for (idx in fields) {
+    if(fields[idx].fieldIsEnum) { _%>
+import <%=packageName%>.domain.enumeration.<%=fields[idx].fieldType%>;
+<%_ }}_%>
 import <%=packageName%>.service.dto.<%=entityClass%>DTO;
 import <%=packageName%>.grpc.ProtobufUtil;
 
