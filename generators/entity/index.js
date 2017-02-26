@@ -71,7 +71,11 @@ module.exports = yeoman.Base.extend({
             this.entityInstance = this.entityConfig.entityInstance;
             this.entityInstancePlural = pluralize(this.entityInstance);
             this.entityUnderscoredName = _.snakeCase(this.entityClass).toLowerCase();
-            this.javadoc = this.entityConfig.javadoc;
+            if(this.entityConfig.data.javadoc === undefined) {
+                this.entityJavadoc = '// Protobuf message for entity ' + this.entityClass;
+            } else {
+                this.entityJavadoc = '// ' + this.entityConfig.data.javadoc.replace('\n', '\n// ');
+            }
             this.fields = this.entityConfig.data.fields;
             this.fields.forEach(f => f.fieldProtobufType = getProtobufType(f.fieldType));
             this.fields.forEach(f => f.isProtobufCustomType = isProtobufCustomType(f.fieldProtobufType));

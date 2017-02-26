@@ -49,8 +49,8 @@ TODOs:
 - [x] ~~JWT security~~
 - [x] ~~OAuth2 security~~
 - [x] ~~Basic auth security~~ (used for session auth option)
-- [ ] Entity javadoc
-- [ ] Field javadoc
+- [x] ~~Entity javadoc~~
+- [x] ~~Field javadoc~~
 - [ ] Management endpoints (account, audits, logs, ...)
 - [ ] Support streaming from the DB (Stream<> in repository)
 - [ ] Support streaming back-pressure (reactive streams with rxJava2 or Reactor)

@@ -51,10 +51,15 @@ enum <%=field.fieldType %>Proto {
      <%_ } _%>
 <%_ } _%>
 
+<%= entityJavadoc %>
 message <%=entityClass%>Proto {
-    oneof id_oneof { <%=idProtoType%> id = 1; }
+    oneof id_oneof {
+        <%=idProtoType%> id = 1;
+    }
+
 <%_ for (idx in fields) {
     var isOneOf = false;
+    var indentOneOf = '';
     var fieldValidate = fields[idx].fieldValidate;
     var fieldValidateRules = fields[idx].fieldValidateRules;
     var fieldValidateRulesMaxlength = fields[idx].fieldValidateRulesMaxlength;
@@ -64,7 +69,15 @@ message <%=entityClass%>Proto {
     var fieldNameUnderscored = fields[idx].fieldNameUnderscored;
     if (!isProtobufCustomType && !(fieldValidate && fieldValidateRules.indexOf('required') != -1)) {
         isOneOf = true;
+        indentOneOf = '    ';
+    }
+    var javadoc = '';
+    if(fields[idx].javadoc !== undefined) {
+        javadoc = '// ' + fields[idx].javadoc.replace('\n', '\n    '+ indentOneOf + '// ') + '\n    '+ indentOneOf;
     }_%>
-    <% if (isOneOf) { %>oneof <%=fieldNameUnderscored%>_oneof { <% } %><%=fieldType%> <%=fieldNameUnderscored%> = <%=parseInt(idx) +2%>;<% if (isOneOf) { %> }<% } %>
+    <% if (isOneOf) { %>oneof <%=fieldNameUnderscored%>_oneof {
+        <% } %><%= javadoc %><%=fieldType%> <%=fieldNameUnderscored%> = <%=parseInt(idx) +2%>;<% if (isOneOf) { %>
+    }<% } %>
+
 <%_ } _%>
 }
