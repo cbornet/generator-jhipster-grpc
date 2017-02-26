@@ -128,7 +128,10 @@ function getProtobufType(type) {
     case 'BigDecimal':
         return 'util.Decimal';
     case 'byte[]':
+    case 'ByteBuffer':
         return 'bytes';
+    case 'UUID':
+        return 'string';
     default:
         // It's an enum
         return type + 'Proto';

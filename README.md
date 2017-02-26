@@ -35,8 +35,7 @@ If you want to add CRUD gRPC services for an entity, just (re)generate it and co
 Current limitations:
 * Maven only
 * only entities with DTOs and service
-* cassandra needs netty-handler resolution to v4.1. Otherwise not tested but should work
-* mongo not tested but should work
+* no Cassandra (needs datastax driver 3.2 release because of Guava incompatibility)
 * no relationships
 * no security
 
@@ -44,7 +43,7 @@ TODOs:
 - [ ] Support Gradle
 - [ ] Entities without DTOs
 - [ ] Entities without service
-- [ ] Support Cassandra
+- [x] ~~Test with Cassandra~~
 - [x] ~~Test with Mongo~~
 - [ ] Support relationships
 - [x] ~~JWT security~~

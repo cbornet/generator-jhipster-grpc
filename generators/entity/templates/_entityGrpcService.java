@@ -11,7 +11,7 @@ import <%=packageName%>.service.mapper.<%=entityClass%>Mapper;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import org.lognet.springboot.grpc.GRpcService;
-import org.springframework.transaction.annotation.Transactional;
+//import org.springframework.transaction.annotation.Transactional;
 
 /**
  * gRPC service providing CRUD methods for entity <%=entityClass%>.
