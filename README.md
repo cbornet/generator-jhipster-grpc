@@ -33,14 +33,13 @@ so that the proto files present in `src/main/proto` are compiled.
 If you want to add CRUD gRPC services for an entity, just (re)generate it and confirm when the question is asked.
 
 Current limitations:
-* Maven only
 * only entities with DTOs and service
 * no Cassandra (needs datastax driver 3.2 release because of Guava incompatibility)
-* no relationships
+* entities can have non-required relationships but they will not be manageable by grpc
 
 TODOs:
 - [ ] Generate existing entities
-- [ ] Support Gradle
+- [x] ~~Support Gradle~~
 - [ ] Entities without DTOs
 - [ ] Entities without service
 - [x] ~~Test with Cassandra~~
