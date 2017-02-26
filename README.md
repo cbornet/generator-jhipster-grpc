@@ -34,7 +34,6 @@ If you want to add CRUD gRPC services for an entity, just (re)generate it and co
 
 Current limitations:
 * only entities with DTOs and service
-* no Cassandra (needs datastax driver 3.2 release because of Guava incompatibility)
 * entities can have non-required relationships but they will not be manageable by grpc
 
 TODOs:
@@ -42,8 +41,8 @@ TODOs:
 - [x] ~~Support Gradle~~
 - [ ] Entities without DTOs
 - [ ] Entities without service
-- [x] ~~Test with Cassandra~~
-- [x] ~~Test with Mongo~~
+- [x] ~~Support Cassandra~~
+- [x] ~~Support Mongo~~
 - [ ] Support relationships
 - [x] ~~JWT security~~
 - [x] ~~OAuth2 security~~

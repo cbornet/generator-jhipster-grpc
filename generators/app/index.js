@@ -58,19 +58,33 @@ module.exports = yeoman.Base.extend({
             this.template('_decimal.proto', PROTO_DIR + '/util/decimal.proto', this, {});
             this.template('_AuthenticationInterceptor.java', javaDir + '/grpc/AuthenticationInterceptor.java');
             this.template('_ProtobufUtil.java', javaDir + '/grpc/ProtobufUtil.java');
+            this.grpcVersion = '1.1.1';
+            var grpcSpringVersion = '2.0.0';
+            var guavaVersion = '20.0';
+            if (jhipsterVar.databaseType === 'cassandra') {
+                // Downgrade grpc to get a compatible guava version
+                this.grpcVersion = '1.0.2';
+                grpcSpringVersion = '1.0.0';
+                guavaVersion = '19.0';
 
-            if(jhipsterVar.buildTool === 'maven') {
-                jhipsterFunc.addMavenDependency('org.lognet', 'grpc-spring-boot-starter', '2.0.0');
+            }
+
+            if (jhipsterVar.buildTool === 'maven') {
+                jhipsterFunc.addMavenDependency('org.lognet', 'grpc-spring-boot-starter', grpcSpringVersion);
                 // Resolve conflict with springfox
-                jhipsterFunc.addMavenDependency('com.google.guava', 'guava', '20.0');
-                jhipsterFunc.addMavenDependency('io.grpc', 'grpc-protobuf', '1.1.1');
-                jhipsterFunc.addMavenDependency('io.grpc', 'grpc-stub', '1.1.1');
+                jhipsterFunc.addMavenDependency('com.google.guava', 'guava', guavaVersion);
+                jhipsterFunc.addMavenDependency('io.grpc', 'grpc-protobuf', this.grpcVersion);
+                jhipsterFunc.addMavenDependency('io.grpc', 'grpc-stub', this.grpcVersion);
+                if (jhipsterVar.databaseType === 'cassandra') {
+                    // grpc-java needs netty 4.1
+                    jhipsterFunc.addMavenDependency('io.netty', 'netty-handler', '4.1.6.Final');
+                }
                 jhipsterFunc.addMavenPlugin('org.xolstice.maven.plugins', 'protobuf-maven-plugin', '0.5.0',
                     '                ' +
                     '<configuration>' + '\n                ' +
                     '    <protocArtifact>com.google.protobuf:protoc:3.1.0:exe:${os.detected.classifier}</protocArtifact>' + '\n                ' +
                     '    <pluginId>grpc-java</pluginId>' + '\n                ' +
-                    '    <pluginArtifact>io.grpc:protoc-gen-grpc-java:1.1.1:exe:${os.detected.classifier}</pluginArtifact>' + '\n                ' +
+                    '    <pluginArtifact>io.grpc:protoc-gen-grpc-java:'+ this.grpcVersion + ':exe:${os.detected.classifier}</pluginArtifact>' + '\n                ' +
                     '</configuration>' + '\n                ' +
                     '<executions>' + '\n                ' +
                     '    <execution>' + '\n                ' +
@@ -106,11 +120,15 @@ module.exports = yeoman.Base.extend({
                 );
             } else {
                 this.template('_grpc.gradle', 'gradle/grpc.gradle');
-                jhipsterFunc.addGradleDependency('compile', 'org.lognet', 'grpc-spring-boot-starter', '2.0.0');
+                jhipsterFunc.addGradleDependency('compile', 'org.lognet', 'grpc-spring-boot-starter', grpcSpringVersion);
                 // Resolve conflict with springfox
-                jhipsterFunc.addGradleDependency('compile', 'com.google.guava', 'guava', '20.0');
-                jhipsterFunc.addGradleDependency('compile', 'io.grpc', 'grpc-protobuf', '1.1.1');
-                jhipsterFunc.addGradleDependency('compile', 'io.grpc', 'grpc-stub', '1.1.1');
+                jhipsterFunc.addGradleDependency('compile', 'com.google.guava', 'guava', guavaVersion);
+                jhipsterFunc.addGradleDependency('compile', 'io.grpc', 'grpc-protobuf', this.grpcVersion);
+                jhipsterFunc.addGradleDependency('compile', 'io.grpc', 'grpc-stub', this.grpcVersion);
+                if (jhipsterVar.databaseType === 'cassandra') {
+                    // grpc-java needs netty 4.1
+                    jhipsterFunc.addGradleDependency('compile', 'io.netty', 'netty-handler', '4.1.6.Final');
+                }
                 jhipsterFunc.addGradlePlugin('com.google.protobuf', 'protobuf-gradle-plugin', '0.8.1');
                 jhipsterFunc.applyFromGradleScript('gradle/grpc');
             }

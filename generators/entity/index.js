@@ -66,6 +66,7 @@ module.exports = yeoman.Base.extend({
                 return;
             }
             this.packageName = jhipsterVar.packageName;
+            this.databaseType = jhipsterVar.databaseType;
             this.entityClass = this.entityConfig.entityClass;
             this.entityClassPlural = pluralize(this.entityClass);
             this.entityInstance = this.entityConfig.entityInstance;
@@ -79,7 +80,7 @@ module.exports = yeoman.Base.extend({
             this.fields = this.entityConfig.data.fields;
             this.fields.forEach(f => f.fieldProtobufType = getProtobufType(f.fieldType));
             this.fields.forEach(f => f.isProtobufCustomType = isProtobufCustomType(f.fieldProtobufType));
-            if (jhipsterVar.databaseType === 'sql') {
+            if (this.databaseType === 'sql') {
                 this.idProtoType = 'sint64';
                 this.idProtoWrappedType = 'Int64Value';
             } else {
