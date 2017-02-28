@@ -70,11 +70,11 @@ public abstract class <%=entityClass%>ProtoMapper {
     if (!isProtobufCustomType && !(fieldValidate && fieldValidateRules.indexOf('required') != -1)) {
         nullable = true;
     }_%>
-        if (fooDTO.get<%= fieldInJavaBeanMethod %>() != null) {
+        if (<%=entityInstance%>DTO.get<%= fieldInJavaBeanMethod %>() != null) {
             <%=entityInstance%>ProtoBuilder.set<%= fieldInJavaBeanMethod %>(<% if(fieldType === 'byte[]' || fieldType === 'ByteBuffer') { %>ByteString.copyFrom(<% } %><% if (isProtobufCustomType) { %>ProtobufUtil.<% } %><% if(fieldType === 'ZonedDateTime') { %>zonedDateTimeToTimestamp(<% } %><% if(fieldType === 'LocalDate') { %>localDateToDateProto(<% } %><% if(fieldType === 'BigDecimal') { %>bigDecimalToDecimalProto(<% } %><% if(fieldIsEnum) { %><%=fieldType%>Proto.valueOf(<% } %><%=entityInstance%>DTO.get<%= fieldInJavaBeanMethod %>()<% if(fieldIsEnum ||fieldType === 'UUID') { %>.toString()<% } %>)<% if(fieldIsEnum || isProtobufCustomType || fieldType === 'byte[]' || fieldType === 'ByteBuffer') { %>)<% } %>;
         }
 <%_ } _%>
-        return fooProtoBuilder.build();
+        return <%=entityInstance%>ProtoBuilder.build();
     }
 
 }
