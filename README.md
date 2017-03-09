@@ -33,15 +33,15 @@ so that the proto files present in `src/main/proto` are compiled.
 If you want to add CRUD gRPC services for an entity, just (re)generate it and confirm when the question is asked.
 
 Current limitations:
-* only entities with DTOs and service
 * entities with required relationships
 * entities can have non-required relationships but they will not be manageable by grpc
+
+Note that entities must have a service layer (serviceClass or serviceImpl) or else they will be ignored by the generator (not having a common service layer between the REST resources and the gRPC endpoints would be bad design).
 
 TODOs:
 - [ ] Generate existing entities
 - [x] ~~Support Gradle~~
-- [ ] Entities without DTOs
-- [ ] Entities without service
+- [x] ~~Entities without DTOs~~
 - [x] ~~Entities with pagination~~
 - [x] ~~Support Cassandra~~
 - [x] ~~Support Mongo~~

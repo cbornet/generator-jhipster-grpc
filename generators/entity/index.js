@@ -27,18 +27,25 @@ module.exports = yeoman.Base.extend({
         },
 
         displayLogo: function () {
-            this.log(chalk.white('Running ' + chalk.bold('JHipster grpc') + ' Generator! ' + chalk.yellow('v' + packagejs.version + '\n')));
+            this.log(chalk.white('Running ' + chalk.bold('JHipster gRPC') + ' Generator! ' + chalk.yellow('v' + packagejs.version + '\n')));
         },
 
         validate: function () {
-            // this shouldnt be run directly
+            // this should not be run directly
             if (!this.entityConfig) {
                 this.env.error(chalk.red.bold('ERROR!') + ' This sub generator should be used only from JHipster and cannot be run directly...\n');
+            }
+            this.noEntityService = this.entityConfig.data.service !== 'serviceClass' && this.entityConfig.data.service !== 'serviceImpl';
+            if (this.noEntityService) {
+                this.log(chalk.yellow('Entity ' + this.entityConfig.entityClass + ' doesn\'t have a service layer so skipping gRPC generator !'));
             }
         }
     },
 
     prompting: function () {
+        if (this.noEntityService) {
+            return;
+        }
         // don't prompt if data are imported from a file
         if (this.entityConfig.useConfigurationFile === true && this.entityConfig.data && typeof this.entityConfig.data.grpcService !== 'undefined') {
             this.grpcService = this.entityConfig.data.grpcService;
@@ -49,7 +56,7 @@ module.exports = yeoman.Base.extend({
             {
                 type: 'confirm',
                 name: 'grpcService',
-                message: 'Do you want to generate a grpc service for this entity ?',
+                message: 'Do you want to generate a gRPC service for this entity ?',
                 default: true
             }
         ];
@@ -72,6 +79,9 @@ module.exports = yeoman.Base.extend({
             this.entityInstance = this.entityConfig.entityInstance;
             this.entityInstancePlural = pluralize(this.entityInstance);
             this.entityUnderscoredName = _.snakeCase(this.entityClass).toLowerCase();
+            this.dto = this.entityConfig.data.dto || 'no';
+            this.instanceType = (this.dto == 'mapstruct') ? this.entityClass + 'DTO' : this.entityClass;
+            this.instanceName = (this.dto == 'mapstruct') ? this.entityInstance + 'DTO' : this.entityInstance;
             this.fieldsContainZonedDateTime = this.entityConfig.fieldsContainZonedDateTime;
             this.fieldsContainLocalDate = this.entityConfig.fieldsContainLocalDate;
             this.fieldsContainBigDecimal = this.entityConfig.fieldsContainBigDecimal;
@@ -111,7 +121,7 @@ module.exports = yeoman.Base.extend({
 
     end: function () {
         if (this.grpcService) {
-            this.log('\n' + chalk.bold.green('grpc enabled for this entity'));
+            this.log('\n' + chalk.bold.green('gRPC enabled for entity ' + this.entityClass));
         }
     }
 });
@@ -150,5 +160,4 @@ function getProtobufType(type) {
 
 function isProtobufCustomType(type) {
     return type.startsWith('google') || type.startsWith('util');
-    //return ['string', 'sint32', 'sint64', 'float', 'double', 'bool', 'bytes'].includes(type);
 }

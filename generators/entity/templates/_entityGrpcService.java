@@ -7,15 +7,13 @@ import <%=packageName%>.grpc.AuthenticationInterceptor;
 <%_ if (pagination !== 'no') { _%>
 import com.mycompany.myapp.grpc.PageRequest;
 import com.mycompany.myapp.grpc.ProtobufUtil;
-<%_ } _%>
-import <%=packageName%>.repository.<%=entityClass%>Repository;
-import <%=packageName%>.service.<%=entityClass%>Service;
-import <%=packageName%>.service.dto.<%=entityClass%>DTO;
-import <%=packageName%>.service.mapper.<%=entityClass%>Mapper;
+<%_ } _%><% if (dto !== 'mapstruct') { %>
+import <%=packageName%>.domain.<%=instanceType%>;<% } %>
+import <%=packageName%>.service.<%=entityClass%>Service;<% if (dto === 'mapstruct') { %>
+import <%=packageName%>.service.dto.<%=instanceType%>;<% } %>
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import org.lognet.springboot.grpc.GRpcService;
-//import org.springframework.transaction.annotation.Transactional;
 
 /**
  * gRPC service providing CRUD methods for entity <%=entityClass%>.
@@ -24,13 +22,9 @@ import org.lognet.springboot.grpc.GRpcService;
 public class <%=entityClass%>GrpcService extends <%=entityClass%>ServiceGrpc.<%=entityClass%>ServiceImplBase{
 
     private final <%=entityClass%>Service <%=entityInstance%>Service;
-    private final <%=entityClass%>Repository <%=entityInstance%>Repository;
-    private final <%=entityClass%>Mapper <%=entityInstance%>Mapper;
 
-    public <%=entityClass%>GrpcService(<%=entityClass%>Service <%=entityInstance%>Service, <%=entityClass%>Repository <%=entityInstance%>Repository, <%=entityClass%>Mapper <%=entityInstance%>Mapper) {
+    public <%=entityClass%>GrpcService(<%=entityClass%>Service <%=entityInstance%>Service) {
         this.<%=entityInstance%>Service = <%=entityInstance%>Service;
-        this.<%=entityInstance%>Repository = <%=entityInstance%>Repository;
-        this.<%=entityInstance%>Mapper = <%=entityInstance%>Mapper;
     }
 
     @Override
@@ -45,31 +39,23 @@ public class <%=entityClass%>GrpcService extends <%=entityClass%>ServiceGrpc.<%=
     }
 
     public void update<%=entityClass%>(<%=entityClass%>Proto request, StreamObserver<<%=entityClass%>Proto> responseObserver) {
-        <%=entityClass%>DTO <%=entityInstance%>DTO = <%=entityClass%>ProtoMapper.<%=entityInstance%>ProtoTo<%=entityClass%>DTO(request);
-        <%=entityInstance%>DTO = <%=entityInstance%>Service.save(<%=entityInstance%>DTO);
-        <%=entityClass%>Proto result = <%=entityClass%>ProtoMapper.<%=entityInstance%>DTOTo<%=entityClass%>Proto(<%=entityInstance%>DTO);
+        <%=instanceType%> <%=instanceName%> = <%=entityClass%>ProtoMapper.<%=entityInstance%>ProtoTo<%=instanceType%>(request);
+        <%=instanceName%> = <%=entityInstance%>Service.save(<%=instanceName%>);
+        <%=entityClass%>Proto result = <%=entityClass%>ProtoMapper.<%=instanceName%>To<%=entityClass%>Proto(<%=instanceName%>);
         responseObserver.onNext(result);
         responseObserver.onCompleted();
     }
 
-    /*@Transactional(readOnly = true)
-    public void getAll<%=entityClass%>s(Empty request, StreamObserver<<%=entityClass%>Proto> responseObserver) {
-        <%=entityInstance%>Repository.findAllAndStream()
-            .map(<%=entityInstance%>Mapper::<%=entityInstance%>To<%=entityClass%>DTO)
-            .forEach(<%=entityInstance%> -> responseObserver.onNext(<%=entityClass%>ProtoMapper.<%=entityInstance%>DTOTo<%=entityClass%>Proto(<%=entityInstance%>)));
-        responseObserver.onCompleted();
-    }*/
-
     public void getAll<%=entityClass%>s(<% if (pagination !== 'no') { %>PageRequest<% } else { %>Empty<% } %> request, StreamObserver<<%=entityClass%>Proto> responseObserver) {
         <%=entityInstance%>Service.findAll(<% if (pagination !== 'no') { %>ProtobufUtil.pageRequestProtoToPageRequest(request)<% } %>)
-            .forEach(<%=entityInstance%> -> responseObserver.onNext(<%=entityClass%>ProtoMapper.<%=entityInstance%>DTOTo<%=entityClass%>Proto(<%=entityInstance%>)));
+            .forEach(<%=entityInstance%> -> responseObserver.onNext(<%=entityClass%>ProtoMapper.<%=instanceName%>To<%=entityClass%>Proto(<%=entityInstance%>)));
         responseObserver.onCompleted();
     }
 
     public void get<%=entityClass%>(<%=idProtoWrappedType%> request, StreamObserver<<%=entityClass%>Proto> responseObserver) {
-        <%=entityClass%>DTO <%=entityInstance%>DTO = <%=entityInstance%>Service.findOne(request.getValue());
-        if( <%=entityInstance%>DTO != null) {
-            responseObserver.onNext(<%=entityClass%>ProtoMapper.<%=entityInstance%>DTOTo<%=entityClass%>Proto(<%=entityInstance%>DTO));
+        <%=instanceType%> <%=instanceName%> = <%=entityInstance%>Service.findOne(request.getValue());
+        if( <%=instanceName%> != null) {
+            responseObserver.onNext(<%=entityClass%>ProtoMapper.<%=instanceName%>To<%=entityClass%>Proto(<%=instanceName%>));
         } else {
             responseObserver.onError(Status.NOT_FOUND.asException());
         }
