@@ -56,6 +56,7 @@ module.exports = yeoman.Base.extend({
 
             this.template('_date.proto', PROTO_DIR + '/util/date.proto', this, {});
             this.template('_decimal.proto', PROTO_DIR + '/util/decimal.proto', this, {});
+            this.template('_pagination.proto', PROTO_DIR + '/util/pagination.proto', this, {});
             this.template('_AuthenticationInterceptor.java', javaDir + '/grpc/AuthenticationInterceptor.java');
             this.template('_ProtobufUtil.java', javaDir + '/grpc/ProtobufUtil.java');
             this.grpcVersion = '1.1.1';

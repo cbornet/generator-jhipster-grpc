@@ -72,6 +72,11 @@ module.exports = yeoman.Base.extend({
             this.entityInstance = this.entityConfig.entityInstance;
             this.entityInstancePlural = pluralize(this.entityInstance);
             this.entityUnderscoredName = _.snakeCase(this.entityClass).toLowerCase();
+            this.fieldsContainZonedDateTime = this.entityConfig.fieldsContainZonedDateTime;
+            this.fieldsContainLocalDate = this.entityConfig.fieldsContainLocalDate;
+            this.fieldsContainBigDecimal = this.entityConfig.fieldsContainBigDecimal;
+            this.fieldsContainBlob = this.entityConfig.fieldsContainBlob;
+            this.pagination = this.entityConfig.data.pagination || 'no';
             if(this.entityConfig.data.javadoc === undefined) {
                 this.entityJavadoc = '// Protobuf message for entity ' + this.entityClass;
             } else {

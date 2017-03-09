@@ -34,7 +34,7 @@ If you want to add CRUD gRPC services for an entity, just (re)generate it and co
 
 Current limitations:
 * only entities with DTOs and service
-* doesn't work with paginated entities
+* entities with required relationships
 * entities can have non-required relationships but they will not be manageable by grpc
 
 TODOs:
@@ -42,7 +42,7 @@ TODOs:
 - [x] ~~Support Gradle~~
 - [ ] Entities without DTOs
 - [ ] Entities without service
-- [ ] Entities with pagination
+- [x] ~~Entities with pagination~~
 - [x] ~~Support Cassandra~~
 - [x] ~~Support Mongo~~
 - [ ] Support relationships

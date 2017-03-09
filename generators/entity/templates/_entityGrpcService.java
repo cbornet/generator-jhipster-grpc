@@ -4,6 +4,10 @@ package <%=packageName%>.grpc.entity.<%=entityUnderscoredName%>;
 import com.google.protobuf.Empty;
 import com.google.protobuf.<%=idProtoWrappedType%>;
 import <%=packageName%>.grpc.AuthenticationInterceptor;
+<%_ if (pagination !== 'no') { _%>
+import com.mycompany.myapp.grpc.PageRequest;
+import com.mycompany.myapp.grpc.ProtobufUtil;
+<%_ } _%>
 import <%=packageName%>.repository.<%=entityClass%>Repository;
 import <%=packageName%>.service.<%=entityClass%>Service;
 import <%=packageName%>.service.dto.<%=entityClass%>DTO;
@@ -56,8 +60,8 @@ public class <%=entityClass%>GrpcService extends <%=entityClass%>ServiceGrpc.<%=
         responseObserver.onCompleted();
     }*/
 
-    public void getAll<%=entityClass%>s(Empty request, StreamObserver<<%=entityClass%>Proto> responseObserver) {
-        <%=entityInstance%>Service.findAll()
+    public void getAll<%=entityClass%>s(<% if (pagination !== 'no') { %>PageRequest<% } else { %>Empty<% } %> request, StreamObserver<<%=entityClass%>Proto> responseObserver) {
+        <%=entityInstance%>Service.findAll(<% if (pagination !== 'no') { %>ProtobufUtil.pageRequestProtoToPageRequest(request)<% } %>)
             .forEach(<%=entityInstance%> -> responseObserver.onNext(<%=entityClass%>ProtoMapper.<%=entityInstance%>DTOTo<%=entityClass%>Proto(<%=entityInstance%>)));
         responseObserver.onCompleted();
     }

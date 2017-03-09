@@ -1,13 +1,14 @@
 package <%=packageName%>.grpc.entity.<%=entityUnderscoredName%>;
 
-import com.google.protobuf.ByteString;
 
 <%_ for (idx in fields) {
     if(fields[idx].fieldIsEnum) { _%>
 import <%=packageName%>.domain.enumeration.<%=fields[idx].fieldType%>;
 <%_ }}_%>
-import <%=packageName%>.service.dto.<%=entityClass%>DTO;
-import <%=packageName%>.grpc.ProtobufUtil;<% if (databaseType === 'cassandra') { %>
+import <%=packageName%>.service.dto.<%=entityClass%>DTO;<% if (fieldsContainZonedDateTime || fieldsContainLocalDate || fieldsContainBigDecimal) { %>
+import <%=packageName%>.grpc.ProtobufUtil;<% } %><% if (fieldsContainBlob) { %>
+
+import com.google.protobuf.ByteString;<% } %><% if (databaseType === 'cassandra') { %>
 
 import java.util.UUID;<% } %>
 

@@ -1,17 +1,23 @@
 package <%=packageName%>.grpc;
 
 import com.google.protobuf.Timestamp;
-import <%=packageName%>.grpc.Date;
-import <%=packageName%>.grpc.Decimal;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 
 public abstract class ProtobufUtil {
+
+    private static final int DEFAULT_MAX_PAGE_SIZE = 2000;
+    private static final Pageable DEFAULT_PAGE_REQUEST = new org.springframework.data.domain.PageRequest(0, 20);
+
     public static LocalDate dateProtoToLocalDate(Date date) {
         return LocalDate.of(date.getYear(), date.getMonth(), date.getDay());
     }
@@ -50,4 +56,22 @@ public abstract class ProtobufUtil {
             .setScale(decimal.scale())
             .build();
     }
+
+    public static org.springframework.data.domain.PageRequest pageRequestProtoToPageRequest(PageRequest pageRequestProto) {
+        int page = pageRequestProto.getPage();
+        int pageSize = pageRequestProto.getSize();
+
+        // Limit lower bound
+        pageSize = pageSize < 1 ? DEFAULT_PAGE_REQUEST.getPageSize() : pageSize;
+        // Limit upper bound
+        pageSize = pageSize > DEFAULT_MAX_PAGE_SIZE ? DEFAULT_MAX_PAGE_SIZE : pageSize;
+
+        List<Sort.Order> orders = pageRequestProto.getOrdersList().stream()
+            .map( o -> new Sort.Order(Sort.Direction.fromString(o.getDirection().toString()), o.getProperty()))
+            .collect(Collectors.toList());
+        Sort sort = orders.isEmpty() ? null : new Sort(orders);
+
+        return new org.springframework.data.domain.PageRequest(page, pageSize, sort);
+    }
+
 }

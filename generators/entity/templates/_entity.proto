@@ -6,12 +6,12 @@ option java_package = "<%=packageName%>.grpc.entity.<%=entityUnderscoredName%>";
 
 package <%=packageName%>.entity;
 
-import "google/protobuf/wrappers.proto";
-import "google/protobuf/timestamp.proto";
-import "google/protobuf/empty.proto";
-import "util/date.proto";
-import "util/decimal.proto";
-
+import "google/protobuf/empty.proto";<% if (fieldsContainZonedDateTime) { %>
+import "google/protobuf/timestamp.proto";<% } %>
+import "google/protobuf/wrappers.proto";<% if (fieldsContainBigDecimal) { %>
+import "util/decimal.proto";<% } %><% if (fieldsContainLocalDate) { %>
+import "util/date.proto";<% } %><% if (pagination !== 'no') { %>
+import "util/pagination.proto";<% } %>
 
 // gRPC service providing CRUD methods for entity <%=entityClass%>
 service <%=entityClass%>Service {
@@ -27,7 +27,7 @@ service <%=entityClass%>Service {
 
     // Get all the <%=entityInstancePlural%>.
     // response : the list of <%=entityInstance%>Protos
-    rpc GetAll<%=entityClassPlural%> (google.protobuf.Empty) returns (stream <%=entityClass%>Proto);
+    rpc GetAll<%=entityClassPlural%> (<% if (pagination !== 'no') { %>util.PageRequest<% } else { %>google.protobuf.Empty<% } %>) returns (stream <%=entityClass%>Proto);
 
     // Get a <%=entityInstance%> from it's id.
     // request : the id of the <%=entityInstance%>Proto to retrieve
