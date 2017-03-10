@@ -64,16 +64,19 @@ module.exports = yeoman.Base.extend({
             var protoPackageDir = protoDir + jhipsterVar.packageFolder + '/';
 
 
-            this.template('_date.proto', protoDir + '/util/date.proto', this, {});
-            this.template('_decimal.proto', protoDir + '/util/decimal.proto', this, {});
-            this.template('_pagination.proto', protoDir + '/util/pagination.proto', this, {});
-            this.template('_AuthenticationInterceptor.java', javaDir + '/grpc/AuthenticationInterceptor.java');
+            this.template('_date.proto', protoDir + 'util/date.proto', this, {});
+            this.template('_decimal.proto', protoDir + 'util/decimal.proto', this, {});
+            this.template('_pagination.proto', protoDir + 'util/pagination.proto', this, {});
+            this.template('_AuthenticationInterceptor.java', javaDir + 'grpc/AuthenticationInterceptor.java');
             this.template('_ProtobufUtil.java', javaDir + 'grpc/ProtobufUtil.java');
             if (jhipsterVar.authenticationType === 'jwt') {
-                this.template('_jwt.proto', protoPackageDir + '/jwt.proto');
-                this.template('_JWTService.java', javaDir + '/grpc/JWTService.java');
-                this.template('_JWTServiceTest.java', testDir + '/grpc/JWTServiceTest.java');
+                this.template('_jwt.proto', protoPackageDir + 'jwt.proto');
+                this.template('_JWTService.java', javaDir + 'grpc/JWTService.java');
+                this.template('_JWTServiceTest.java', testDir + 'grpc/JWTServiceTest.java');
             }
+            this.template('_logs.proto', protoPackageDir + 'logs.proto');
+            this.template('_LogsService.java', javaDir + 'grpc/LogsService.java');
+            this.template('_LogsServiceTest.java', testDir + 'grpc/LogsServiceTest.java');
 
             this.grpcVersion = '1.1.1';
             var grpcSpringVersion = '2.0.0';
