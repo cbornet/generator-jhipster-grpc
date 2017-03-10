@@ -30,23 +30,30 @@ module.exports = yeoman.Base.extend({
         }
     },
 
-    /*prompting: function () {
+    prompting: function () {
+        this.entities = [];
+        this.existingEntitiesNames = jhipsterFunc.getExistingEntities()
+            .filter(entity => entity.definition.service === 'serviceClass' || entity.definition.service === 'serviceImpl')
+            .map(entity => entity.name);
+
+        if (this.existingEntitiesNames.length == 0) {
+            this.log(chalk.yellow('No existing entities with a service layer found.'));
+            return;
+        }
         var done = this.async();
 
         var prompts = [{
-            type: 'confirm',
-            name: 'confirm',
-            message: 'This will configure your project for gRPC' ,
-            default: 'hello world!'
+            type: 'checkbox',
+            name: 'entities',
+            message: 'Select existing entities for which you want to add gRPC endpoints' ,
+            choices: this.existingEntitiesNames
         }];
 
-        this.prompt(prompts, function (props) {
-            this.props = props;
-            // To access props later use this.props.someOption;
-
+        this.prompt(prompts, props => {
+            this.entities = props.entities;
             done();
-        }.bind(this));
-    },*/
+        });
+    },
 
     writing: {
         writeTemplates: function () {
@@ -134,6 +141,8 @@ module.exports = yeoman.Base.extend({
                 jhipsterFunc.applyFromGradleScript('gradle/grpc');
             }
 
+            this.entities.forEach(entityName => {jhipsterFunc.updateEntityConfig('.jhipster/' + entityName + '.json', 'grpcService', true)});
+
         },
 
         registering: function () {
@@ -142,6 +151,22 @@ module.exports = yeoman.Base.extend({
             } catch (err) {
                 this.log(chalk.red.bold('WARN!') + ' Could not register as a jhipster entity post creation hook...\n');
             }
+        },
+
+        regenerateEntities: function () {
+            if (this.entities.length != 0) {
+                this.log(chalk.green('Regenerating entities with gRPC service'));
+            }
+            this.entities.forEach(function (entity) {
+                this.composeWith('jhipster:entity', {
+                    options: {
+                        regenerate: true,
+                        'skip-install': true,
+                        force: this.options['force']
+                    },
+                    args: [entity]
+                });
+            }, this);
         }
     },
 
