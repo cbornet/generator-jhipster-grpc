@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "<%=packageName%>.grpc";
+
+package <%=packageName%>;
+
+service JWTService {
+    rpc Authenticate(Login) returns (JWTToken);
+}
+
+message Login {
+    string username = 1;
+    string password = 2;
+    bool remember_me = 3;
+}
+
+message JWTToken {
+    string id_token = 1;
+}

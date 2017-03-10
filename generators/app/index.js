@@ -9,8 +9,6 @@ var jhipsterVar = { moduleName: 'grpc' };
 // Stores JHipster functions
 var jhipsterFunc = {};
 
-const PROTO_DIR = 'src/main/proto';
-
 module.exports = yeoman.Base.extend({
 
     initializing: {
@@ -57,15 +55,26 @@ module.exports = yeoman.Base.extend({
 
     writing: {
         writeTemplates: function () {
+            this.mainClass = jhipsterVar.mainClassName;
             this.packageName = jhipsterVar.packageName;
             this.authenticationType = jhipsterVar.authenticationType;
             var javaDir = jhipsterVar.javaDir;
+            var testDir = jhipsterVar.CONSTANTS.SERVER_TEST_SRC_DIR + jhipsterVar.packageFolder + '/';
+            var protoDir = jhipsterVar.CONSTANTS.MAIN_DIR + 'proto/';
+            var protoPackageDir = protoDir + jhipsterVar.packageFolder + '/';
 
-            this.template('_date.proto', PROTO_DIR + '/util/date.proto', this, {});
-            this.template('_decimal.proto', PROTO_DIR + '/util/decimal.proto', this, {});
-            this.template('_pagination.proto', PROTO_DIR + '/util/pagination.proto', this, {});
+
+            this.template('_date.proto', protoDir + '/util/date.proto', this, {});
+            this.template('_decimal.proto', protoDir + '/util/decimal.proto', this, {});
+            this.template('_pagination.proto', protoDir + '/util/pagination.proto', this, {});
             this.template('_AuthenticationInterceptor.java', javaDir + '/grpc/AuthenticationInterceptor.java');
-            this.template('_ProtobufUtil.java', javaDir + '/grpc/ProtobufUtil.java');
+            this.template('_ProtobufUtil.java', javaDir + 'grpc/ProtobufUtil.java');
+            if (jhipsterVar.authenticationType === 'jwt') {
+                this.template('_jwt.proto', protoPackageDir + '/jwt.proto');
+                this.template('_JWTService.java', javaDir + '/grpc/JWTService.java');
+                this.template('_JWTServiceTest.java', testDir + '/grpc/JWTServiceTest.java');
+            }
+
             this.grpcVersion = '1.1.1';
             var grpcSpringVersion = '2.0.0';
             var guavaVersion = '20.0';
