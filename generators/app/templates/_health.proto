@@ -8,7 +8,7 @@ import "google/protobuf/empty.proto";
 package <%=packageName%>;
 
 service HealthService {
-    rpc GetHealth(google.protobuf.Empty) returns (stream Health);
+    rpc GetHealth(google.protobuf.Empty) returns (Health);
 }
 
 enum Status {
@@ -18,7 +18,12 @@ enum Status {
     OUT_OF_SERVICE = 3;
 }
 
-message Health {
+message HealthIndicator {
     Status status = 1;
     map<string, string> details = 2;
+}
+
+message Health {
+    Status status = 1;
+    map<string, HealthIndicator> healthIndicators = 2;
 }

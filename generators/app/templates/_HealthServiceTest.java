@@ -15,6 +15,8 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = JwtApp.class)
 public class HealthServiceTest {
@@ -42,6 +44,7 @@ public class HealthServiceTest {
 
     @Test
     public void testHealth() {
-        stub.getHealth(Empty.newBuilder().build());
+        Health health = stub.getHealth(Empty.newBuilder().build());
+        assertThat(health.getStatus() != Status.UNKNOWN);
     }
 }
