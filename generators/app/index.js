@@ -69,6 +69,11 @@ module.exports = yeoman.Base.extend({
             this.template('_pagination.proto', protoDir + 'util/pagination.proto', this, {});
             this.template('_AuthenticationInterceptor.java', javaDir + 'grpc/AuthenticationInterceptor.java');
             this.template('_ProtobufUtil.java', javaDir + 'grpc/ProtobufUtil.java');
+
+            this.template('_health.proto', protoPackageDir + 'health.proto');
+            this.template('_HealthService.java', javaDir + 'grpc/HealthService.java');
+            this.template('_HealthServiceTest.java', testDir + 'grpc/HealthServiceTest.java');
+
             if (jhipsterVar.authenticationType === 'jwt') {
                 this.template('_jwt.proto', protoPackageDir + 'jwt.proto');
                 this.template('_JWTService.java', javaDir + 'grpc/JWTService.java');

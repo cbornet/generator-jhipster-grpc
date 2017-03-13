@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "<%=packageName%>.grpc";
+
+import "google/protobuf/empty.proto";
+
+package <%=packageName%>;
+
+service HealthService {
+    rpc GetHealth(google.protobuf.Empty) returns (stream Health);
+}
+
+enum Status {
+    UNKNOWN = 0;
+    UP = 1;
+    DOWN = 2;
+    OUT_OF_SERVICE = 3;
+}
+
+message Health {
+    Status status = 1;
+    map<string, string> details = 2;
+}

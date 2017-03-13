@@ -2,7 +2,8 @@ package <%=packageName%>.grpc;
 
 import <%=packageName%>.security.AuthoritiesConstants;<% if (authenticationType === 'jwt') { %>
 import <%=packageName%>.security.jwt.TokenProvider;<% } %>
-import io.grpc.*;<% if (authenticationType === 'session') { %>
+import io.grpc.*;
+import io.grpc.Status;<% if (authenticationType === 'session') { %>
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationManager;
