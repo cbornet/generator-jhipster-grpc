@@ -83,6 +83,11 @@ module.exports = yeoman.Base.extend({
             this.template('_LogsService.java', javaDir + 'grpc/LogsService.java');
             this.template('_LogsServiceTest.java', testDir + 'grpc/LogsServiceTest.java');
 
+            this.template('_metric.proto', protoPackageDir + 'metric.proto');
+            this.template('_MetricService.java', javaDir + 'grpc/MetricService.java');
+            this.template('_MetricServiceTest.java', testDir + 'grpc/MetricServiceTest.java');
+
+
             this.grpcVersion = '1.1.1';
             var grpcSpringVersion = '2.0.0';
             var guavaVersion = '20.0';

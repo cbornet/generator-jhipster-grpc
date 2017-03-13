@@ -11,8 +11,6 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
-
-
 public abstract class ProtobufUtil {
 
     private static final int DEFAULT_MAX_PAGE_SIZE = 2000;
@@ -40,9 +38,13 @@ public abstract class ProtobufUtil {
     }
 
     public static Timestamp zonedDateTimeToTimestamp(ZonedDateTime zonedDateTime) {
+        return instantToTimestamp(zonedDateTime.toInstant());
+    }
+
+    public static Timestamp instantToTimestamp(Instant instant) {
         return Timestamp.newBuilder()
-            .setSeconds(zonedDateTime.toInstant().getEpochSecond())
-            .setNanos(zonedDateTime.getNano())
+            .setSeconds(instant.getEpochSecond())
+            .setNanos(instant.getNano())
             .build();
     }
 

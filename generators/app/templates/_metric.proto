@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "<%=packageName%>.grpc";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+package <%=packageName%>;
+
+service MetricService {
+    rpc GetMetrics(google.protobuf.Empty) returns (stream Metric);
+}
+
+message Metric {
+    string name = 1;
+    oneof number {
+        int64 longValue = 2;
+        double doubleValue = 3;
+        string stringValue = 4;
+    }
+    google.protobuf.Timestamp timestamp = 5;
+}
