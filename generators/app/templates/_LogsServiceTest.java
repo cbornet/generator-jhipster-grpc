@@ -47,7 +47,7 @@ public class LogsServiceTest {
 
     @Test
     public void changeLevel() {
-        stub.changeLevel(Logger.newBuilder().setName("ROOT").setLevel("INFO").build());
+        stub.changeLevel(Logger.newBuilder().setName("ROOT").setLevel(Level.INFO).build());
     }
 
 }

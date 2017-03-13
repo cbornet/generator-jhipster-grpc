@@ -12,7 +12,18 @@ service LogsService {
     rpc ChangeLevel(Logger) returns (google.protobuf.Empty);
 }
 
+enum Level {
+    UNDEFINED = 0;
+    OFF = 1;
+    ERROR = 2;
+    WARN = 3;
+    INFO = 4;
+    DEBUG = 5;
+    TRACE = 6;
+    ALL = 7;
+}
+
 message Logger {
     string name = 1;
-    string level = 2;
+    Level level = 2;
 }
