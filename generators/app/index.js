@@ -79,9 +79,9 @@ module.exports = yeoman.Base.extend({
                 this.template('_JWTService.java', javaDir + 'grpc/JWTService.java');
                 this.template('_JWTServiceTest.java', testDir + 'grpc/JWTServiceTest.java');
             }
-            this.template('_logs.proto', protoPackageDir + 'logs.proto');
-            this.template('_LogsService.java', javaDir + 'grpc/LogsService.java');
-            this.template('_LogsServiceTest.java', testDir + 'grpc/LogsServiceTest.java');
+            this.template('_loggers.proto', protoPackageDir + 'loggers.proto');
+            this.template('_LoggersService.java', javaDir + 'grpc/LoggersService.java');
+            this.template('_LoggersServiceTest.java', testDir + 'grpc/LoggersServiceTest.java');
 
             this.template('_metric.proto', protoPackageDir + 'metric.proto');
             this.template('_MetricService.java', javaDir + 'grpc/MetricService.java');

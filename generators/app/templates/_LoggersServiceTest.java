@@ -17,22 +17,22 @@ import java.io.IOException;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = JwtApp.class)
-public class LogsServiceTest {
+public class LoggersServiceTest {
 
     @Autowired
-    private LogsService logsService;
+    private LoggersService logsService;
 
     private Server mockServer;
-    private LogsServiceGrpc.LogsServiceBlockingStub stub;
+    private LoggersServiceGrpc.LoggersServiceBlockingStub stub;
 
     @Before
     public void setUp() throws IOException {
-        String uniqueServerName = "Mock server for " + LogsService.class;
+        String uniqueServerName = "Mock server for " + LoggersService.class;
         mockServer = InProcessServerBuilder
             .forName(uniqueServerName).directExecutor().addService(logsService).build().start();
         InProcessChannelBuilder channelBuilder =
             InProcessChannelBuilder.forName(uniqueServerName).directExecutor();
-        stub = LogsServiceGrpc.newBlockingStub(channelBuilder.build());
+        stub = LoggersServiceGrpc.newBlockingStub(channelBuilder.build());
     }
 
     @After

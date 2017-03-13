@@ -7,7 +7,7 @@ import "google/protobuf/empty.proto";
 
 package <%=packageName%>;
 
-service LogsService {
+service LoggersService {
     rpc GetLoggers(google.protobuf.Empty) returns (stream Logger);
     rpc ChangeLevel(Logger) returns (google.protobuf.Empty);
 }
@@ -15,12 +15,13 @@ service LogsService {
 enum Level {
     UNDEFINED = 0;
     OFF = 1;
-    ERROR = 2;
-    WARN = 3;
-    INFO = 4;
-    DEBUG = 5;
-    TRACE = 6;
-    ALL = 7;
+    FATAL = 2;
+    ERROR = 3;
+    WARN = 4;
+    INFO = 5;
+    DEBUG = 6;
+    TRACE = 7;
+    ALL = 8;
 }
 
 message Logger {
