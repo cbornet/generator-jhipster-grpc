@@ -70,6 +70,10 @@ module.exports = yeoman.Base.extend({
             this.template('_AuthenticationInterceptor.java', javaDir + 'grpc/AuthenticationInterceptor.java');
             this.template('_ProtobufUtil.java', javaDir + 'grpc/ProtobufUtil.java');
 
+            this.template('_configprops.proto', protoPackageDir + 'configprops.proto');
+            this.template('_ConfigurationPropertiesReportService.java', javaDir + 'grpc/ConfigurationPropertiesReportService.java');
+            this.template('_ConfigurationPropertiesReportServiceTest.java', testDir + 'grpc/ConfigurationPropertiesReportServiceTest.java');
+
             this.template('_health.proto', protoPackageDir + 'health.proto');
             this.template('_HealthService.java', javaDir + 'grpc/HealthService.java');
             this.template('_HealthServiceTest.java', testDir + 'grpc/HealthServiceTest.java');
