@@ -74,6 +74,10 @@ module.exports = yeoman.Base.extend({
             this.template('_ConfigurationPropertiesReportService.java', javaDir + 'grpc/ConfigurationPropertiesReportService.java');
             this.template('_ConfigurationPropertiesReportServiceTest.java', testDir + 'grpc/ConfigurationPropertiesReportServiceTest.java');
 
+            this.template('_environment.proto', protoPackageDir + 'environment.proto');
+            this.template('_EnvironmentService.java', javaDir + 'grpc/EnvironmentService.java');
+            this.template('_EnvironmentServiceTest.java', testDir + 'grpc/EnvironmentServiceTest.java');
+
             this.template('_health.proto', protoPackageDir + 'health.proto');
             this.template('_HealthService.java', javaDir + 'grpc/HealthService.java');
             this.template('_HealthServiceTest.java', testDir + 'grpc/HealthServiceTest.java');
