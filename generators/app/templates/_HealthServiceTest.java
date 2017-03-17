@@ -1,6 +1,7 @@
 package <%=packageName%>.grpc;
 
 import <%=packageName%>.<%=mainClass%>;
+
 import com.google.protobuf.Empty;
 import io.grpc.Server;
 import io.grpc.inprocess.InProcessChannelBuilder;
@@ -10,10 +11,12 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.actuate.health.HealthAggregator;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -22,16 +25,21 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class HealthServiceTest {
 
     @Autowired
-    private HealthService serviceImpl;
+    HealthAggregator healthAggregator;
+
+    @Autowired
+    Map<String, org.springframework.boot.actuate.health.HealthIndicator> healthIndicators;
 
     private Server mockServer;
+
     private HealthServiceGrpc.HealthServiceBlockingStub stub;
 
     @Before
     public void setUp() throws IOException {
-        String uniqueServerName = "Mock server for " + HealthServiceGrpc.class;
+        HealthService service = new HealthService(healthAggregator, healthIndicators);
+        String uniqueServerName = "Mock server for " + HealthService.class;
         mockServer = InProcessServerBuilder
-            .forName(uniqueServerName).directExecutor().addService(serviceImpl).build().start();
+            .forName(uniqueServerName).directExecutor().addService(service).build().start();
         InProcessChannelBuilder channelBuilder =
             InProcessChannelBuilder.forName(uniqueServerName).directExecutor();
         stub = HealthServiceGrpc.newBlockingStub(channelBuilder.build());
@@ -45,6 +53,6 @@ public class HealthServiceTest {
     @Test
     public void testHealth() {
         Health health = stub.getHealth(Empty.newBuilder().build());
-        assertThat(health.getStatus() != Status.UNKNOWN);
+        assertThat(health.getStatus()).isNotEqualTo(Status.UNKNOWN);
     }
 }

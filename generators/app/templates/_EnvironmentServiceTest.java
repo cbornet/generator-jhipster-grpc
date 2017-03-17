@@ -1,6 +1,7 @@
 package <%=packageName%>.grpc;
 
 import <%=packageName%>.<%=mainClass%>;
+
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.protobuf.Empty;
@@ -12,6 +13,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.actuate.endpoint.EnvironmentEndpoint;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -25,16 +27,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class EnvironmentServiceTest {
 
     @Autowired
-    private EnvironmentService serviceImpl;
+    private EnvironmentEndpoint endpoint;
 
     private Server mockServer;
+
     private EnvironmentServiceGrpc.EnvironmentServiceBlockingStub stub;
 
     @Before
     public void setUp() throws IOException {
-        String uniqueServerName = "Mock server for " + EnvironmentServiceGrpc.class;
+        EnvironmentService service = new EnvironmentService(endpoint);
+        String uniqueServerName = "Mock server for " + EnvironmentService.class;
         mockServer = InProcessServerBuilder
-            .forName(uniqueServerName).directExecutor().addService(serviceImpl).build().start();
+            .forName(uniqueServerName).directExecutor().addService(service).build().start();
         InProcessChannelBuilder channelBuilder =
             InProcessChannelBuilder.forName(uniqueServerName).directExecutor();
         stub = EnvironmentServiceGrpc.newBlockingStub(channelBuilder.build());
@@ -53,6 +57,6 @@ public class EnvironmentServiceTest {
             = new TypeReference<HashMap<String,Object>>() {};
         // String value should represent a Json map
         HashMap<String,Object> env = mapper.readValue(Environment.getValue(), typeRef);
-        assertThat(!env.isEmpty());
+        assertThat(env).isNotEmpty();
     }
 }

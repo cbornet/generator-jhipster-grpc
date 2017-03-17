@@ -73,14 +73,15 @@ public class UserGrpcServiceIntTest {
     private UserProtoMapper userProtoMapper;
 
     private Server mockServer;
+
     private UserServiceGrpc.UserServiceBlockingStub stub;
+
     private User user;
 
     @Before
     public void setUp() throws IOException {
-        MockitoAnnotations.initMocks(this);
         UserGrpcService userGrpcService = new UserGrpcService(userRepository, mailService, userService, userProtoMapper);
-        String uniqueServerName = "Mock server for " + UserServiceGrpc.class;
+        String uniqueServerName = "Mock server for " + UserGrpcService.class;
         mockServer = InProcessServerBuilder
             .forName(uniqueServerName).directExecutor().addService(userGrpcService).build().start();
         InProcessChannelBuilder channelBuilder =

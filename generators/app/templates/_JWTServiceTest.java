@@ -1,6 +1,8 @@
 package <%=packageName%>.grpc;
 
 import <%=packageName%>.<%=mainClass%>;
+import <%=packageName%>.security.jwt.TokenProvider;
+
 import io.grpc.Server;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
@@ -12,6 +14,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
@@ -24,16 +27,21 @@ import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 public class JWTServiceTest {
 
     @Autowired
-    private JWTService serviceImpl;
+    private TokenProvider tokenProvider;
+
+    @Autowired
+    private AuthenticationManager authenticationManager;
 
     private Server mockServer;
+
     private JWTServiceGrpc.JWTServiceBlockingStub stub;
 
     @Before
     public void setUp() throws IOException {
-        String uniqueServerName = "Mock server for " + JWTServiceGrpc.class;
+        JWTService service = new JWTService(tokenProvider, authenticationManager);
+        String uniqueServerName = "Mock server for " + JWTService.class;
         mockServer = InProcessServerBuilder
-            .forName(uniqueServerName).directExecutor().addService(serviceImpl).build().start();
+            .forName(uniqueServerName).directExecutor().addService(service).build().start();
         InProcessChannelBuilder channelBuilder =
             InProcessChannelBuilder.forName(uniqueServerName).directExecutor();
         stub = JWTServiceGrpc.newBlockingStub(channelBuilder.build());
@@ -54,11 +62,10 @@ public class JWTServiceTest {
     public void tesAuthenticationRefused() {
         try {
             stub.authenticate(Login.newBuilder().setUsername("user").setPassword("foo").build());
+            failBecauseExceptionWasNotThrown(StatusRuntimeException.class);
         } catch (StatusRuntimeException e) {
-            assertThat(e.getStatus() == Status.UNAUTHENTICATED);
-            return;
+            assertThat(e.getStatus().getCode()).isEqualTo(Status.Code.UNAUTHENTICATED);
         }
-        failBecauseExceptionWasNotThrown(StatusRuntimeException.class);
     }
 
 }

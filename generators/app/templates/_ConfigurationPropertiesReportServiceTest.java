@@ -1,6 +1,7 @@
 package <%=packageName%>.grpc;
 
 import <%=packageName%>.<%=mainClass%>;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.protobuf.Empty;
 import io.grpc.Server;
@@ -24,19 +25,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class ConfigurationPropertiesReportServiceTest {
 
     @Autowired
-    private ConfigurationPropertiesReportService logsService;
-
-    @Autowired
     private ConfigurationPropertiesReportEndpoint configurationPropertiesReportEndpoint;
 
     private Server mockServer;
+
     private ConfigurationPropertiesReportServiceGrpc.ConfigurationPropertiesReportServiceBlockingStub stub;
 
     @Before
     public void setUp() throws IOException {
+        ConfigurationPropertiesReportService service = new ConfigurationPropertiesReportService(configurationPropertiesReportEndpoint);
         String uniqueServerName = "Mock server for " + ConfigurationPropertiesReportService.class;
         mockServer = InProcessServerBuilder
-            .forName(uniqueServerName).directExecutor().addService(logsService).build().start();
+            .forName(uniqueServerName).directExecutor().addService(service).build().start();
         InProcessChannelBuilder channelBuilder =
             InProcessChannelBuilder.forName(uniqueServerName).directExecutor();
         stub = ConfigurationPropertiesReportServiceGrpc.newBlockingStub(channelBuilder.build());
@@ -53,7 +53,7 @@ public class ConfigurationPropertiesReportServiceTest {
         String configurationPropertiesReportEndpointStr = report.getConfigurationPropertiesMap().get("configurationPropertiesReportEndpoint").getProperties();
         ObjectMapper mapper = new ObjectMapper();
         ConfigurationPropertiesReportEndpoint configurationPropertiesReportEndpoint = mapper.readValue(configurationPropertiesReportEndpointStr, ConfigurationPropertiesReportEndpoint.class);
-        assertThat(configurationPropertiesReportEndpoint.getId().equals(this.configurationPropertiesReportEndpoint.getId()));
+        assertThat(configurationPropertiesReportEndpoint.getId()).isEqualTo(this.configurationPropertiesReportEndpoint.getId());
     }
 
 }
