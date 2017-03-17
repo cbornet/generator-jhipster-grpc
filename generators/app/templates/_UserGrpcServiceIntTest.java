@@ -1,12 +1,17 @@
 package <%=packageName%>.grpc;
 
-import <%=packageName%>.JwtApp;
+<%_ if (databaseType === 'cassandra') { _%>
+import <%=packageName%>.AbstractCassandraTest;
+<%_ } _%>
+import <%=packageName%>.<%=mainClass%>;
 import <%=packageName%>.domain.User;
 import <%=packageName%>.repository.UserRepository;
 import <%=packageName%>.service.MailService;
 import <%=packageName%>.service.UserService;
-import <%=packageName%>.web.rest.UserResource;
 
+<%_ if (databaseType === 'cassandra') { _%>
+import com.google.protobuf.Empty;
+<%_ } _%>
 import com.google.protobuf.StringValue;
 import io.grpc.Server;
 import io.grpc.Status;
@@ -18,7 +23,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -26,6 +30,9 @@ import org.springframework.test.context.junit4.SpringRunner;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+<%_ if (databaseType === 'cassandra') { _%>
+import java.util.UUID;
+<%_ } _%>
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
@@ -36,8 +43,8 @@ import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
  * @see UserGrpcService
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = JwtApp.class)
-public class UserGrpcServiceIntTest {
+@SpringBootTest(classes = <%=mainClass%>.class)
+public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>extends AbstractCassandraTest <% } %> {
 
     private static final String DEFAULT_LOGIN = "johndoe";
     private static final String UPDATED_LOGIN = "jhipster";
@@ -54,9 +61,11 @@ public class UserGrpcServiceIntTest {
     private static final String DEFAULT_LASTNAME = "doe";
     private static final String UPDATED_LASTNAME = "jhipsterLastName";
 
+    <%_ if (databaseType !== 'cassandra') { _%>
     private static final String DEFAULT_IMAGEURL = "http://placehold.it/50x50";
     private static final String UPDATED_IMAGEURL = "http://placehold.it/40x40";
 
+    <%_ } _%>
     private static final String DEFAULT_LANGKEY = "en";
     private static final String UPDATED_LANGKEY = "fr";
 
@@ -103,13 +112,18 @@ public class UserGrpcServiceIntTest {
      */
     public static User createEntity() {
         User user = new User();
+        <%_ if (databaseType === 'cassandra') { _%>
+        user.setId(UUID.randomUUID().toString());
+        <%_ } _%>
         user.setLogin(DEFAULT_LOGIN);
         user.setPassword(RandomStringUtils.random(60));
         user.setActivated(true);
         user.setEmail(DEFAULT_EMAIL);
         user.setFirstName(DEFAULT_FIRSTNAME);
         user.setLastName(DEFAULT_LASTNAME);
+        <%_ if (databaseType !== 'cassandra') { _%>
         user.setImageUrl(DEFAULT_IMAGEURL);
+        <%_ } _%>
         user.setLangKey(DEFAULT_LANGKEY);
         return user;
     }
@@ -132,7 +146,9 @@ public class UserGrpcServiceIntTest {
             .setLastName(DEFAULT_LASTNAME)
             .setEmail(DEFAULT_EMAIL)
             .setActivated(true)
+            <%_ if (databaseType !== 'cassandra') { _%>
             .setImageUrl(DEFAULT_IMAGEURL)
+            <%_ } _%>
             .setLangKey(DEFAULT_LANGKEY)
             .addAuthorities("ROLE_USER")
             .build();
@@ -147,7 +163,9 @@ public class UserGrpcServiceIntTest {
         assertThat(testUser.getFirstName()).isEqualTo(DEFAULT_FIRSTNAME);
         assertThat(testUser.getLastName()).isEqualTo(DEFAULT_LASTNAME);
         assertThat(testUser.getEmail()).isEqualTo(DEFAULT_EMAIL);
+         <%_ if (databaseType !== 'cassandra') { _%>
         assertThat(testUser.getImageUrl()).isEqualTo(DEFAULT_IMAGEURL);
+        <%_ } _%>
         assertThat(testUser.getLangKey()).isEqualTo(DEFAULT_LANGKEY);
     }
 
@@ -156,14 +174,22 @@ public class UserGrpcServiceIntTest {
         int databaseSizeBeforeCreate = userRepository.findAll().size();
 
         UserProto userProto = UserProto.newBuilder()
+            <%_ if (databaseType === 'cassandra') { _%>
+            .setId(UUID.randomUUID().toString())
+            <%_ } else if (databaseType === 'mongodb') { _%>
             .setId("1L")
+            <%_ } else { _%>
+            .setId(1L)
+            <%_ } _%>
             .setLogin(DEFAULT_LOGIN)
             .setPassword(DEFAULT_PASSWORD)
             .setFirstName(DEFAULT_FIRSTNAME)
             .setLastName(DEFAULT_LASTNAME)
             .setEmail(DEFAULT_EMAIL)
             .setActivated(true)
+            <%_ if (databaseType !== 'cassandra') { _%>
             .setImageUrl(DEFAULT_IMAGEURL)
+            <%_ } _%>
             .setLangKey(DEFAULT_LANGKEY)
             .addAuthorities("ROLE_USER")
             .build();
@@ -193,7 +219,9 @@ public class UserGrpcServiceIntTest {
             .setLastName(DEFAULT_LASTNAME)
             .setEmail("anothermail@localhost")
             .setActivated(true)
+            <%_ if (databaseType !== 'cassandra') { _%>
             .setImageUrl(DEFAULT_IMAGEURL)
+            <%_ } _%>
             .setLangKey(DEFAULT_LANGKEY)
             .addAuthorities("ROLE_USER")
             .build();
@@ -227,7 +255,9 @@ public class UserGrpcServiceIntTest {
             .setLastName(DEFAULT_LASTNAME)
             .setEmail(DEFAULT_EMAIL)
             .setActivated(true)
+            <%_ if (databaseType !== 'cassandra') { _%>
             .setImageUrl(DEFAULT_IMAGEURL)
+            <%_ } _%>
             .setLangKey(DEFAULT_LANGKEY)
             .addAuthorities("ROLE_USER")
             .build();
@@ -255,13 +285,15 @@ public class UserGrpcServiceIntTest {
 
         // Get all the users
         List<UserProto> users = new ArrayList<>();
-        stub.getAllUsers(PageRequest.getDefaultInstance()).forEachRemaining(users::add);
+        stub.getAllUsers(<% if (databaseType == 'sql' || databaseType == 'mongodb') { %>PageRequest<% } else { %>Empty<% } %>.getDefaultInstance()).forEachRemaining(users::add);
 
         assertThat(users).extracting("login").contains(DEFAULT_LOGIN);
         assertThat(users).extracting("firstName").contains(DEFAULT_FIRSTNAME);
         assertThat(users).extracting("lastName").contains(DEFAULT_LASTNAME);
         assertThat(users).extracting("email").contains(DEFAULT_EMAIL);
+        <%_ if (databaseType !== 'cassandra') { _%>
         assertThat(users).extracting("imageUrl").contains(DEFAULT_IMAGEURL);
+        <%_ } _%>
         assertThat(users).extracting("langKey").contains(DEFAULT_LANGKEY);
     }
 
@@ -276,7 +308,9 @@ public class UserGrpcServiceIntTest {
         assertThat(userProto.getFirstName()).isEqualTo(DEFAULT_FIRSTNAME);
         assertThat(userProto.getLastName()).isEqualTo(DEFAULT_LASTNAME);
         assertThat(userProto.getEmail()).isEqualTo(DEFAULT_EMAIL);
+        <%_ if (databaseType !== 'cassandra') { _%>
         assertThat(userProto.getImageUrl()).isEqualTo(DEFAULT_IMAGEURL);
+        <%_ } _%>
         assertThat(userProto.getLangKey()).isEqualTo(DEFAULT_LANGKEY);
     }
 
@@ -307,12 +341,16 @@ public class UserGrpcServiceIntTest {
             .setLastName(UPDATED_LASTNAME)
             .setEmail(UPDATED_EMAIL)
             .setActivated(updatedUser.getActivated())
+            <%_ if (databaseType !== 'cassandra') { _%>
             .setImageUrl(UPDATED_IMAGEURL)
+            <%_ } _%>
             .setLangKey(UPDATED_LANGKEY)
+            <%_ if (databaseType !== 'cassandra') { _%>
             .setCreatedBy(updatedUser.getCreatedBy())
             .setCreatedDate(ProtobufUtil.zonedDateTimeToTimestamp(updatedUser.getCreatedDate()))
             .setLastModifiedBy(updatedUser.getLastModifiedBy())
             .setLastModifiedDate(ProtobufUtil.zonedDateTimeToTimestamp(updatedUser.getLastModifiedDate()))
+            <%_ } _%>
             .addAuthorities("ROLE_USER")
             .build();
 
@@ -325,7 +363,9 @@ public class UserGrpcServiceIntTest {
         assertThat(testUser.getFirstName()).isEqualTo(UPDATED_FIRSTNAME);
         assertThat(testUser.getLastName()).isEqualTo(UPDATED_LASTNAME);
         assertThat(testUser.getEmail()).isEqualTo(UPDATED_EMAIL);
+        <%_ if (databaseType !== 'cassandra') { _%>
         assertThat(testUser.getImageUrl()).isEqualTo(UPDATED_IMAGEURL);
+        <%_ } _%>
         assertThat(testUser.getLangKey()).isEqualTo(UPDATED_LANGKEY);
     }
 
@@ -346,12 +386,16 @@ public class UserGrpcServiceIntTest {
             .setLastName(UPDATED_LASTNAME)
             .setEmail(UPDATED_EMAIL)
             .setActivated(updatedUser.getActivated())
+            <%_ if (databaseType !== 'cassandra') { _%>
             .setImageUrl(UPDATED_IMAGEURL)
+            <%_ } _%>
             .setLangKey(UPDATED_LANGKEY)
+            <%_ if (databaseType !== 'cassandra') { _%>
             .setCreatedBy(updatedUser.getCreatedBy())
             .setCreatedDate(ProtobufUtil.zonedDateTimeToTimestamp(updatedUser.getCreatedDate()))
             .setLastModifiedBy(updatedUser.getLastModifiedBy())
             .setLastModifiedDate(ProtobufUtil.zonedDateTimeToTimestamp(updatedUser.getLastModifiedDate()))
+            <%_ } _%>
             .addAuthorities("ROLE_USER")
             .build();
 
@@ -365,7 +409,9 @@ public class UserGrpcServiceIntTest {
         assertThat(testUser.getFirstName()).isEqualTo(UPDATED_FIRSTNAME);
         assertThat(testUser.getLastName()).isEqualTo(UPDATED_LASTNAME);
         assertThat(testUser.getEmail()).isEqualTo(UPDATED_EMAIL);
+        <%_ if (databaseType !== 'cassandra') { _%>
         assertThat(testUser.getImageUrl()).isEqualTo(UPDATED_IMAGEURL);
+        <%_ } _%>
         assertThat(testUser.getLangKey()).isEqualTo(UPDATED_LANGKEY);
     }
 
@@ -375,13 +421,18 @@ public class UserGrpcServiceIntTest {
         userRepository.save(user);
 
         User anotherUser = new User();
+        <%_ if (databaseType === 'cassandra') { _%>
+        anotherUser.setId(UUID.randomUUID().toString());
+        <%_ } _%>
         anotherUser.setLogin("jhipster");
         anotherUser.setPassword(RandomStringUtils.random(60));
         anotherUser.setActivated(true);
         anotherUser.setEmail("jhipster@localhost");
         anotherUser.setFirstName("java");
         anotherUser.setLastName("hipster");
+        <%_ if (databaseType !== 'cassandra') { _%>
         anotherUser.setImageUrl("");
+        <%_ } _%>
         anotherUser.setLangKey("en");
         userRepository.save(anotherUser);
 
@@ -396,12 +447,16 @@ public class UserGrpcServiceIntTest {
             .setLastName(updatedUser.getLastName())
             .setEmail("jhipster@localhost")  // this email should already be used by anotherUser
             .setActivated(updatedUser.getActivated())
+            <%_ if (databaseType !== 'cassandra') { _%>
             .setImageUrl(updatedUser.getImageUrl())
+            <%_ } _%>
             .setLangKey(updatedUser.getLangKey())
+            <%_ if (databaseType !== 'cassandra') { _%>
             .setCreatedBy(updatedUser.getCreatedBy())
             .setCreatedDate(ProtobufUtil.zonedDateTimeToTimestamp(updatedUser.getCreatedDate()))
             .setLastModifiedBy(updatedUser.getLastModifiedBy())
             .setLastModifiedDate(ProtobufUtil.zonedDateTimeToTimestamp(updatedUser.getLastModifiedDate()))
+            <%_ } _%>
             .addAuthorities("ROLE_USER")
             .build();
 
@@ -420,13 +475,18 @@ public class UserGrpcServiceIntTest {
         userRepository.save(user);
 
         User anotherUser = new User();
+        <%_ if (databaseType === 'cassandra') { _%>
+        anotherUser.setId(UUID.randomUUID().toString());
+        <%_ } _%>
         anotherUser.setLogin("jhipster");
         anotherUser.setPassword(RandomStringUtils.random(60));
         anotherUser.setActivated(true);
         anotherUser.setEmail("jhipster@localhost");
         anotherUser.setFirstName("java");
         anotherUser.setLastName("hipster");
+        <%_ if (databaseType !== 'cassandra') { _%>
         anotherUser.setImageUrl("");
+        <%_ } _%>
         anotherUser.setLangKey("en");
         userRepository.save(anotherUser);
 
@@ -441,12 +501,16 @@ public class UserGrpcServiceIntTest {
             .setLastName(updatedUser.getLastName())
             .setEmail(updatedUser.getEmail())
             .setActivated(updatedUser.getActivated())
+            <%_ if (databaseType !== 'cassandra') { _%>
             .setImageUrl(updatedUser.getImageUrl())
+            <%_ } _%>
             .setLangKey(updatedUser.getLangKey())
+            <%_ if (databaseType !== 'cassandra') { _%>
             .setCreatedBy(updatedUser.getCreatedBy())
             .setCreatedDate(ProtobufUtil.zonedDateTimeToTimestamp(updatedUser.getCreatedDate()))
             .setLastModifiedBy(updatedUser.getLastModifiedBy())
             .setLastModifiedDate(ProtobufUtil.zonedDateTimeToTimestamp(updatedUser.getLastModifiedDate()))
+            <%_ } _%>
             .addAuthorities("ROLE_USER")
             .build();
 

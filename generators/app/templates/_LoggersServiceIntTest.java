@@ -1,5 +1,8 @@
 package <%=packageName%>.grpc;
 
+<%_ if (databaseType === 'cassandra') { _%>
+import <%=packageName%>.AbstractCassandraTest;
+<%_ } _%>
 import <%=packageName%>.<%=mainClass%>;
 
 import com.google.protobuf.Empty;
@@ -18,8 +21,8 @@ import org.springframework.test.context.junit4.SpringRunner;
 import java.io.IOException;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = JwtApp.class)
-public class LoggersServiceIntTest {
+@SpringBootTest(classes = <%=mainClass%>.class)
+public class LoggersServiceIntTest <% if (databaseType === 'cassandra') { %>extends AbstractCassandraTest <% } %> {
 
     @Autowired
     private LoggingSystem loggingSystem;

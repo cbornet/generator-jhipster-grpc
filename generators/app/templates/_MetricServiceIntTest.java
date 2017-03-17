@@ -1,6 +1,9 @@
 package <%=packageName%>.grpc;
 
-import <%=packageName%>.JwtApp;
+<%_ if (databaseType === 'cassandra') { _%>
+import <%=packageName%>.AbstractCassandraTest;
+<%_ } _%>
+import <%=packageName%>.<%=mainClass%>;
 
 import com.google.protobuf.Empty;
 import io.grpc.Server;
@@ -19,8 +22,8 @@ import java.io.IOException;
 import java.util.Collection;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = JwtApp.class)
-public class MetricServiceIntTest {
+@SpringBootTest(classes = <%=mainClass%>.class)
+public class MetricServiceIntTest <% if (databaseType === 'cassandra') { %>extends AbstractCassandraTest <% } %> {
 
     @Autowired
     private Collection<PublicMetrics> publicMetrics;

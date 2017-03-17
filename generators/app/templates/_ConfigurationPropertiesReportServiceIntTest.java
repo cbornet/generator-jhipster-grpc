@@ -1,5 +1,8 @@
 package <%=packageName%>.grpc;
 
+<%_ if (databaseType === 'cassandra') { _%>
+import <%=packageName%>.AbstractCassandraTest;
+<%_ } _%>
 import <%=packageName%>.<%=mainClass%>;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -21,8 +24,8 @@ import java.io.IOException;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = JwtApp.class)
-public class ConfigurationPropertiesReportServiceIntTest {
+@SpringBootTest(classes = <%=mainClass%>.class)
+public class ConfigurationPropertiesReportServiceIntTest <% if (databaseType === 'cassandra') { %>extends AbstractCassandraTest <% } %> {
 
     @Autowired
     private ConfigurationPropertiesReportEndpoint configurationPropertiesReportEndpoint;

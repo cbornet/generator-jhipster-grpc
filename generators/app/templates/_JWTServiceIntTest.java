@@ -1,5 +1,8 @@
 package <%=packageName%>.grpc;
 
+<%_ if (databaseType === 'cassandra') { _%>
+import <%=packageName%>.AbstractCassandraTest;
+<%_ } _%>
 import <%=packageName%>.<%=mainClass%>;
 import <%=packageName%>.security.jwt.TokenProvider;
 
@@ -23,8 +26,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = JwtApp.class)
-public class JWTServiceIntTest {
+@SpringBootTest(classes = <%=mainClass%>.class)
+public class JWTServiceIntTest <% if (databaseType === 'cassandra') { %>extends AbstractCassandraTest <% } %> {
 
     @Autowired
     private TokenProvider tokenProvider;

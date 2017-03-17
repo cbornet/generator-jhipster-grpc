@@ -1,5 +1,8 @@
 package <%=packageName%>.grpc;
 
+<%_ if (databaseType === 'cassandra') { _%>
+import <%=packageName%>.AbstractCassandraTest;
+<%_ } _%>
 import <%=packageName%>.<%=mainClass%>;
 
 import com.google.protobuf.Empty;
@@ -21,8 +24,8 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = JwtApp.class)
-public class HealthServiceIntTest {
+@SpringBootTest(classes = <%=mainClass%>.class)
+public class HealthServiceIntTest <% if (databaseType === 'cassandra') { %>extends AbstractCassandraTest <% } %> {
 
     @Autowired
     HealthAggregator healthAggregator;
