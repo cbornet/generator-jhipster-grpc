@@ -96,7 +96,7 @@ module.exports = yeoman.Base.extend({
             this.fields.forEach(f => f.fieldProtobufType = getProtobufType(f.fieldType));
             this.fields.forEach(f => f.isProtobufCustomType = isProtobufCustomType(f.fieldProtobufType));
             if (this.databaseType === 'sql') {
-                this.idProtoType = 'sint64';
+                this.idProtoType = 'int64';
                 this.idProtoWrappedType = 'Int64Value';
             } else {
                 this.idProtoType = 'string';
@@ -133,9 +133,9 @@ function getProtobufType(type) {
     case 'Double':
         return type.toLowerCase();
     case 'Integer':
-        return 'sint32';
+        return 'int32';
     case 'Long':
-        return 'sint64';
+        return 'int64';
     case 'Boolean':
         return 'bool';
     case 'Instant':

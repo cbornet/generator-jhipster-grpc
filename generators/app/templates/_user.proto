@@ -37,7 +37,9 @@ service UserService {
 }
 
 message UserProto {
-    string id = 1;
+    oneof id_oneof {
+        <%=idProtoType%> id = 1;
+    }
     string login = 2;
     string password = 3;
     string first_name = 4;

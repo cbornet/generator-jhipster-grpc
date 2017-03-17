@@ -41,7 +41,7 @@ public class UserGrpcService extends UserServiceGrpc.UserServiceImplBase {
     public void createUser(UserProto userProto, StreamObserver<UserProto> responseObserver) {
         log.debug("gRPC request to save User : {}", userProto);
 
-        if (!"".equals(userProto.getId())) {
+        if (userProto.getIdOneofCase() == UserProto.IdOneofCase.ID) {
             responseObserver.onError(new StatusRuntimeException(Status.INVALID_ARGUMENT.withDescription("A new user cannot already have an ID")));
             // Lowercase the user login before comparing with database
         } else if (userRepository.findOneByLogin(userProto.getLogin().toLowerCase()).isPresent()) {

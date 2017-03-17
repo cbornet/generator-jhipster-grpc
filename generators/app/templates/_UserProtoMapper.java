@@ -17,7 +17,7 @@ public abstract class UserProtoMapper extends ProtobufUtil {
             return null;
         }
         return new UserDTO(
-            "".equals(userProto.getId()) ? null : userProto.getId(),
+            (userProto.getIdOneofCase() == UserProto.IdOneofCase.ID) ? userProto.getId() : null,
             "".equals(userProto.getLogin()) ? null : userProto.getLogin(),
             "".equals(userProto.getFirstName()) ? null : userProto.getFirstName(),
             "".equals(userProto.getLastName()) ? null : userProto.getLastName(),

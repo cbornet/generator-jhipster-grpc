@@ -8,6 +8,7 @@ import <%=packageName%>.domain.User;
 import <%=packageName%>.repository.UserRepository;
 import <%=packageName%>.service.MailService;
 import <%=packageName%>.service.UserService;
+import <%=packageName%>.web.rest.UserResourceIntTest;
 
 <%_ if (databaseType === 'cassandra') { _%>
 import com.google.protobuf.Empty;
@@ -26,7 +27,13 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
+<%_ if (databaseType === 'sql') { _%>
+import org.springframework.transaction.annotation.Transactional;
+<%_ } _%>
 
+<%_ if (databaseType === 'sql') { _%>
+import javax.persistence.EntityManager;
+<%_ } _%>
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -81,6 +88,11 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
     @Autowired
     private UserProtoMapper userProtoMapper;
 
+    <%_ if (databaseType === 'sql') { _%>
+    @Autowired
+    private EntityManager em;
+
+    <%_ } _%>
     private Server mockServer;
 
     private UserServiceGrpc.UserServiceBlockingStub stub;
@@ -103,38 +115,18 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
         mockServer.shutdownNow();
     }
 
-
-    /**
-     * Create a User.
-     *
-     * This is a static method, as tests for other entities might also need it,
-     * if they test an entity which has a required relationship to the User entity.
-     */
-    public static User createEntity() {
-        User user = new User();
-        <%_ if (databaseType === 'cassandra') { _%>
-        user.setId(UUID.randomUUID().toString());
-        <%_ } _%>
-        user.setLogin(DEFAULT_LOGIN);
-        user.setPassword(RandomStringUtils.random(60));
-        user.setActivated(true);
-        user.setEmail(DEFAULT_EMAIL);
-        user.setFirstName(DEFAULT_FIRSTNAME);
-        user.setLastName(DEFAULT_LASTNAME);
-        <%_ if (databaseType !== 'cassandra') { _%>
-        user.setImageUrl(DEFAULT_IMAGEURL);
-        <%_ } _%>
-        user.setLangKey(DEFAULT_LANGKEY);
-        return user;
-    }
-
     @Before
     public void initTest() {
+        <%_ if (databaseType !== 'sql') { _%>
         userRepository.deleteAll();
-        user = createEntity();
+        <%_ } _%>
+        user = UserResourceIntTest.createEntity(<% if (databaseType === 'sql') { %>em<% } %>);
     }
 
     @Test
+    <%_ if (databaseType === 'sql') { _%>
+    @Transactional
+    <%_ } _%>
     public void createUser() throws Exception {
         int databaseSizeBeforeCreate = userRepository.findAll().size();
 
@@ -170,6 +162,9 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
     }
 
     @Test
+    <%_ if (databaseType === 'sql') { _%>
+    @Transactional
+    <%_ } _%>
     public void createUserWithExistingId() throws Exception {
         int databaseSizeBeforeCreate = userRepository.findAll().size();
 
@@ -207,9 +202,12 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
     }
 
     @Test
+    <%_ if (databaseType === 'sql') { _%>
+    @Transactional
+    <%_ } _%>
     public void createUserWithExistingLogin() throws Exception {
         // Initialize the database
-        userRepository.save(user);
+        userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(user);
         int databaseSizeBeforeCreate = userRepository.findAll().size();
 
         UserProto userProto = UserProto.newBuilder()
@@ -243,9 +241,12 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
     }
 
     @Test
+    <%_ if (databaseType === 'sql') { _%>
+    @Transactional
+    <%_ } _%>
     public void createUserWithExistingEmail() throws Exception {
         // Initialize the database
-        userRepository.save(user);
+        userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(user);
         int databaseSizeBeforeCreate = userRepository.findAll().size();
 
         UserProto userProto = UserProto.newBuilder()
@@ -279,9 +280,12 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
     }
 
     @Test
+    <%_ if (databaseType === 'sql') { _%>
+    @Transactional
+    <%_ } _%>
     public void getAllUsers() throws Exception {
         // Initialize the database
-        userRepository.save(user);
+        userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(user);
 
         // Get all the users
         List<UserProto> users = new ArrayList<>();
@@ -298,9 +302,12 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
     }
 
     @Test
+    <%_ if (databaseType === 'sql') { _%>
+    @Transactional
+    <%_ } _%>
     public void getUser() throws Exception {
         // Initialize the database
-        userRepository.save(user);
+        userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(user);
 
         UserProto userProto = stub.getUser(StringValue.newBuilder().setValue(user.getLogin()).build());
 
@@ -315,6 +322,9 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
     }
 
     @Test
+        <%_ if (databaseType === 'sql') { _%>
+    @Transactional
+    <%_ } _%>
     public void getNonExistingUser() throws Exception {
         try {
             stub.getUser(StringValue.newBuilder().setValue("unknown").build());
@@ -325,9 +335,12 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
     }
 
     @Test
+    <%_ if (databaseType === 'sql') { _%>
+    @Transactional
+    <%_ } _%>
     public void updateUser() throws Exception {
         // Initialize the database
-        userRepository.save(user);
+        userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(user);
         int databaseSizeBeforeUpdate = userRepository.findAll().size();
 
         // Update the user
@@ -370,9 +383,12 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
     }
 
     @Test
+    <%_ if (databaseType === 'sql') { _%>
+    @Transactional
+    <%_ } _%>
     public void updateUserLogin() throws Exception {
         // Initialize the database
-        userRepository.save(user);
+        userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(user);
         int databaseSizeBeforeUpdate = userRepository.findAll().size();
 
         // Update the user
@@ -416,9 +432,12 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
     }
 
     @Test
+    <%_ if (databaseType === 'sql') { _%>
+    @Transactional
+    <%_ } _%>
     public void updateUserExistingEmail() throws Exception {
         // Initialize the database with 2 users
-        userRepository.save(user);
+        userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(user);
 
         User anotherUser = new User();
         <%_ if (databaseType === 'cassandra') { _%>
@@ -434,7 +453,7 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
         anotherUser.setImageUrl("");
         <%_ } _%>
         anotherUser.setLangKey("en");
-        userRepository.save(anotherUser);
+        userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(anotherUser);
 
         // Update the user
         User updatedUser = userRepository.findOne(user.getId());
@@ -470,9 +489,12 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
     }
 
     @Test
+    <%_ if (databaseType === 'sql') { _%>
+    @Transactional
+    <%_ } _%>
     public void updateUserExistingLogin() throws Exception {
         // Initialize the database
-        userRepository.save(user);
+        userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(user);
 
         User anotherUser = new User();
         <%_ if (databaseType === 'cassandra') { _%>
@@ -488,7 +510,7 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
         anotherUser.setImageUrl("");
         <%_ } _%>
         anotherUser.setLangKey("en");
-        userRepository.save(anotherUser);
+        userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(anotherUser);
 
         // Update the user
         User updatedUser = userRepository.findOne(user.getId());
@@ -524,9 +546,12 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
     }
 
     @Test
+    <%_ if (databaseType === 'sql') { _%>
+    @Transactional
+    <%_ } _%>
     public void deleteUser() throws Exception {
         // Initialize the database
-        userRepository.save(user);
+        userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(user);
         int databaseSizeBeforeDelete = userRepository.findAll().size();
 
         // Delete the user

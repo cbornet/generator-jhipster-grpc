@@ -64,6 +64,13 @@ module.exports = yeoman.Base.extend({
             var protoDir = jhipsterVar.CONSTANTS.MAIN_DIR + 'proto/';
             var protoPackageDir = protoDir + jhipsterVar.packageFolder + '/';
 
+            if (this.databaseType === 'sql') {
+                this.idProtoType = 'int64';
+                this.idProtoWrappedType = 'Int64Value';
+            } else {
+                this.idProtoType = 'string';
+                this.idProtoWrappedType = 'StringValue';
+            }
 
             this.template('_date.proto', protoDir + 'util/date.proto', this, {});
             this.template('_decimal.proto', protoDir + 'util/decimal.proto', this, {});
