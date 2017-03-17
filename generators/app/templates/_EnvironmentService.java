@@ -9,7 +9,7 @@ import io.grpc.stub.StreamObserver;
 import org.lognet.springboot.grpc.GRpcService;
 import org.springframework.boot.actuate.endpoint.EnvironmentEndpoint;
 
-@GRpcService
+@GRpcService(interceptors = {AuthenticationInterceptor.class})
 public class EnvironmentService extends EnvironmentServiceGrpc.EnvironmentServiceImplBase {
 
     private final EnvironmentEndpoint endpoint;

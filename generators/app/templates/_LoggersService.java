@@ -10,7 +10,7 @@ import org.springframework.util.Assert;
 
 import java.util.Collection;
 
-@GRpcService
+@GRpcService(interceptors = {AuthenticationInterceptor.class})
 public class LoggersService extends LoggersServiceGrpc.LoggersServiceImplBase {
 
     private final LoggingSystem loggingSystem;

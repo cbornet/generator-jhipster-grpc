@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 
-@GRpcService
+@GRpcService(interceptors = {AuthenticationInterceptor.class})
 public class UserGrpcService extends UserServiceGrpc.UserServiceImplBase {
 
     private final org.slf4j.Logger log = LoggerFactory.getLogger(UserGrpcService.class);

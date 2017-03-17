@@ -11,7 +11,7 @@ import org.springframework.boot.actuate.endpoint.ConfigurationPropertiesReportEn
 
 import java.util.Map;
 
-@GRpcService
+@GRpcService(interceptors = {AuthenticationInterceptor.class})
 public class ConfigurationPropertiesReportService extends ConfigurationPropertiesReportServiceGrpc.ConfigurationPropertiesReportServiceImplBase {
 
     private final org.slf4j.Logger log = LoggerFactory.getLogger(ConfigurationPropertiesReportService.class);

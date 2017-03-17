@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-@GRpcService
+@GRpcService(interceptors = {AuthenticationInterceptor.class})
 public class MetricService extends MetricServiceGrpc.MetricServiceImplBase {
 
     private final List<PublicMetrics> publicMetrics;
