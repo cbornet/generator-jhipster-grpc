@@ -24,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = JwtApp.class)
-public class EnvironmentServiceTest {
+public class EnvironmentServiceIntTest {
 
     @Autowired
     private EnvironmentEndpoint endpoint;

@@ -20,7 +20,7 @@ import java.util.Collection;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = JwtApp.class)
-public class MetricServiceTest {
+public class MetricServiceIntTest {
 
     @Autowired
     private Collection<PublicMetrics> publicMetrics;

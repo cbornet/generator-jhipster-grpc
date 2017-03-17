@@ -11,38 +11,32 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.actuate.health.HealthAggregator;
+import org.springframework.boot.logging.LoggingSystem;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
-import java.util.Map;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = JwtApp.class)
-public class HealthServiceTest {
+public class LoggersServiceIntTest {
 
     @Autowired
-    HealthAggregator healthAggregator;
-
-    @Autowired
-    Map<String, org.springframework.boot.actuate.health.HealthIndicator> healthIndicators;
+    private LoggingSystem loggingSystem;
 
     private Server mockServer;
 
-    private HealthServiceGrpc.HealthServiceBlockingStub stub;
+    private LoggersServiceGrpc.LoggersServiceBlockingStub stub;
 
     @Before
     public void setUp() throws IOException {
-        HealthService service = new HealthService(healthAggregator, healthIndicators);
-        String uniqueServerName = "Mock server for " + HealthService.class;
+        LoggersService service = new LoggersService(loggingSystem);
+        String uniqueServerName = "Mock server for " + LoggersService.class;
         mockServer = InProcessServerBuilder
             .forName(uniqueServerName).directExecutor().addService(service).build().start();
         InProcessChannelBuilder channelBuilder =
             InProcessChannelBuilder.forName(uniqueServerName).directExecutor();
-        stub = HealthServiceGrpc.newBlockingStub(channelBuilder.build());
+        stub = LoggersServiceGrpc.newBlockingStub(channelBuilder.build());
     }
 
     @After
@@ -51,8 +45,13 @@ public class HealthServiceTest {
     }
 
     @Test
-    public void testHealth() {
-        Health health = stub.getHealth(Empty.newBuilder().build());
-        assertThat(health.getStatus()).isNotEqualTo(Status.UNKNOWN);
+    public void getAllLogs() {
+        stub.getLoggers(Empty.newBuilder().build());
     }
+
+    @Test
+    public void changeLevel() {
+        stub.changeLevel(Logger.newBuilder().setName("ROOT").setLevel(Level.INFO).build());
+    }
+
 }

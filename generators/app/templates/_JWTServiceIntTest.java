@@ -24,7 +24,7 @@ import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = JwtApp.class)
-public class JWTServiceTest {
+public class JWTServiceIntTest {
 
     @Autowired
     private TokenProvider tokenProvider;

@@ -22,7 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = JwtApp.class)
-public class ConfigurationPropertiesReportServiceTest {
+public class ConfigurationPropertiesReportServiceIntTest {
 
     @Autowired
     private ConfigurationPropertiesReportEndpoint configurationPropertiesReportEndpoint;
