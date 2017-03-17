@@ -5,8 +5,8 @@ option java_package = "<%=packageName%>.grpc";
 
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
-import "google/protobuf/wrappers.proto";
-import "util/pagination.proto";
+import "google/protobuf/wrappers.proto";<% if (databaseType == 'sql' || databaseType == 'mongodb') { %>
+import "util/pagination.proto";<% } %>
 
 package <%=packageName%>;
 
@@ -23,7 +23,7 @@ service UserService {
 
     // Get all the Users.
     // response : the list of UserProtos
-    rpc GetAllUsers (util.PageRequest) returns (stream UserProto);
+    rpc GetAllUsers (<% if (databaseType == 'sql' || databaseType == 'mongodb') { %>util.PageRequest<% } else { %>google.protobuf.Empty<% } %>) returns (stream UserProto);
 
     // Get a User from it's id.
     // request : the id of the UserProto to retrieve

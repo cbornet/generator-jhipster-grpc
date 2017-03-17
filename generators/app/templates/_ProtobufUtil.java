@@ -6,11 +6,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
 import java.math.BigDecimal;
+import java.nio.ByteBuffer;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 public abstract class ProtobufUtil {
@@ -65,8 +67,12 @@ public abstract class ProtobufUtil {
         return ByteString.copyFrom(bytes);
     }
 
-    public static byte[] byteStringToBytes(ByteString byteString) {
-        return byteString.toByteArray();
+    public static ByteString byteBufferToByteString(ByteBuffer buffer) {
+        return ByteString.copyFrom(buffer);
+    }
+
+    public static String uuidToString(UUID uuid) {
+        return uuid.toString();
     }
 
     public static org.springframework.data.domain.PageRequest pageRequestProtoToPageRequest(PageRequest pageRequestProto) {

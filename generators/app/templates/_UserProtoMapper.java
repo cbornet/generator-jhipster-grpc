@@ -22,13 +22,13 @@ public abstract class UserProtoMapper extends ProtobufUtil {
             "".equals(userProto.getFirstName()) ? null : userProto.getFirstName(),
             "".equals(userProto.getLastName()) ? null : userProto.getLastName(),
             "".equals(userProto.getEmail()) ? null : userProto.getEmail(),
-            userProto.getActivated(),
-            "".equals(userProto.getImageUrl()) ? null : userProto.getImageUrl(),
-            "".equals(userProto.getLangKey()) ? null : userProto.getLangKey(),
+            userProto.getActivated(),<% if (databaseType == 'sql' || databaseType == 'mongodb') { %>
+            "".equals(userProto.getImageUrl()) ? null : userProto.getImageUrl(),<% } %>
+            "".equals(userProto.getLangKey()) ? null : userProto.getLangKey(),<% if (databaseType == 'sql' || databaseType == 'mongodb') { %>
             "".equals(userProto.getCreatedBy()) ? null : userProto.getCreatedBy(),
             timestampToZonedDateTime(userProto.getCreatedDate()),
             "".equals(userProto.getLastModifiedBy()) ? null: userProto.getLastModifiedBy(),
-            timestampToZonedDateTime(userProto.getLastModifiedDate()),
+            timestampToZonedDateTime(userProto.getLastModifiedDate()),<% } %>
             new HashSet<>(userProto.getAuthoritiesList())
         );
     }

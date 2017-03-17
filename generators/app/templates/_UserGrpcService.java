@@ -77,9 +77,9 @@ public class UserGrpcService extends UserServiceGrpc.UserServiceImplBase {
         }
     }
 
-    public void getAllUsers(PageRequest request, StreamObserver<UserProto> responseObserver) {
+    public void getAllUsers(<% if (databaseType == 'sql' || databaseType == 'mongodb') { %>PageRequest<% } else { %>Empty<% } %> request, StreamObserver<UserProto> responseObserver) {
         log.debug("gRPC request to get all users");
-        userService.getAllManagedUsers(userProtoMapper.pageRequestProtoToPageRequest(request))
+        userService.getAllManagedUsers(<% if (databaseType == 'sql' || databaseType == 'mongodb') { %>userProtoMapper.pageRequestProtoToPageRequest(request)<% } %>)
             .forEach(userDTO -> responseObserver.onNext(userProtoMapper.userDTOToUserProto(userDTO)));
         responseObserver.onCompleted();
     }

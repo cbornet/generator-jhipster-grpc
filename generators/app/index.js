@@ -58,6 +58,7 @@ module.exports = yeoman.Base.extend({
             this.mainClass = jhipsterVar.mainClassName;
             this.packageName = jhipsterVar.packageName;
             this.authenticationType = jhipsterVar.authenticationType;
+            this.databaseType = jhipsterVar.databaseType;
             var javaDir = jhipsterVar.javaDir;
             var testDir = jhipsterVar.CONSTANTS.SERVER_TEST_SRC_DIR + jhipsterVar.packageFolder + '/';
             var protoDir = jhipsterVar.CONSTANTS.MAIN_DIR + 'proto/';
@@ -102,11 +103,13 @@ module.exports = yeoman.Base.extend({
 
             this.grpcVersion = '1.1.1';
             var grpcSpringVersion = '2.0.0';
+            this.protocVersion = '3.1.0';
             var guavaVersion = '20.0';
             if (jhipsterVar.databaseType === 'cassandra') {
                 // Downgrade grpc to get a compatible guava version
                 this.grpcVersion = '1.0.2';
                 grpcSpringVersion = '1.0.0';
+                this.protocVersion = '3.0.2';
                 guavaVersion = '19.0';
 
             }
@@ -124,7 +127,7 @@ module.exports = yeoman.Base.extend({
                 jhipsterFunc.addMavenPlugin('org.xolstice.maven.plugins', 'protobuf-maven-plugin', '0.5.0',
                     '                ' +
                     '<configuration>' + '\n                ' +
-                    '    <protocArtifact>com.google.protobuf:protoc:3.1.0:exe:${os.detected.classifier}</protocArtifact>' + '\n                ' +
+                    '    <protocArtifact>com.google.protobuf:protoc:' + this.protocVersion + ':exe:${os.detected.classifier}</protocArtifact>' + '\n                ' +
                     '    <pluginId>grpc-java</pluginId>' + '\n                ' +
                     '    <pluginArtifact>io.grpc:protoc-gen-grpc-java:'+ this.grpcVersion + ':exe:${os.detected.classifier}</pluginArtifact>' + '\n                ' +
                     '</configuration>' + '\n                ' +
