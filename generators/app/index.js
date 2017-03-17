@@ -95,6 +95,10 @@ module.exports = yeoman.Base.extend({
             this.template('_MetricService.java', javaDir + 'grpc/MetricService.java');
             this.template('_MetricServiceTest.java', testDir + 'grpc/MetricServiceTest.java');
 
+            this.template('_user.proto', protoPackageDir + 'user.proto');
+            this.template('_UserGrpcService.java', javaDir + 'grpc/UserGrpcService.java');
+            this.template('_UserProtoMapper.java', javaDir + 'grpc/UserProtoMapper.java');
+            this.template('_UserGrpcServiceIntTest.java', testDir + 'grpc/UserGrpcServiceIntTest.java');
 
             this.grpcVersion = '1.1.1';
             var grpcSpringVersion = '2.0.0';

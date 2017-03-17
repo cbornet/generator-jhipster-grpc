@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "<%=packageName%>.grpc";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
+import "util/pagination.proto";
+
+package <%=packageName%>;
+
+service UserService {
+    // Create a new User.
+    // request : the UserProto to create
+    // response : the created UserProto or a ALREADY_EXISTS error
+    rpc CreateUser (UserProto) returns (UserProto);
+
+    // Update or create a User.
+    // request : the UserProto to update or create
+    // response : the updated UserProto
+    rpc UpdateUser (UserProto) returns (UserProto);
+
+    // Get all the Users.
+    // response : the list of UserProtos
+    rpc GetAllUsers (util.PageRequest) returns (stream UserProto);
+
+    // Get a User from it's id.
+    // request : the id of the UserProto to retrieve
+    // response : the UserProto or a NOT_FOUND error
+    rpc GetUser (google.protobuf.StringValue) returns (UserProto);
+
+    // Delete a User from it's id.
+    // request : the id of the UserProto to delete
+    // response : empty or a NOT_FOUND error
+    rpc DeleteUser (google.protobuf.StringValue) returns (google.protobuf.Empty);
+}
+
+message UserProto {
+    string id = 1;
+    string login = 2;
+    string password = 3;
+    string first_name = 4;
+    string last_name = 5;
+    string email = 6;
+    bool activated = 7;
+    string lang_key = 8;
+    string image_url = 9;
+    repeated string authorities = 10;
+    string reset_key = 11;
+    google.protobuf.Timestamp reset_date = 12;
+    string created_by = 13;
+    google.protobuf.Timestamp created_date = 14;
+    string last_modified_by = 15;
+    google.protobuf.Timestamp last_modified_date = 16;
+}

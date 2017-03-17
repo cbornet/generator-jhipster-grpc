@@ -1,5 +1,6 @@
 package <%=packageName%>.grpc;
 
+import com.google.protobuf.ByteString;
 import com.google.protobuf.Timestamp;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -11,6 +12,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
+
 public abstract class ProtobufUtil {
 
     private static final int DEFAULT_MAX_PAGE_SIZE = 2000;
@@ -57,6 +59,14 @@ public abstract class ProtobufUtil {
             .setUnscaledVal(decimal.unscaledValue().longValue())
             .setScale(decimal.scale())
             .build();
+    }
+
+    public static ByteString bytesToByteString(byte[] bytes) {
+        return ByteString.copyFrom(bytes);
+    }
+
+    public static byte[] byteStringToBytes(ByteString byteString) {
+        return byteString.toByteArray();
     }
 
     public static org.springframework.data.domain.PageRequest pageRequestProtoToPageRequest(PageRequest pageRequestProto) {
