@@ -45,12 +45,14 @@ message UserProto {
     string email = 6;
     bool activated = 7;
     string lang_key = 8;
-    string image_url = 9;
-    repeated string authorities = 10;
-    string reset_key = 11;
-    google.protobuf.Timestamp reset_date = 12;
+    repeated string authorities = 9;
+    string reset_key = 10;
+    google.protobuf.Timestamp reset_date = 11;
+    <%_ if (databaseType !== 'cassandra') { _%>
+    string image_url = 12;
     string created_by = 13;
     google.protobuf.Timestamp created_date = 14;
     string last_modified_by = 15;
     google.protobuf.Timestamp last_modified_date = 16;
+    <%_ } _%>
 }
