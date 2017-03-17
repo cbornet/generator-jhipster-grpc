@@ -5,17 +5,19 @@ import <%=packageName%>.domain.<%=instanceType%>;<% } %>
 <%_ for (idx in fields) {
     if(fields[idx].fieldIsEnum) { _%>
 import <%=packageName%>.domain.enumeration.<%=fields[idx].fieldType%>;
-<%_ }}_%><% if (dto === 'mapstruct') { %>
-import <%=packageName%>.service.dto.<%=instanceType%>;<% } %><% if (fieldsContainZonedDateTime || fieldsContainLocalDate || fieldsContainBigDecimal) { %>
-import <%=packageName%>.grpc.ProtobufUtil;<% } %><% if (fieldsContainBlob) { %>
+<%_ }}_%><% if (fieldsContainZonedDateTime || fieldsContainLocalDate || fieldsContainBigDecimal || fieldsContainBlob) { %>
+import <%=packageName%>.grpc.ProtobufUtil;<% } %><% if (dto === 'mapstruct') { %>
+import <%=packageName%>.service.dto.<%=instanceType%>;<% } %>
 
-import com.google.protobuf.ByteString;<% } %><% if (databaseType === 'cassandra') { %>
+import org.mapstruct.Mapper;
+import org.mapstruct.NullValueCheckStrategy;<% if (databaseType === 'cassandra') { %>
 
 import java.util.UUID;<% } %>
 
-public abstract class <%=entityClass%>ProtoMapper {
+@Mapper(componentModel = "spring", nullValueCheckStrategy = NullValueCheckStrategy.ALWAYS)
+public abstract class <%=entityClass%>ProtoMapper extends ProtobufUtil {
 
-    public static <%=instanceType%> <%=entityInstance%>ProtoTo<%=instanceType%>(<%=entityClass%>Proto <%=entityInstance%>Proto) {
+    public <%=instanceType%> <%=entityInstance%>ProtoTo<%=instanceType%>(<%=entityClass%>Proto <%=entityInstance%>Proto) {
         if ( <%=entityInstance%>Proto == null ) {
             return null;
         }
@@ -50,33 +52,26 @@ public abstract class <%=entityClass%>ProtoMapper {
         return <%=instanceName%>;
     }
 
-    public static <%=entityClass%>Proto <%=instanceName%>To<%=entityClass%>Proto(<%=instanceType%> <%=instanceName%>) {
-        if ( <%=instanceName%> == null ) {
+<%_ for (idx in fields) {
+    if(fields[idx].fieldIsEnum) {
+        var fieldType = fields[idx].fieldType;
+        var fieldName = fieldType _%>
+    <%=fieldType%>Proto convert<%=fieldType%>To<%=fieldType%>Proto(<%=fieldType%> enumValue) {
+        return <%=fieldType%>Proto.valueOf(enumValue.toString());
+    }
 
+<%_ }} _%>
+    <%=entityClass%>Proto.Builder create<%=entityClass%>Proto () {
+        return <%=entityClass%>Proto.newBuilder();
+    }
+
+    abstract <%=entityClass%>Proto.Builder <%=instanceName%>To<%=entityClass%>ProtoBuilder(<%=instanceType%> <%=instanceName%>);
+
+    public <%=entityClass%>Proto <%=instanceName%>To<%=entityClass%>Proto(<%=instanceType%> <%=instanceName%>) {
+        if (<%=instanceName%> == null) {
             return null;
         }
-        <%=entityClass%>Proto.Builder <%=entityInstance%>ProtoBuilder = <%=entityClass%>Proto.newBuilder();
-
-        if (<%=instanceName%>.getId() != null) {
-            <%=entityInstance%>ProtoBuilder.setId(<%=instanceName%>.getId()<% if (databaseType === 'cassandra') { %>.toString()<% } %>);
-        }
-<%_ for (idx in fields) {
-    var nullable = false;
-    var fieldValidate = fields[idx].fieldValidate;
-    var fieldValidateRules = fields[idx].fieldValidateRules;
-    var fieldType = fields[idx].fieldType;
-    var fieldIsEnum = fields[idx].fieldIsEnum;
-    var isProtobufCustomType = fields[idx].isProtobufCustomType;
-    var fieldInJavaBeanMethod = fields[idx].fieldInJavaBeanMethod;
-    var fieldNameUnderscored = fields[idx].fieldNameUnderscored;
-    if (!isProtobufCustomType && !(fieldValidate && fieldValidateRules.indexOf('required') != -1)) {
-        nullable = true;
-    }_%>
-        if (<%=instanceName%>.<% if (dto !== 'mapstruct' && fieldType.toLowerCase() === 'boolean') { %>is<% } else { %>get<% } %><%= fieldInJavaBeanMethod %>() != null) {
-            <%=entityInstance%>ProtoBuilder.set<%= fieldInJavaBeanMethod %>(<% if(fieldType === 'byte[]' || fieldType === 'ByteBuffer') { %>ByteString.copyFrom(<% } %><% if (isProtobufCustomType) { %>ProtobufUtil.<% } %><% if(fieldType === 'ZonedDateTime') { %>zonedDateTimeToTimestamp(<% } %><% if(fieldType === 'LocalDate') { %>localDateToDateProto(<% } %><% if(fieldType === 'BigDecimal') { %>bigDecimalToDecimalProto(<% } %><% if(fieldIsEnum) { %><%=fieldType%>Proto.valueOf(<% } %><%=instanceName%>.<% if (dto !== 'mapstruct' && fieldType.toLowerCase() === 'boolean') { %>is<% } else { %>get<% } %><%= fieldInJavaBeanMethod %>()<% if(fieldIsEnum ||fieldType === 'UUID') { %>.toString()<% } %>)<% if(fieldIsEnum || isProtobufCustomType || fieldType === 'byte[]' || fieldType === 'ByteBuffer') { %>)<% } %>;
-        }
-<%_ } _%>
-        return <%=entityInstance%>ProtoBuilder.build();
+        return <%=instanceName%>To<%=entityClass%>ProtoBuilder(<%=instanceName%>).build();
     }
 
 }
