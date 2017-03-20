@@ -78,6 +78,10 @@ module.exports = yeoman.Base.extend({
             this.template('_AuthenticationInterceptor.java', javaDir + 'grpc/AuthenticationInterceptor.java');
             this.template('_ProtobufUtil.java', javaDir + 'grpc/ProtobufUtil.java');
 
+            this.template('_audit.proto', protoPackageDir + 'audit.proto');
+            this.template('_AuditGrpcService.java', javaDir + 'grpc/AuditGrpcService.java');
+            this.template('_AuditGrpcServiceIntTest.java', testDir + 'grpc/AuditGrpcServiceIntTest.java');
+
             this.template('_configprops.proto', protoPackageDir + 'configprops.proto');
             this.template('_ConfigurationPropertiesReportService.java', javaDir + 'grpc/ConfigurationPropertiesReportService.java');
             this.template('_ConfigurationPropertiesReportServiceIntTest.java', testDir + 'grpc/ConfigurationPropertiesReportServiceIntTest.java');

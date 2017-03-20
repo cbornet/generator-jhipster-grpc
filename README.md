@@ -54,11 +54,11 @@ TODOs:
 - [ ] Add ElasticSearch endpoints
 - [ ] Management endpoints
   - [ ] Account
-  - [ ] ~~Loggers~~
-  - [ ] Audits
-  - [ ] ~~Users~~
-  - [ ] Profile info
-  - [ ] ~~Spring Boot Actuators~~
+  - [x] ~~Loggers~~
+  - [x] ~~Audits~~
+  - [x] ~~Users~~
+  - [x] ~~Profile info~~
+  - [x] ~~Spring Boot Actuators~~
 - [ ] Support streaming from the DB (Stream<> in repository)
 - [ ] Support streaming back-pressure (reactive streams with rxJava2 or Reactor)
 - [ ] Client-side configuration (micro-services)

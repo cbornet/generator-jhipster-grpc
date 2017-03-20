@@ -23,7 +23,7 @@ import java.util.Collection;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = <%=mainClass%>.class)
-public class MetricServiceIntTest <% if (databaseType === 'cassandra') { %>extends AbstractCassandraTest <% } %> {
+public class MetricServiceIntTest <% if (databaseType === 'cassandra') { %>extends AbstractCassandraTest <% } %>{
 
     @Autowired
     private Collection<PublicMetrics> publicMetrics;

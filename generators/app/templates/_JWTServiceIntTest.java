@@ -27,7 +27,7 @@ import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = <%=mainClass%>.class)
-public class JWTServiceIntTest <% if (databaseType === 'cassandra') { %>extends AbstractCassandraTest <% } %> {
+public class JWTServiceIntTest <% if (databaseType === 'cassandra') { %>extends AbstractCassandraTest <% } %>{
 
     @Autowired
     private TokenProvider tokenProvider;

@@ -25,7 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = <%=mainClass%>.class)
-public class ConfigurationPropertiesReportServiceIntTest <% if (databaseType === 'cassandra') { %>extends AbstractCassandraTest <% } %> {
+public class ConfigurationPropertiesReportServiceIntTest <% if (databaseType === 'cassandra') { %>extends AbstractCassandraTest <% } %>{
 
     @Autowired
     private ConfigurationPropertiesReportEndpoint configurationPropertiesReportEndpoint;
