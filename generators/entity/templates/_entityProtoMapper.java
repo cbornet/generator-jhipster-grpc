@@ -30,7 +30,7 @@ public abstract class <%=entityClass%>ProtoMapper extends ProtobufUtil {
     var nullable = false;
     var fieldValidate = fields[idx].fieldValidate;
     var fieldValidateRules = fields[idx].fieldValidateRules;
-    var fieldType = fields[idx].fieldType;
+    var fieldDomainType = fields[idx].fieldDomainType;
     var fieldIsEnum = fields[idx].fieldIsEnum;
     var isProtobufCustomType = fields[idx].isProtobufCustomType;
     var fieldInJavaBeanMethod = fields[idx].fieldInJavaBeanMethod;
@@ -44,7 +44,7 @@ public abstract class <%=entityClass%>ProtoMapper extends ProtobufUtil {
     <%_ if (isProtobufCustomType) { _%>
         if(<%= entityInstance %>Proto.has<%= fieldInJavaBeanMethod %>()) {
     <% } -%>
-        <%=instanceName%>.set<%= fieldInJavaBeanMethod %>(<% if (isProtobufCustomType) { %>ProtobufUtil.<% } %><% if(fieldType === 'ZonedDateTime') { %>timestampToZonedDateTime(<% } %><% if(fieldType === 'UUID') { %>UUID.fromString(<% } %><% if(fieldType === 'LocalDate') { %>dateProtoToLocalDate(<% } %><% if(fieldType === 'BigDecimal') { %>decimalProtoToBigDecimal(<% } %><% if(fieldIsEnum) { %><%=fieldType%>.valueOf(<% } %><%=entityInstance%>Proto.get<%= fieldInJavaBeanMethod %>()<% if(fieldIsEnum) { %>.toString()<% } %><% if(fieldType === 'byte[]') { %>.toByteArray()<% } %><% if(fieldType === 'ByteBuffer') { %>.asReadOnlyByteBuffer()<% } %>)<% if(fieldIsEnum || isProtobufCustomType || fieldType === 'UUID') { %>)<% } %>;
+        <%=instanceName%>.set<%= fieldInJavaBeanMethod %>(<% if (isProtobufCustomType) { %>ProtobufUtil.<% } %><% if(fieldDomainType === 'ZonedDateTime') { %>timestampToZonedDateTime(<% } %><% if(fieldDomainType === 'UUID') { %>UUID.fromString(<% } %><% if(fieldDomainType === 'LocalDate') { %>dateProtoToLocalDate(<% } %><% if(fieldDomainType === 'BigDecimal') { %>decimalProtoToBigDecimal(<% } %><% if(fieldIsEnum) { %><%=fieldDomainType%>.valueOf(<% } %><%=entityInstance%>Proto.get<%= fieldInJavaBeanMethod %>()<% if(fieldIsEnum) { %>.toString()<% } %><% if(fieldDomainType === 'byte[]') { %>.toByteArray()<% } %><% if(fieldDomainType === 'ByteBuffer') { %>.asReadOnlyByteBuffer()<% } %>)<% if(fieldIsEnum || isProtobufCustomType || fieldDomainType === 'UUID') { %>)<% } %>;
     <%_ if (nullable || isProtobufCustomType) { _%>
         }
     <%_ } _%>

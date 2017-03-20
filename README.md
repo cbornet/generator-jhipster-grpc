@@ -35,7 +35,6 @@ If you want to add CRUD gRPC services for an entity, just (re)generate it and co
 Current limitations:
 * entity creation/update will fail for entities with required relationships.
 * entities can have non-required relationships but the relationship will not be manageable by gRPC
-* not tested with elastic search (probably some issues)
 
 Note that entities must have a service layer (serviceClass or serviceImpl) or else they will be ignored by the generator (not having a common service layer between the REST resources and the gRPC endpoints would be bad design).
 
@@ -46,14 +45,20 @@ TODOs:
 - [x] ~~Entities with pagination~~
 - [x] ~~Support Cassandra~~
 - [x] ~~Support Mongo~~
-- [ ] Support ElasticSearch
 - [ ] Support relationships
 - [x] ~~JWT security~~
 - [x] ~~OAuth2 security~~
 - [x] ~~Basic auth security~~ (used for session auth option)
 - [x] ~~Entity javadoc~~
 - [x] ~~Field javadoc~~
-- [ ] Management endpoints (account, audits, logs, ...)
+- [ ] Add ElasticSearch endpoints
+- [ ] Management endpoints
+  - [ ] Account
+  - [ ] ~~Loggers~~
+  - [ ] Audits
+  - [ ] ~~Users~~
+  - [ ] Profile info
+  - [ ] ~~Spring Boot Actuators~~
 - [ ] Support streaming from the DB (Stream<> in repository)
 - [ ] Support streaming back-pressure (reactive streams with rxJava2 or Reactor)
 - [ ] Client-side configuration (micro-services)

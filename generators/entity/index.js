@@ -80,8 +80,8 @@ module.exports = yeoman.Base.extend({
             this.entityInstancePlural = pluralize(this.entityInstance);
             this.entityUnderscoredName = _.snakeCase(this.entityClass).toLowerCase();
             this.dto = this.entityConfig.data.dto || 'no';
-            this.instanceType = (this.dto == 'mapstruct') ? this.entityClass + 'DTO' : this.entityClass;
-            this.instanceName = (this.dto == 'mapstruct') ? this.entityInstance + 'DTO' : this.entityInstance;
+            this.instanceType = (this.dto === 'mapstruct') ? this.entityClass + 'DTO' : this.entityClass;
+            this.instanceName = (this.dto === 'mapstruct') ? this.entityInstance + 'DTO' : this.entityInstance;
             this.fieldsContainZonedDateTime = this.entityConfig.fieldsContainZonedDateTime;
             this.fieldsContainLocalDate = this.entityConfig.fieldsContainLocalDate;
             this.fieldsContainBigDecimal = this.entityConfig.fieldsContainBigDecimal;
@@ -93,8 +93,15 @@ module.exports = yeoman.Base.extend({
                 this.entityJavadoc = '// ' + this.entityConfig.data.javadoc.replace('\n', '\n// ');
             }
             this.fields = this.entityConfig.data.fields;
-            this.fields.forEach(f => f.fieldProtobufType = getProtobufType(f.fieldType));
-            this.fields.forEach(f => f.isProtobufCustomType = isProtobufCustomType(f.fieldProtobufType));
+            this.fields.forEach(f => {
+                if (f.fieldTypeBlobContent === 'text') {
+                    f.fieldDomainType = 'String';
+                } else {
+                    f.fieldDomainType = f.fieldType;
+                }
+                f.fieldProtobufType = getProtobufType(f.fieldDomainType);
+                f.isProtobufCustomType = isProtobufCustomType(f.fieldProtobufType);
+            });
             if (this.databaseType === 'sql') {
                 this.idProtoType = 'int64';
                 this.idProtoWrappedType = 'Int64Value';
