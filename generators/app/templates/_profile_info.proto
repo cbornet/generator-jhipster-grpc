@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "<%=packageName%>.grpc";
+
+import "google/protobuf/empty.proto";
+
+package <%=packageName%>;
+
+service ProfileInfoService {
+    rpc GetActiveProfiles(google.protobuf.Empty) returns (ProfileInfo);
+}
+
+message ProfileInfo {
+    repeated string active_profiles = 1;
+    string ribbon_env = 2;
+}

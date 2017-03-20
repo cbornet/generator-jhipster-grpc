@@ -34,7 +34,7 @@ module.exports = yeoman.Base.extend({
             .filter(entity => entity.definition.service === 'serviceClass' || entity.definition.service === 'serviceImpl')
             .map(entity => entity.name);
 
-        if (this.existingEntitiesNames.length == 0) {
+        if (this.existingEntitiesNames.length === 0) {
             this.log(chalk.yellow('No existing entities with a service layer found.'));
             return;
         }
@@ -102,6 +102,10 @@ module.exports = yeoman.Base.extend({
             this.template('_metric.proto', protoPackageDir + 'metric.proto');
             this.template('_MetricService.java', javaDir + 'grpc/MetricService.java');
             this.template('_MetricServiceIntTest.java', testDir + 'grpc/MetricServiceIntTest.java');
+
+            this.template('_profile_info.proto', protoPackageDir + 'profile_info.proto');
+            this.template('_ProfileInfoService.java', javaDir + 'grpc/ProfileInfoService.java');
+            this.template('_ProfileInfoServiceIntTest.java', testDir + 'grpc/ProfileInfoServiceIntTest.java');
 
             this.template('_user.proto', protoPackageDir + 'user.proto');
             this.template('_UserGrpcService.java', javaDir + 'grpc/UserGrpcService.java');
@@ -185,7 +189,7 @@ module.exports = yeoman.Base.extend({
                 jhipsterFunc.applyFromGradleScript('gradle/grpc');
             }
 
-            this.entities.forEach(entityName => {jhipsterFunc.updateEntityConfig('.jhipster/' + entityName + '.json', 'grpcService', true)});
+            this.entities.forEach(entityName => {jhipsterFunc.updateEntityConfig('.jhipster/' + entityName + '.json', 'grpcService', true);});
 
         },
 
@@ -198,7 +202,7 @@ module.exports = yeoman.Base.extend({
         },
 
         regenerateEntities: function () {
-            if (this.entities.length != 0) {
+            if (this.entities.length !== 0) {
                 this.log(chalk.green('Regenerating entities with gRPC service'));
             }
             this.entities.forEach(function (entity) {

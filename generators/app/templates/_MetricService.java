@@ -1,6 +1,5 @@
 package <%=packageName%>.grpc;
 
-
 import com.google.protobuf.Empty;
 import io.grpc.stub.StreamObserver;
 import org.lognet.springboot.grpc.GRpcService;
