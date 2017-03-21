@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "<%=packageName%>.grpc";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
+import "util/date.proto";
+import "util/pagination.proto";
+
+package <%=packageName%>;
+
+service AuditService {
+    rpc getAuditEvents(AuditRequest) returns (stream AuditEvent);
+    rpc getAuditEvent(google.protobuf.Int64Value) returns (AuditEvent);
+}
+
+message AuditRequest {
+    util.PageRequest pagination_params = 1;
+    util.Date from_date = 2;
+    util.Date to_date = 3;
+}
+
+message AuditEvent {
+    google.protobuf.Timestamp timestamp = 1;
+    string principal = 2;
+    string type = 3;
+    string data = 4;
+}
