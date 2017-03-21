@@ -30,6 +30,7 @@ public class HealthService extends HealthServiceGrpc.HealthServiceImplBase {
         this.healthIndicator = healthIndicator;
     }
 
+    @Override
     public void getHealth(Empty request, StreamObserver<Health> responseObserver) {
         Map<String, HealthIndicator> healthIndicatorProtos = new HashMap<>();
         this.healthIndicators.forEach((key, indicator) -> healthIndicatorProtos.put(key, healthIndicatorToHealthIndicatorProto(indicator)));

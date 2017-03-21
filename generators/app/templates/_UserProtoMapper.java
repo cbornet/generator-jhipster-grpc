@@ -17,18 +17,18 @@ public abstract class UserProtoMapper extends ProtobufUtil {
             return null;
         }
         return new UserDTO(
-            (userProto.getIdOneofCase() == UserProto.IdOneofCase.ID) ? userProto.getId() : null,
-            "".equals(userProto.getLogin()) ? null : userProto.getLogin(),
-            "".equals(userProto.getFirstName()) ? null : userProto.getFirstName(),
-            "".equals(userProto.getLastName()) ? null : userProto.getLastName(),
-            "".equals(userProto.getEmail()) ? null : userProto.getEmail(),
-            userProto.getActivated(),<% if (databaseType == 'sql' || databaseType == 'mongodb') { %>
-            "".equals(userProto.getImageUrl()) ? null : userProto.getImageUrl(),<% } %>
-            "".equals(userProto.getLangKey()) ? null : userProto.getLangKey(),<% if (databaseType == 'sql' || databaseType == 'mongodb') { %>
-            "".equals(userProto.getCreatedBy()) ? null : userProto.getCreatedBy(),
+            userProto.getIdOneofCase() == UserProto.IdOneofCase.ID ? userProto.getId() : null,
+            userProto.getLogin().isEmpty() ? null : userProto.getLogin(),
+            userProto.getFirstName().isEmpty() ? null : userProto.getFirstName(),
+            userProto.getLastName().isEmpty() ? null : userProto.getLastName(),
+            userProto.getEmail().isEmpty() ? null : userProto.getEmail(),
+            userProto.getActivated(),
+            userProto.getImageUrl().isEmpty() ? null : userProto.getImageUrl(),
+            userProto.getLangKey().isEmpty() ? null : userProto.getLangKey(),
+            userProto.getCreatedBy().isEmpty() ? null : userProto.getCreatedBy(),
             timestampToZonedDateTime(userProto.getCreatedDate()),
-            "".equals(userProto.getLastModifiedBy()) ? null: userProto.getLastModifiedBy(),
-            timestampToZonedDateTime(userProto.getLastModifiedDate()),<% } %>
+            userProto.getLastModifiedBy().isEmpty() ? null: userProto.getLastModifiedBy(),
+            timestampToZonedDateTime(userProto.getLastModifiedDate()),
             new HashSet<>(userProto.getAuthoritiesList())
         );
     }
@@ -49,7 +49,7 @@ public abstract class UserProtoMapper extends ProtobufUtil {
         return UserProto.newBuilder();
     }
 
-    abstract UserProto.Builder userDTOToUserProtoBuilder (UserDTO userDTO);
+    protected abstract UserProto.Builder userDTOToUserProtoBuilder (UserDTO userDTO);
 
     public UserProto userToUserProto(User user) {
         if (user == null) {
@@ -59,6 +59,6 @@ public abstract class UserProtoMapper extends ProtobufUtil {
     }
 
     @Mapping(target = "password", ignore = true)
-    abstract UserProto.Builder userToUserProtoBuilder (User user);
+    protected abstract UserProto.Builder userToUserProtoBuilder (User user);
 
 }

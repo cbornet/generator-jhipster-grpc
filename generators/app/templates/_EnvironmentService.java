@@ -18,6 +18,7 @@ public class EnvironmentService extends EnvironmentServiceGrpc.EnvironmentServic
         this.endpoint = endpoint;
     }
 
+    @Override
     public void getEnv(Empty request, StreamObserver<Environment> responseObserver) {
         ObjectMapper mapper = new ObjectMapper();
         try {

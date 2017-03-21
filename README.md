@@ -52,8 +52,8 @@ TODOs:
 - [x] ~~Entity javadoc~~
 - [x] ~~Field javadoc~~
 - [ ] Add ElasticSearch endpoints
-- [ ] Management endpoints
-  - [ ] Account
+- [x] ~~Management endpoints~~
+  - [x] ~~Account~~
   - [x] ~~Loggers~~
   - [x] ~~Audits~~
   - [x] ~~Users~~

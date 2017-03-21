@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "<%=packageName%>.grpc";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/wrappers.proto";
+import "<%=packageFolder%>/user.proto";
+
+package <%=packageName%>;
+
+service AccountService {
+    rpc RegisterAccount(UserProto) returns (google.protobuf.Empty);
+    rpc ActivateAccount(google.protobuf.StringValue) returns (UserProto);
+    rpc IsAuthenticated(google.protobuf.Empty) returns (google.protobuf.StringValue);
+    rpc GetAccount(google.protobuf.Empty) returns (UserProto);
+    rpc SaveAccount(UserProto) returns (google.protobuf.Empty);
+    rpc ChangePassword(google.protobuf.StringValue) returns (google.protobuf.Empty);
+    rpc InvalidateSession(google.protobuf.StringValue) returns (google.protobuf.Empty);
+    rpc RequestPasswordReset(google.protobuf.StringValue) returns (google.protobuf.Empty);
+    rpc FinishPasswordReset(KeyAndPassword) returns (google.protobuf.Empty);
+}
+
+message KeyAndPassword {
+    string key = 1;
+    string new_password =2;
+}

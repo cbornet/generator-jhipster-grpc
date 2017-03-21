@@ -21,6 +21,7 @@ public class ConfigurationPropertiesReportService extends ConfigurationPropertie
         this.endpoint = endpoint;
     }
 
+    @Override
     public void getConfigurationProperties(Empty request, StreamObserver<ConfigurationPropertiesReport> responseObserver) {
         Map<String, Object> properties = endpoint.invoke();
         responseObserver.onNext(mapToConfigurationPropertiesReport(properties));

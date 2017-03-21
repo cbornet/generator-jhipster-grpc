@@ -27,6 +27,7 @@ public class MetricService extends MetricServiceGrpc.MetricServiceImplBase {
         AnnotationAwareOrderComparator.sort(this.publicMetrics);
     }
 
+    @Override
     public void getMetrics(Empty request, StreamObserver<Metric> responseObserver) {
         for (PublicMetrics publicMetric : this.publicMetrics) {
             for (org.springframework.boot.actuate.metrics.Metric<?> metric : publicMetric.metrics()) {

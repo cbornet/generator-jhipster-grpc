@@ -56,6 +56,7 @@ module.exports = yeoman.Base.extend({
     writing: {
         writeTemplates: function () {
             this.mainClass = jhipsterVar.mainClassName;
+            this.packageFolder = jhipsterVar.packageFolder;
             this.packageName = jhipsterVar.packageName;
             this.authenticationType = jhipsterVar.authenticationType;
             this.databaseType = jhipsterVar.databaseType;
@@ -77,6 +78,10 @@ module.exports = yeoman.Base.extend({
             this.template('_pagination.proto', protoDir + 'util/pagination.proto', this, {});
             this.template('_AuthenticationInterceptor.java', javaDir + 'grpc/AuthenticationInterceptor.java');
             this.template('_ProtobufUtil.java', javaDir + 'grpc/ProtobufUtil.java');
+
+            this.template('_account.proto', protoPackageDir + 'account.proto');
+            this.template('_AccountService.java', javaDir + 'grpc/AccountService.java');
+            this.template('_AccountServiceIntTest.java', testDir + 'grpc/AccountServiceIntTest.java');
 
             this.template('_audit.proto', protoPackageDir + 'audit.proto');
             this.template('_AuditGrpcService.java', javaDir + 'grpc/AuditGrpcService.java');

@@ -22,6 +22,7 @@ public class ProfileInfoService extends ProfileInfoServiceGrpc.ProfileInfoServic
         this.env = env;
     }
 
+    @Override
     public void getActiveProfiles(Empty request, StreamObserver<ProfileInfo> responseObserver) {
         ProfileInfo.Builder builder = ProfileInfo.newBuilder();
         String[] activeProfiles = DefaultProfileUtil.getActiveProfiles(env);

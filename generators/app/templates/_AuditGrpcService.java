@@ -6,7 +6,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.protobuf.Int64Value;
 import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 
 import java.time.LocalDateTime;
@@ -14,12 +17,15 @@ import java.util.Optional;
 
 public class AuditGrpcService extends AuditServiceGrpc.AuditServiceImplBase {
 
+    private final Logger log = LoggerFactory.getLogger(AuditGrpcService.class);
+
     private final AuditEventService auditEventService;
 
     public AuditGrpcService(AuditEventService auditEventService) {
         this.auditEventService = auditEventService;
     }
 
+    @Override
     public void getAuditEvents(AuditRequest request, StreamObserver<AuditEvent> responseObserver) {
         Page<org.springframework.boot.actuate.audit.AuditEvent> auditEvents;
         if (request.hasFromDate() || request.hasToDate()) {
@@ -35,10 +41,12 @@ public class AuditGrpcService extends AuditServiceGrpc.AuditServiceImplBase {
             }
             responseObserver.onCompleted();
         } catch (JsonProcessingException e) {
-            responseObserver.onError(e);
+            log.error("Couldn't parse audit events", e);
+            throw new StatusRuntimeException(Status.INTERNAL.withCause(e));
         }
     }
 
+    @Override
     public void getAuditEvent(Int64Value id, StreamObserver<AuditEvent> responseObserver) {
         Optional<org.springframework.boot.actuate.audit.AuditEvent> auditEvent = auditEventService.find(id.getValue());
         if (auditEvent.isPresent()) {
