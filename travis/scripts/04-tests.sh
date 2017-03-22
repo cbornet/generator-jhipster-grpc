@@ -10,7 +10,8 @@ if [ -f "mvnw" ]; then
 elif [ -f "gradlew" ]; then
     ./gradlew javadoc
 fi
-
+cat pom.xml
+./mvnw dependency:tree | grep netty
 #-------------------------------------------------------------------------------
 # Launch UAA tests
 #-------------------------------------------------------------------------------
