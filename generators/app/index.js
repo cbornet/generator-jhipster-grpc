@@ -21,7 +21,16 @@ module.exports = yeoman.Base.extend({
                     }
                 },
                 this.options.testmode ? { local: require.resolve('generator-jhipster/generators/modules') } : null
+
+
             );
+
+            // This adds support for a `--all-entities` flag
+            this.option('all-entities', {
+                desc: 'Apply grpc to all entities',
+                type: Boolean,
+                defaults: false
+            });
         },
         displayLogo: function () {
             this.log('Welcome to the ' + chalk.red('JHipster grpc') + ' generator! ' + chalk.yellow('v' + packagejs.version + '\n'));
@@ -43,6 +52,12 @@ module.exports = yeoman.Base.extend({
             this.log(chalk.yellow('No existing entities with a service layer found.'));
             return;
         }
+
+        if (this.options.allEntities) {
+            this.entities = this.existingEntitiesNames;
+            return;
+        }
+
         var done = this.async();
 
         var prompts = [{

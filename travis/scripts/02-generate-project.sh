@@ -26,4 +26,5 @@ cp -f "$JHIPSTER_SAMPLES"/"$JHIPSTER"/.yo-rc.json "$APP_FOLDER"/
 cd "$APP_FOLDER"
 yarn link generator-jhipster
 yo jhipster --force --no-insight --skip-checks --with-entities
+yo jhipster-grpc --force --all-entities
 ls -al "$APP_FOLDER"
