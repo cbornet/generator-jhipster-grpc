@@ -9,7 +9,7 @@ var deps = [
 ];
 
 describe('JHipster generator grpc', function () {
-  describe('simple test', function () {
+  /*describe('simple test', function () {
     before(function (done) {
       helpers
         .run(path.join( __dirname, '../generators/app'))
@@ -31,5 +31,5 @@ describe('JHipster generator grpc', function () {
         'dummy.txt'
       ]);
     });
-  });
+  });*/
 });
