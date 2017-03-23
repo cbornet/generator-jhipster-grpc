@@ -5,6 +5,9 @@ option java_package = "<%=packageName%>.grpc";
 
 import "google/protobuf/empty.proto";
 import "google/protobuf/wrappers.proto";
+<%_ if (authenticationType == 'session') { _%>
+import "util/date.proto";
+<%_ } _%>
 import "<%=packageFolder%>/user.proto";
 
 package <%=packageName%>;
@@ -16,10 +19,22 @@ service AccountService {
     rpc GetAccount(google.protobuf.Empty) returns (UserProto);
     rpc SaveAccount(UserProto) returns (google.protobuf.Empty);
     rpc ChangePassword(google.protobuf.StringValue) returns (google.protobuf.Empty);
+    <%_ if (authenticationType == 'session') { _%>
+    rpc GetCurrentSessions(google.protobuf.Empty) returns (stream PersistentToken);
     rpc InvalidateSession(google.protobuf.StringValue) returns (google.protobuf.Empty);
+    <%_ } _%>
     rpc RequestPasswordReset(google.protobuf.StringValue) returns (google.protobuf.Empty);
     rpc FinishPasswordReset(KeyAndPassword) returns (google.protobuf.Empty);
 }
+
+<%_ if (authenticationType == 'session') { _%>
+message PersistentToken {
+    string series = 1;
+    util.Date token_date = 2;
+    string ip_address = 3;
+    string user_agent = 4;
+}
+<%_ } _%>
 
 message KeyAndPassword {
     string key = 1;

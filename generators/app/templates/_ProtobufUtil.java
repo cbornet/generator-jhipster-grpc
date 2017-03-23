@@ -1,5 +1,7 @@
 package <%=packageName%>.grpc;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Timestamp;
 import org.springframework.data.domain.Pageable;
@@ -21,10 +23,16 @@ public abstract class ProtobufUtil {
     private static final Pageable DEFAULT_PAGE_REQUEST = new org.springframework.data.domain.PageRequest(0, 20);
 
     public static LocalDate dateProtoToLocalDate(Date date) {
+        if (date == null) {
+            return null;
+        }
         return LocalDate.of(date.getYear(), date.getMonth(), date.getDay());
     }
 
     public static Date localDateToDateProto(LocalDate date) {
+        if (date == null) {
+            return null;
+        }
         return Date.newBuilder()
             .setYear(date.getYear())
             .setMonth(date.getMonthValue())
@@ -33,6 +41,9 @@ public abstract class ProtobufUtil {
     }
 
     public static ZonedDateTime timestampToZonedDateTime(Timestamp timestamp) {
+        if (timestamp == null) {
+            return null;
+        }
         return ZonedDateTime.ofInstant(
             Instant.ofEpochSecond(
                 timestamp.getSeconds(),
@@ -42,10 +53,16 @@ public abstract class ProtobufUtil {
     }
 
     public static Timestamp zonedDateTimeToTimestamp(ZonedDateTime zonedDateTime) {
+        if (zonedDateTime == null) {
+            return null;
+        }
         return instantToTimestamp(zonedDateTime.toInstant());
     }
 
     public static Timestamp instantToTimestamp(Instant instant) {
+        if (instant == null) {
+            return null;
+        }
         return Timestamp.newBuilder()
             .setSeconds(instant.getEpochSecond())
             .setNanos(instant.getNano())
@@ -53,10 +70,16 @@ public abstract class ProtobufUtil {
     }
 
     public static BigDecimal decimalProtoToBigDecimal(Decimal decimal) {
+        if (decimal == null) {
+            return null;
+        }
         return BigDecimal.valueOf(decimal.getUnscaledVal(), decimal.getScale());
     }
 
     public static Decimal bigDecimalToDecimalProto(BigDecimal decimal) {
+        if (decimal == null) {
+            return null;
+        }
         return Decimal.newBuilder()
             .setUnscaledVal(decimal.unscaledValue().longValue())
             .setScale(decimal.scale())
@@ -64,18 +87,30 @@ public abstract class ProtobufUtil {
     }
 
     public static ByteString bytesToByteString(byte[] bytes) {
+        if (bytes == null) {
+            return null;
+        }
         return ByteString.copyFrom(bytes);
     }
 
     public static ByteString byteBufferToByteString(ByteBuffer buffer) {
+        if (buffer == null) {
+            return null;
+        }
         return ByteString.copyFrom(buffer);
     }
 
     public static String uuidToString(UUID uuid) {
+        if (uuid == null) {
+            return null;
+        }
         return uuid.toString();
     }
 
     public static org.springframework.data.domain.PageRequest pageRequestProtoToPageRequest(PageRequest pageRequestProto) {
+        if (pageRequestProto == null) {
+            return null;
+        }
         int page = pageRequestProto.getPage();
         int pageSize = pageRequestProto.getSize();
 
@@ -90,6 +125,42 @@ public abstract class ProtobufUtil {
         Sort sort = orders.isEmpty() ? null : new Sort(orders);
 
         return new org.springframework.data.domain.PageRequest(page, pageSize, sort);
+    }
+    <%_ if (authenticationType == 'session') { _%>
+
+    public static PersistentToken persistentTokenToPersistentTokenProto(com.mycompany.myapp.domain.PersistentToken token) {
+        if (token == null) {
+            return null;
+        }
+        PersistentToken.Builder builder = PersistentToken.newBuilder().setTokenDate(localDateToDateProto(token.getTokenDate()));
+        if (token.getSeries() != null) {
+            builder.setSeries(token.getSeries());
+        }
+        if (token.getIpAddress() != null) {
+            builder.setIpAddress(token.getIpAddress());
+        }
+        if (token.getUserAgent() != null) {
+            builder.setUserAgent(token.getUserAgent());
+        }
+        return builder.build();
+    }
+    <%_ } _%>
+
+    public static AuditEvent auditEventToAuditEventProto(org.springframework.boot.actuate.audit.AuditEvent event) throws JsonProcessingException {
+        if (event == null) {
+            return null;
+        }
+        ObjectMapper mapper = new ObjectMapper();
+        AuditEvent.Builder builder =  AuditEvent.newBuilder()
+            .setTimestamp(ProtobufUtil.instantToTimestamp(event.getTimestamp().toInstant()))
+            .setData(mapper.writeValueAsString(event.getData()));
+        if (event.getPrincipal() != null) {
+            builder.setPrincipal(event.getPrincipal());
+        }
+        if(event.getType() != null) {
+            builder.setType(event.getType());
+        }
+        return builder.build();
     }
 
 }

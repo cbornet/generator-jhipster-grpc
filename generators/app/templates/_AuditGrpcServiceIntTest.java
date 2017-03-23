@@ -86,10 +86,7 @@ public class AuditGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ex
         // Initialize the database
         auditEventRepository.save(auditEvent);
 
-        // Get all the audits
-        List<AuditEvent> auditEvents = new ArrayList<>();
-        stub.getAuditEvents(AuditRequest.newBuilder().build()).forEachRemaining(auditEvents::add);
-        assertThat(auditEvents).extracting("principal").contains(SAMPLE_PRINCIPAL);
+        assertThat(stub.getAuditEvents(AuditRequest.newBuilder().build())).extracting("principal").contains(SAMPLE_PRINCIPAL);
     }
 
     @Test
@@ -107,14 +104,11 @@ public class AuditGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ex
         // Initialize the database
         auditEventRepository.save(auditEvent);
 
-        // Get the audit
-        List<AuditEvent> auditEvents = new ArrayList<>();
         AuditRequest request = AuditRequest.newBuilder()
             .setFromDate(ProtobufUtil.localDateToDateProto(SAMPLE_TIMESTAMP.minusDays(1).toLocalDate()))
             .setToDate(ProtobufUtil.localDateToDateProto(SAMPLE_TIMESTAMP.plusDays(1).toLocalDate()))
             .build();
-        stub.getAuditEvents(request).forEachRemaining(auditEvents::add);
-        assertThat(auditEvents).extracting("principal").contains(SAMPLE_PRINCIPAL);
+        assertThat(stub.getAuditEvents(request)).extracting("principal").contains(SAMPLE_PRINCIPAL);
     }
 
     @Test
@@ -123,13 +117,11 @@ public class AuditGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ex
         auditEventRepository.save(auditEvent);
 
         // Query audits but expect no results
-        List<AuditEvent> auditEvents = new ArrayList<>();
         AuditRequest request = AuditRequest.newBuilder()
             .setFromDate(ProtobufUtil.localDateToDateProto(SAMPLE_TIMESTAMP.minusDays(2).toLocalDate()))
             .setToDate(ProtobufUtil.localDateToDateProto(SAMPLE_TIMESTAMP.minusDays(1).toLocalDate()))
             .build();
-        stub.getAuditEvents(request).forEachRemaining(auditEvents::add);
-        assertThat(auditEvents).isEmpty();
+        assertThat(stub.getAuditEvents(request)).isEmpty();
     }
 
     @Test
@@ -139,7 +131,7 @@ public class AuditGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ex
             stub.getAuditEvent(Int64Value.newBuilder().setValue(Long.MAX_VALUE).build());
             failBecauseExceptionWasNotThrown(StatusException.class);
         } catch (StatusRuntimeException e) {
-            assertThat(e.getStatus().getCode() == Status.Code.NOT_FOUND);
+            assertThat(e.getStatus().getCode()).isEqualTo(Status.Code.NOT_FOUND);
         }
     }
 }

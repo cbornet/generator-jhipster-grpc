@@ -1,7 +1,9 @@
 package <%=packageName%>.grpc;
 
 import <%=packageName%>.domain.User;
+<%_ if (authenticationType == 'session') { _%>
 import <%=packageName%>.repository.PersistentTokenRepository;
+<%_ } _%>
 import <%=packageName%>.repository.UserRepository;
 import <%=packageName%>.security.SecurityUtils;
 import <%=packageName%>.service.MailService;
@@ -38,11 +40,13 @@ public class AccountService extends AccountServiceGrpc.AccountServiceImplBase {
 
     private final UserProtoMapper userProtoMapper;
 
-    public AccountService(UserRepository userRepository, UserService userService, MailService mailService, PersistentTokenRepository persistentTokenRepository, UserProtoMapper userProtoMapper) {
+    public AccountService(UserRepository userRepository, UserService userService, MailService mailService, <% if (authenticationType == 'session') { %>PersistentTokenRepository persistentTokenRepository, <% } %>UserProtoMapper userProtoMapper) {
         this.userRepository = userRepository;
         this.userService = userService;
         this.mailService = mailService;
+        <%_ if (authenticationType == 'session') { _%>
         this.persistentTokenRepository = persistentTokenRepository;
+        <%_ } _%>
         this.userProtoMapper = userProtoMapper;
     }
 
@@ -142,6 +146,19 @@ public class AccountService extends AccountServiceGrpc.AccountServiceImplBase {
         }
     }
 
+    <%_ if (authenticationType == 'session') { _%>
+    @Override
+    public void getCurrentSessions(Empty request, StreamObserver<PersistentToken> responseObserver) {
+        Optional<User> user = userRepository.findOneByLogin(SecurityUtils.getCurrentUserLogin());
+        if (user.isPresent()) {
+            persistentTokenRepository.findByUser(user.get()).forEach( persistentToken ->
+                responseObserver.onNext(ProtobufUtil.persistentTokenToPersistentTokenProto(persistentToken))
+            );
+        } else {
+            responseObserver.onError(Status.INTERNAL.asException());
+        }
+    }
+
     @Override
     public void invalidateSession(StringValue series, StreamObserver<Empty> responseObserver) {
         userRepository.findOneByLogin(SecurityUtils.getCurrentUserLogin()).ifPresent(u ->
@@ -152,6 +169,7 @@ public class AccountService extends AccountServiceGrpc.AccountServiceImplBase {
         responseObserver.onCompleted();
     }
 
+    <%_ } _%>
     @Override
     public void requestPasswordReset(StringValue mail, StreamObserver<Empty> responseObserver) {
         Optional<User> user = userService.requestPasswordReset(mail.getValue());

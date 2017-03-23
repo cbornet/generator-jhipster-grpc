@@ -5,10 +5,14 @@ import <%=packageName%>.AbstractCassandraTest;
 <%_ } _%>
 import <%=packageName%>.<%= mainClass %>;
 import <%=packageName%>.domain.Authority;
+<%_ if (authenticationType == 'session') { _%>
 import <%=packageName%>.domain.PersistentToken;
+<%_ } _%>
 import <%=packageName%>.domain.User;
 import <%=packageName%>.repository.AuthorityRepository;
+<%_ if (authenticationType == 'session') { _%>
 import <%=packageName%>.repository.PersistentTokenRepository;
+<%_ } _%>
 import <%=packageName%>.repository.UserRepository;
 import <%=packageName%>.security.AuthoritiesConstants;
 import <%=packageName%>.service.MailService;
@@ -40,6 +44,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -84,9 +89,11 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
     @Autowired
     private UserService userService;
 
+    <%_ if (authenticationType == 'session') { _%>
     @Autowired
     private PersistentTokenRepository persistentTokenRepository;
 
+    <%_ } _%>
     @Autowired
     private UserProtoMapper userProtoMapper;
 
@@ -116,10 +123,10 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
         doNothing().when(mockMailService).sendActivationEmail(anyObject());
 
         AccountService service =
-            new AccountService(userRepository, userService, mockMailService, persistentTokenRepository, userProtoMapper);
+            new AccountService(userRepository, userService, mockMailService,<% if (authenticationType == 'session') { %> persistentTokenRepository,<% } %> userProtoMapper);
 
         AccountService userService =
-            new AccountService(userRepository, mockUserService, mockMailService, persistentTokenRepository, userProtoMapper);
+            new AccountService(userRepository, mockUserService, mockMailService,<% if (authenticationType == 'session') { %> persistentTokenRepository, <% } %>userProtoMapper);
 
         String uniqueServerName = "Mock server for " + AccountService.class;
         mockServer = InProcessServerBuilder
@@ -492,6 +499,32 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
         }
     }
 
+    <%_ if (authenticationType == 'session') { _%>
+    @Test
+    @Transactional
+    @WithMockUser(DEFAULT_LOGIN)
+    public void testGetCurrentSessions() {
+        User user = UserResourceIntTest.createEntity(null);
+        userRepository.saveAndFlush(user);
+
+        PersistentToken token = new PersistentToken();
+        token.setSeries("1111-1111");
+        token.setUser(user);
+        token.setTokenValue("1111-1111-data");
+        token.setTokenDate(LocalDate.of(2017, 3, 23));
+        token.setIpAddress("127.0.0.1");
+        token.setUserAgent("Test agent");
+        persistentTokenRepository.saveAndFlush(token);
+
+        com.mycompany.myapp.grpc.PersistentToken tokenProto = stub.getCurrentSessions(Empty.newBuilder().build()).next();
+        assertThat(tokenProto.getSeries()).isEqualTo("1111-1111");
+        assertThat(tokenProto.getIpAddress()).isEqualTo("127.0.0.1");
+        assertThat(tokenProto.getUserAgent()).isEqualTo("Test agent");
+        assertThat(tokenProto.getTokenDate().getYear()).isEqualTo(2017);
+        assertThat(tokenProto.getTokenDate().getMonth()).isEqualTo(3);
+        assertThat(tokenProto.getTokenDate().getDay()).isEqualTo(23);
+    }
+
     @Test
     @Transactional
     @WithMockUser(DEFAULT_LOGIN)
@@ -513,6 +546,7 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
         assertThat(persistentTokenRepository.findByUser(user)).isEmpty();
     }
 
+    <%_ } _%>
     @Test
     @Transactional
     public void testRequestPasswordReset() {

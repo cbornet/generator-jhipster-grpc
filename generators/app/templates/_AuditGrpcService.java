@@ -37,7 +37,7 @@ public class AuditGrpcService extends AuditServiceGrpc.AuditServiceImplBase {
         }
         try {
             for(org.springframework.boot.actuate.audit.AuditEvent event : auditEvents) {
-                responseObserver.onNext(auditEventToAuditEventProto(event));
+                responseObserver.onNext(ProtobufUtil.auditEventToAuditEventProto(event));
             }
             responseObserver.onCompleted();
         } catch (JsonProcessingException e) {
@@ -51,7 +51,7 @@ public class AuditGrpcService extends AuditServiceGrpc.AuditServiceImplBase {
         Optional<org.springframework.boot.actuate.audit.AuditEvent> auditEvent = auditEventService.find(id.getValue());
         if (auditEvent.isPresent()) {
             try {
-                responseObserver.onNext(auditEventToAuditEventProto(auditEvent.get()));
+                responseObserver.onNext(ProtobufUtil.auditEventToAuditEventProto(auditEvent.get()));
                 responseObserver.onCompleted();
             } catch (JsonProcessingException e) {
                 responseObserver.onError(e);
@@ -59,16 +59,6 @@ public class AuditGrpcService extends AuditServiceGrpc.AuditServiceImplBase {
         } else {
             responseObserver.onError(Status.NOT_FOUND.asException());
         }
-    }
-
-    public static AuditEvent auditEventToAuditEventProto(org.springframework.boot.actuate.audit.AuditEvent event) throws JsonProcessingException {
-        ObjectMapper mapper = new ObjectMapper();
-        return AuditEvent.newBuilder()
-            .setTimestamp(ProtobufUtil.instantToTimestamp(event.getTimestamp().toInstant()))
-            .setPrincipal(event.getPrincipal())
-            .setType(event.getType())
-            .setData(mapper.writeValueAsString(event.getData()))
-            .build();
     }
 
 }
