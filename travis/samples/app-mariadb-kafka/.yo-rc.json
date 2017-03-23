@@ -19,7 +19,6 @@
     "useSass": false,
     "applicationType": "monolith",
     "testFrameworks": [
-      "gatling",
       "protractor"
     ],
     "jhiPrefix": "jhi",

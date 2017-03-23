@@ -22,7 +22,6 @@
     ],
     "enableSocialSignIn": false,
     "testFrameworks": [
-      "gatling"
     ],
     "serverPort": "8080",
     "jhiPrefix": "jhi",
