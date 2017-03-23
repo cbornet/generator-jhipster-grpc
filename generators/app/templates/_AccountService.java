@@ -36,8 +36,10 @@ public class AccountService extends AccountServiceGrpc.AccountServiceImplBase {
 
     private final MailService mailService;
 
+    <%_ if (authenticationType == 'session') { _%>
     private final PersistentTokenRepository persistentTokenRepository;
 
+    <%_ } _%>
     private final UserProtoMapper userProtoMapper;
 
     public AccountService(UserRepository userRepository, UserService userService, MailService mailService, <% if (authenticationType == 'session') { %>PersistentTokenRepository persistentTokenRepository, <% } %>UserProtoMapper userProtoMapper) {
