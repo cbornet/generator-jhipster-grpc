@@ -128,7 +128,7 @@ public abstract class ProtobufUtil {
     }
     <%_ if (authenticationType == 'session') { _%>
 
-    public static PersistentToken persistentTokenToPersistentTokenProto(com.mycompany.myapp.domain.PersistentToken token) {
+    public static PersistentToken persistentTokenToPersistentTokenProto(<%=packageName%>.domain.PersistentToken token) {
         if (token == null) {
             return null;
         }

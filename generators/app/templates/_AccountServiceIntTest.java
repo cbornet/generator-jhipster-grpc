@@ -516,7 +516,7 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
         token.setUserAgent("Test agent");
         persistentTokenRepository.saveAndFlush(token);
 
-        com.mycompany.myapp.grpc.PersistentToken tokenProto = stub.getCurrentSessions(Empty.newBuilder().build()).next();
+        <%=packageName%>.grpc.PersistentToken tokenProto = stub.getCurrentSessions(Empty.newBuilder().build()).next();
         assertThat(tokenProto.getSeries()).isEqualTo("1111-1111");
         assertThat(tokenProto.getIpAddress()).isEqualTo("127.0.0.1");
         assertThat(tokenProto.getUserAgent()).isEqualTo("Test agent");
