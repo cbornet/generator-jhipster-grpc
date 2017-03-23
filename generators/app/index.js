@@ -25,10 +25,15 @@ module.exports = yeoman.Base.extend({
         },
         displayLogo: function () {
             this.log('Welcome to the ' + chalk.red('JHipster grpc') + ' generator! ' + chalk.yellow('v' + packagejs.version + '\n'));
+            if (jhipsterVar.testFrameworks.includes('gatling')) {
+                this.log(chalk.red('Applications using Gatling are currently not supported (see https://github.com/cbornet/generator-jhipster-grpc/issues/4)'));
+                this.abort = true;
+            }
         }
     },
 
     prompting: function () {
+        if (this.abort) return;
         this.entities = [];
         this.existingEntitiesNames = jhipsterFunc.getExistingEntities()
             .filter(entity => entity.definition.service === 'serviceClass' || entity.definition.service === 'serviceImpl')
@@ -55,6 +60,7 @@ module.exports = yeoman.Base.extend({
 
     writing: {
         writeTemplates: function () {
+            if (this.abort) return;
             this.mainClass = jhipsterVar.mainClassName;
             this.packageFolder = jhipsterVar.packageFolder;
             this.packageName = jhipsterVar.packageName;
@@ -131,7 +137,6 @@ module.exports = yeoman.Base.extend({
                 grpcSpringVersion = '1.0.0';
                 this.protocVersion = '3.0.2';
                 guavaVersion = '19.0';
-
             }
 
             if (jhipsterVar.buildTool === 'maven') {
@@ -203,6 +208,7 @@ module.exports = yeoman.Base.extend({
         },
 
         registering: function () {
+            if (this.abort) return;
             try {
                 jhipsterFunc.registerModule('generator-jhipster-grpc', 'entity', 'post', 'entity', 'Adds support for gRPC and generates gRPC CRUD services');
             } catch (err) {
@@ -211,6 +217,7 @@ module.exports = yeoman.Base.extend({
         },
 
         regenerateEntities: function () {
+            if (this.abort) return;
             if (this.entities.length !== 0) {
                 this.log(chalk.green('Regenerating entities with gRPC service'));
             }
@@ -228,6 +235,7 @@ module.exports = yeoman.Base.extend({
     },
 
     end: function () {
+        if (this.abort) return;
         this.log('End of grpc generator');
     }
 });
