@@ -5,8 +5,8 @@ import <%=packageName%>.domain.<%=instanceType%>;<% } %>
 <%_ for (idx in fields) {
     if(fields[idx].fieldIsEnum) { _%>
 import <%=packageName%>.domain.enumeration.<%=fields[idx].fieldType%>;
-<%_ }}_%><% if (fieldsContainZonedDateTime || fieldsContainLocalDate || fieldsContainBigDecimal || fieldsContainBlob) { %>
-import <%=packageName%>.grpc.ProtobufUtil;<% } %><% if (dto === 'mapstruct') { %>
+<%_ }}_%>
+import <%=packageName%>.grpc.ProtobufUtil;<% if (dto === 'mapstruct') { %>
 import <%=packageName%>.service.dto.<%=instanceType%>;<% } %>
 
 import org.mapstruct.Mapper;
