@@ -34,7 +34,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 <%_ if (databaseType === 'cassandra') { _%>
 import java.util.UUID;
@@ -282,7 +281,8 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
         userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(user);
 
         // Get all the users
-        Iterator<UserProto> users = stub.getAllUsers(<% if (databaseType == 'sql' || databaseType == 'mongodb') { %>PageRequest<% } else { %>Empty<% } %>.getDefaultInstance());
+        List<UserProto> users = new ArrayList<>();
+        stub.getAllUsers(<% if (databaseType == 'sql' || databaseType == 'mongodb') { %>PageRequest<% } else { %>Empty<% } %>.getDefaultInstance()).forEachRemaining(users::add);
         assertThat(users).extracting("login").contains(DEFAULT_LOGIN);
         assertThat(users).extracting("firstName").contains(DEFAULT_FIRSTNAME);
         assertThat(users).extracting("lastName").contains(DEFAULT_LASTNAME);
