@@ -84,13 +84,11 @@ public class AccountService extends AccountServiceGrpc.AccountServiceImplBase {
                 } else {
                     throw e;
                 }
-            }
-            <%_ } else { _%>
+            <%_ } _%>
             } catch (ConstraintViolationException e) {
                 log.error("Invalid user", e);
                 responseObserver.onError(Status.INVALID_ARGUMENT.withDescription("Invalid user").asException());
             }
-            <%_ } _%>
         }
 
     }
@@ -154,13 +152,11 @@ public class AccountService extends AccountServiceGrpc.AccountServiceImplBase {
                     } else {
                         throw e;
                     }
-                }
-                <%_ } else { _%>
+                <%_ } _%>
                 } catch (ConstraintViolationException e) {
                     log.error("Invalid user", e);
                     responseObserver.onError(Status.INVALID_ARGUMENT.withDescription("Invalid user").asException());
                 }
-                <%_ } _%>
             } else {
                 responseObserver.onError(Status.INTERNAL.asException());
             }
