@@ -200,8 +200,8 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
         }
     }
 
-    @Test
-    @Transactional
+    @Test<% if (databaseType == 'sql') { %>
+    @Transactional<% } %>
     public void testRegisterValid() throws Exception {
         UserProto validUser = UserProto.newBuilder()
             .setLogin(DEFAULT_LOGIN)
@@ -221,7 +221,6 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
     }
 
     @Test
-    @Transactional
     public void testRegisterInvalid() throws Exception {
         UserProto invalidUser = UserProto.newBuilder()
             .setLogin("funky-log!n")
@@ -245,8 +244,8 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
         assertThat(userRepository.findOneByEmail(DEFAULT_EMAIL)).isNotPresent();
     }
 
-    @Test
-    @Transactional
+    @Test<% if (databaseType == 'sql') { %>
+    @Transactional<% } %>
     public void testRegisterDuplicateLogin() throws Exception {
         // Good
         UserProto validUser = UserProto.newBuilder()
@@ -291,9 +290,9 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
         assertThat(userRepository.findOneByEmail("jhipster@localhost")).isNotPresent();
     }
 
-    @Test
-    @Transactional
-    public void testRegisterDuplicateLEmail() throws Exception {
+    @Test<% if (databaseType == 'sql') { %>
+    @Transactional<% } %>
+    public void testRegisterDuplicateEmail() throws Exception {
         // Good
         UserProto validUser = UserProto.newBuilder()
             .setLogin(DEFAULT_LOGIN)
@@ -337,8 +336,8 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
         assertThat(userRepository.findOneByLogin("anotherlogin")).isNotPresent();
     }
 
-    @Test
-    @Transactional
+    @Test<% if (databaseType == 'sql') { %>
+    @Transactional<% } %>
     public void testRegisterAdminIsIgnored() throws Exception {
         UserProto user = UserProto.newBuilder()
             .setLogin(DEFAULT_LOGIN)
@@ -361,8 +360,8 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
             .containsExactly(authorityRepository.findOne(AuthoritiesConstants.USER));
     }
 
-    @Test
-    @Transactional
+    @Test<% if (databaseType == 'sql') { %>
+    @Transactional<% } %>
     public void testActivateAccount() throws Exception {
         final String activationKey = "some activationKey";
         User user = UserResourceIntTest.createEntity(null);
@@ -376,8 +375,8 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
         assertThat(userProto.getActivated()).isTrue();
     }
 
-    @Test
-    @Transactional
+    @Test<% if (databaseType == 'sql') { %>
+    @Transactional<% } %>
     public void testActivateAccountWithWrongKey() throws Exception {
         try {
             stub.activateAccount(StringValue.newBuilder().setValue("some wrong key").build());
@@ -387,8 +386,8 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
         }
     }
 
-    @Test
-    @Transactional
+    @Test<% if (databaseType == 'sql') { %>
+    @Transactional<% } %>
     @WithMockUser(DEFAULT_LOGIN)
     public void testSaveAccount() throws Exception {
         User user = UserResourceIntTest.createEntity(null);
@@ -421,7 +420,36 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
     }
 
     @Test
-    @Transactional
+    @WithMockUser(DEFAULT_LOGIN)
+    public void testSaveInvalidEmail() throws Exception {
+        User user = UserResourceIntTest.createEntity(null);
+        user.setAuthorities(new HashSet<>());
+        userRepository.saveAndFlush(user);
+
+        UserProto invalidUser = UserProto.newBuilder()
+            .setPassword(UPDATED_PASSWORD)
+            .setFirstName(UPDATED_FIRSTNAME)
+            .setLastName(UPDATED_LASTNAME)
+            .setEmail("Invalid email")
+            .setActivated(false)
+            .setImageUrl(UPDATED_IMAGEURL)
+            .setLangKey(UPDATED_LANGKEY)
+            .addAuthorities(AuthoritiesConstants.ADMIN)
+            .build();
+
+        try {
+            stub.saveAccount(invalidUser);
+            failBecauseExceptionWasNotThrown(StatusRuntimeException.class);
+        } catch (StatusRuntimeException e) {
+            assertThat(e.getStatus().getCode()).isEqualTo(Status.Code.INVALID_ARGUMENT);
+            assertThat(userRepository.findOneByEmail("Invalid email")).isNotPresent();
+        } finally {
+            userRepository.delete(user);
+        }
+    }
+
+    @Test<% if (databaseType == 'sql') { %>
+    @Transactional<% } %>
     @WithMockUser(DEFAULT_LOGIN)
     public void testSaveAccountExistingEmail() throws Exception {
         User user = UserResourceIntTest.createEntity(null);
@@ -433,7 +461,6 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
         userRepository.saveAndFlush(anotherUser);
 
         UserProto userProto = UserProto.newBuilder()
-            .setLogin(DEFAULT_LOGIN)
             .setPassword(UPDATED_PASSWORD)
             .setFirstName(UPDATED_FIRSTNAME)
             .setLastName(UPDATED_LASTNAME)
@@ -454,8 +481,8 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
         assertThat(updatedUser.getEmail()).isEqualTo(user.getEmail());
     }
 
-    @Test
-    @Transactional
+    @Test<% if (databaseType == 'sql') { %>
+    @Transactional<% } %>
     @WithMockUser(DEFAULT_LOGIN)
     public void testChangePassword() {
         User user = UserResourceIntTest.createEntity(null);
@@ -467,8 +494,8 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
         assertThat(passwordEncoder.matches("new password", updatedUser.getPassword())).isTrue();
     }
 
-    @Test
-    @Transactional
+    @Test<% if (databaseType == 'sql') { %>
+    @Transactional<% } %>
     @WithMockUser(DEFAULT_LOGIN)
     public void testChangePasswordTooSmall() {
         User user = UserResourceIntTest.createEntity(null);
@@ -482,8 +509,8 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
         }
     }
 
-    @Test
-    @Transactional
+    @Test<% if (databaseType == 'sql') { %>
+    @Transactional<% } %>
     @WithMockUser(DEFAULT_LOGIN)
     public void testChangePasswordTooLong() {
         User user = UserResourceIntTest.createEntity(null);
@@ -500,8 +527,8 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
     }
 
     <%_ if (authenticationType == 'session') { _%>
-    @Test
-    @Transactional
+    @Test<% if (databaseType == 'sql') { %>
+    @Transactional<% } %>
     @WithMockUser(DEFAULT_LOGIN)
     public void testGetCurrentSessions() {
         User user = UserResourceIntTest.createEntity(null);
@@ -525,8 +552,8 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
         assertThat(tokenProto.getTokenDate().getDay()).isEqualTo(23);
     }
 
-    @Test
-    @Transactional
+    @Test<% if (databaseType == 'sql') { %>
+    @Transactional<% } %>
     @WithMockUser(DEFAULT_LOGIN)
     public void testInvalidateSession() {
         User user = UserResourceIntTest.createEntity(null);
@@ -547,8 +574,8 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
     }
 
     <%_ } _%>
-    @Test
-    @Transactional
+    @Test<% if (databaseType == 'sql') { %>
+    @Transactional<% } %>
     public void testRequestPasswordReset() {
         User user = UserResourceIntTest.createEntity(null);
         userRepository.saveAndFlush(user);
@@ -556,7 +583,6 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
     }
 
     @Test
-    @Transactional
     public void testRequestPasswordResetWrongEmail() {
         try {
             stub.requestPasswordReset(StringValue.newBuilder().setValue(DEFAULT_EMAIL).build());
@@ -566,8 +592,8 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
         }
     }
 
-    @Test
-    @Transactional
+    @Test<% if (databaseType == 'sql') { %>
+    @Transactional<% } %>
     public void testFinishPasswordReset() {
         User user = UserResourceIntTest.createEntity(null);
         user.setResetDate(ZonedDateTime.now().plusDays(1));
@@ -584,11 +610,7 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
     }
 
     @Test
-    @Transactional
     public void testFinishPasswordResetPasswordTooSmall() {
-        User user = UserResourceIntTest.createEntity(null);
-        userRepository.saveAndFlush(user);
-
         try {
             stub.finishPasswordReset(KeyAndPassword.newBuilder()
                 .setNewPassword("foo")
@@ -600,8 +622,8 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
         }
     }
 
-    @Test
-    @Transactional
+    @Test<% if (databaseType == 'sql') { %>
+    @Transactional<% } %>
     public void testFinishPasswordResetWrongKey() {
         User user = UserResourceIntTest.createEntity(null);
         userRepository.saveAndFlush(user);

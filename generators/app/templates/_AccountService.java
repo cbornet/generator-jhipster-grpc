@@ -21,6 +21,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+<%_ if (databaseType === 'sql') { _%>
+import org.springframework.transaction.TransactionSystemException;
+<%_ } _%>
 
 import javax.validation.ConstraintViolationException;
 import java.util.Optional;
@@ -73,10 +76,21 @@ public class AccountService extends AccountServiceGrpc.AccountServiceImplBase {
                 mailService.sendCreationEmail(newUser);
                 responseObserver.onNext(Empty.newBuilder().build());
                 responseObserver.onCompleted();
+            <%_ if (databaseType === 'sql') { _%>
+            } catch (TransactionSystemException e) {
+                if(e.getOriginalException().getCause() instanceof ConstraintViolationException) {
+                    log.info("Invalid user", e);
+                    responseObserver.onError(Status.INVALID_ARGUMENT.withDescription("Invalid user").asException());
+                } else {
+                    throw e;
+                }
+            }
+            <%_ } else { _%>
             } catch (ConstraintViolationException e) {
                 log.error("Invalid user", e);
                 responseObserver.onError(Status.INVALID_ARGUMENT.withDescription("Invalid user").asException());
             }
+            <%_ } _%>
         }
 
     }
@@ -118,19 +132,35 @@ public class AccountService extends AccountServiceGrpc.AccountServiceImplBase {
     @Override
     public void saveAccount(UserProto user, StreamObserver<Empty> responseObserver) {
         Optional<User> existingUser = userRepository.findOneByEmail(user.getEmail());
-        if (existingUser.isPresent() && (!existingUser.get().getLogin().equalsIgnoreCase(user.getLogin()))) {
+        if (existingUser.isPresent() && (!existingUser.get().getLogin().equalsIgnoreCase(SecurityUtils.getCurrentUserLogin()))) {
             responseObserver.onError(Status.ALREADY_EXISTS.withDescription("Email already in use").asException());
         } else {
             existingUser = userRepository.findOneByLogin(SecurityUtils.getCurrentUserLogin());
             if (existingUser.isPresent()) {
-                userService.updateUser(
-                    user.getFirstName().isEmpty() ? null : user.getFirstName(),
-                    user.getLastName().isEmpty() ? null : user.getLastName(),
-                    user.getEmail().isEmpty() ? null : user.getEmail(),
-                    user.getLangKey().isEmpty() ? null : user.getLangKey()
-                );
-                responseObserver.onNext(Empty.newBuilder().build());
-                responseObserver.onCompleted();
+                try {
+                    userService.updateUser(
+                        user.getFirstName().isEmpty() ? null : user.getFirstName(),
+                        user.getLastName().isEmpty() ? null : user.getLastName(),
+                        user.getEmail().isEmpty() ? null : user.getEmail(),
+                        user.getLangKey().isEmpty() ? null : user.getLangKey()
+                    );
+                    responseObserver.onNext(Empty.newBuilder().build());
+                    responseObserver.onCompleted();
+                <%_ if (databaseType === 'sql') { _%>
+                } catch (TransactionSystemException e) {
+                    if(e.getOriginalException().getCause() instanceof ConstraintViolationException) {
+                        log.info("Invalid user", e);
+                        responseObserver.onError(Status.INVALID_ARGUMENT.withDescription("Invalid user").asException());
+                    } else {
+                        throw e;
+                    }
+                }
+                <%_ } else { _%>
+                } catch (ConstraintViolationException e) {
+                    log.error("Invalid user", e);
+                    responseObserver.onError(Status.INVALID_ARGUMENT.withDescription("Invalid user").asException());
+                }
+                <%_ } _%>
             } else {
                 responseObserver.onError(Status.INTERNAL.asException());
             }
