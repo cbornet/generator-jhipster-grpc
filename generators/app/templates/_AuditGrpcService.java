@@ -4,7 +4,7 @@ import <%=packageName%>.service.AuditEventService;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.protobuf.Int64Value;
+import com.google.protobuf.<%=idProtoWrappedType%>;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
@@ -47,7 +47,7 @@ public class AuditGrpcService extends AuditServiceGrpc.AuditServiceImplBase {
     }
 
     @Override
-    public void getAuditEvent(Int64Value id, StreamObserver<AuditEvent> responseObserver) {
+    public void getAuditEvent(<%=idProtoWrappedType%> id, StreamObserver<AuditEvent> responseObserver) {
         Optional<org.springframework.boot.actuate.audit.AuditEvent> auditEvent = auditEventService.find(id.getValue());
         if (auditEvent.isPresent()) {
             try {
