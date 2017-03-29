@@ -30,12 +30,14 @@ public class AuthenticationInterceptor implements ServerInterceptor {
     public AuthenticationInterceptor(AuthenticationManager authenticationManager) {
         this.authenticationManager = authenticationManager;
     }
+
     <%_ } else if (authenticationType === 'jwt') { _%>
     private final TokenProvider tokenProvider;
 
     public AuthenticationInterceptor(TokenProvider tokenProvider) {
         this.tokenProvider = tokenProvider;
     }
+
     <%_ } else if (authenticationType === 'oauth2') { _%>
     private final TokenStore tokenStore;
 

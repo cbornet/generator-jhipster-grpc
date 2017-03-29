@@ -23,12 +23,16 @@ public abstract class UserProtoMapper extends ProtobufUtil {
             userProto.getLastName().isEmpty() ? null : userProto.getLastName(),
             userProto.getEmail().isEmpty() ? null : userProto.getEmail(),
             userProto.getActivated(),
+            <%_ if (databaseType == 'mongodb' || databaseType == 'sql') { _%>
             userProto.getImageUrl().isEmpty() ? null : userProto.getImageUrl(),
+            <%_ } _%>
             userProto.getLangKey().isEmpty() ? null : userProto.getLangKey(),
+            <%_ if (databaseType == 'mongodb' || databaseType == 'sql') { _%>
             userProto.getCreatedBy().isEmpty() ? null : userProto.getCreatedBy(),
             timestampToZonedDateTime(userProto.getCreatedDate()),
             userProto.getLastModifiedBy().isEmpty() ? null: userProto.getLastModifiedBy(),
             timestampToZonedDateTime(userProto.getLastModifiedDate()),
+            <%_ } _%>
             new HashSet<>(userProto.getAuthoritiesList())
         );
     }

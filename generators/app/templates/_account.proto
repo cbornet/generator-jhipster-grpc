@@ -6,7 +6,11 @@ option java_package = "<%=packageName%>.grpc";
 import "google/protobuf/empty.proto";
 import "google/protobuf/wrappers.proto";
 <%_ if (authenticationType == 'session') { _%>
+    <%_ if (databaseType == 'cassandra') { _%>
+import "google/protobuf/timestamp.proto";
+    <%_ } else { _%>
 import "util/date.proto";
+    <% _} _%>
 <%_ } _%>
 import "<%=packageFolder%>/user.proto";
 
@@ -29,8 +33,9 @@ service AccountService {
 
 <%_ if (authenticationType == 'session') { _%>
 message PersistentToken {
-    string series = 1;
-    util.Date token_date = 2;
+    string series = 1;<% if (databaseType == 'cassandra') { %>
+    google.protobuf.Timestamp token_date = 2;<% } else { %>
+    util.Date token_date = 2;<% } %>
     string ip_address = 3;
     string user_agent = 4;
 }

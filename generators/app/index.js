@@ -103,10 +103,15 @@ module.exports = yeoman.Base.extend({
             this.template('_account.proto', protoPackageDir + 'account.proto');
             this.template('_AccountService.java', javaDir + 'grpc/AccountService.java');
             this.template('_AccountServiceIntTest.java', testDir + 'grpc/AccountServiceIntTest.java');
+            if (this.databaseType === 'cassandra') {
+                this.template('_UserRepository.java', javaDir + 'repository/UserRepository.java');
+            }
 
-            this.template('_audit.proto', protoPackageDir + 'audit.proto');
-            this.template('_AuditGrpcService.java', javaDir + 'grpc/AuditGrpcService.java');
-            this.template('_AuditGrpcServiceIntTest.java', testDir + 'grpc/AuditGrpcServiceIntTest.java');
+            if (this.databaseType === 'sql' || this.databaseType === 'mongodb') {
+                this.template('_audit.proto', protoPackageDir + 'audit.proto');
+                this.template('_AuditGrpcService.java', javaDir + 'grpc/AuditGrpcService.java');
+                this.template('_AuditGrpcServiceIntTest.java', testDir + 'grpc/AuditGrpcServiceIntTest.java');
+            }
 
             this.template('_configprops.proto', protoPackageDir + 'configprops.proto');
             this.template('_ConfigurationPropertiesReportService.java', javaDir + 'grpc/ConfigurationPropertiesReportService.java');

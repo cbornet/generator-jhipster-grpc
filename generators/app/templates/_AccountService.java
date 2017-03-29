@@ -69,8 +69,8 @@ public class AccountService extends AccountServiceGrpc.AccountServiceImplBase {
                     userProto.getPassword().isEmpty() ? null : userProto.getPassword(),
                     userProto.getFirstName().isEmpty() ? null : userProto.getFirstName(),
                     userProto.getLastName().isEmpty() ? null : userProto.getLastName(),
-                    userProto.getEmail().isEmpty() ? null : userProto.getEmail().toLowerCase(),
-                    userProto.getImageUrl().isEmpty() ? null : userProto.getImageUrl(),
+                    userProto.getEmail().isEmpty() ? null : userProto.getEmail().toLowerCase(),<% if (databaseType == 'mongodb' || databaseType == 'sql') { %>
+                    userProto.getImageUrl().isEmpty() ? null : userProto.getImageUrl(),<% } %>
                     userProto.getLangKey().isEmpty() ? null : userProto.getLangKey()
                 );
                 mailService.sendCreationEmail(newUser);
@@ -191,8 +191,9 @@ public class AccountService extends AccountServiceGrpc.AccountServiceImplBase {
     public void invalidateSession(StringValue series, StreamObserver<Empty> responseObserver) {
         userRepository.findOneByLogin(SecurityUtils.getCurrentUserLogin()).ifPresent(u ->
             persistentTokenRepository.findByUser(u).stream()
-                .filter(persistentToken -> StringUtils.equals(persistentToken.getSeries(), series.getValue()))
-                .findAny().ifPresent(t -> persistentTokenRepository.delete(series.getValue())));
+                .filter(persistentToken -> StringUtils.equals(persistentToken.getSeries(), series.getValue()))<% if (databaseType == 'sql' || databaseType == 'mongodb') { %>
+                .findAny().ifPresent(t -> persistentTokenRepository.delete(series.getValue())));<% } else { %>
+                .findAny().ifPresent(persistentTokenRepository::delete));<% } %>
         responseObserver.onNext(Empty.newBuilder().build());
         responseObserver.onCompleted();
     }
