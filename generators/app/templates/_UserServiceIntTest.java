@@ -62,7 +62,7 @@ public class UserServiceIntTest <% if (databaseType == 'cassandra') { %>extends 
     @Transactional
     <%_ } _%>
     public void testRemoveOldPersistentTokens() {
-        userRepository.save(user);
+        userRepository.save<% if (databaseType == 'sql') { %>AndFlush<% } %>(user);
         int existingCount = persistentTokenRepository.findByUser(user).size();
         generateUserToken(user, "1111-1111", LocalDate.now());
         LocalDate now = LocalDate.now();
@@ -77,7 +77,7 @@ public class UserServiceIntTest <% if (databaseType == 'cassandra') { %>extends 
     @Transactional
     <%_ } _%>
     public void assertThatUserMustExistToResetPassword() {
-        userRepository.save(user);
+        userRepository.save<% if (databaseType == 'sql') { %>AndFlush<% } %>(user);
         Optional<User> maybeUser = userService.requestPasswordReset("invalid.login@localhost");
         assertThat(maybeUser.isPresent()).isFalse();
 
@@ -95,7 +95,7 @@ public class UserServiceIntTest <% if (databaseType == 'cassandra') { %>extends 
     <%_ } _%>
     public void assertThatOnlyActivatedUserCanRequestPasswordReset() {
         user.setActivated(false);
-        userRepository.save(user);
+        userRepository.save<% if (databaseType == 'sql') { %>AndFlush<% } %>(user);
         Optional<User> maybeUser = userService.requestPasswordReset(user.getLogin());
         assertThat(maybeUser.isPresent()).isFalse();
         userRepository.delete(user);
@@ -112,7 +112,7 @@ public class UserServiceIntTest <% if (databaseType == 'cassandra') { %>extends 
         user.setResetDate(daysAgo);
         user.setResetKey(resetKey);
 
-        userRepository.save(user);
+        userRepository.save<% if (databaseType == 'sql') { %>AndFlush<% } %>(user);
 
         Optional<User> maybeUser = userService.completePasswordReset("johndoe2", user.getResetKey());
 
@@ -130,7 +130,7 @@ public class UserServiceIntTest <% if (databaseType == 'cassandra') { %>extends 
         user.setActivated(true);
         user.setResetDate(daysAgo);
         user.setResetKey("1234");
-        userRepository.save(user);
+        userRepository.save<% if (databaseType == 'sql') { %>AndFlush<% } %>(user);
         Optional<User> maybeUser = userService.completePasswordReset("johndoe2", user.getResetKey());
         assertThat(maybeUser.isPresent()).isFalse();
         userRepository.delete(user);
@@ -147,7 +147,7 @@ public class UserServiceIntTest <% if (databaseType == 'cassandra') { %>extends 
         user.setActivated(true);
         user.setResetDate(daysAgo);
         user.setResetKey(resetKey);
-        userRepository.save(user);
+        userRepository.save<% if (databaseType == 'sql') { %>AndFlush<% } %>(user);
         Optional<User> maybeUser = userService.completePasswordReset("johndoe2", user.getResetKey());
         assertThat(maybeUser.isPresent()).isTrue();
         assertThat(maybeUser.get().getResetDate()).isNull();
@@ -164,9 +164,9 @@ public class UserServiceIntTest <% if (databaseType == 'cassandra') { %>extends 
     public void testFindNotActivatedUsersByCreationDateBefore() {
         ZonedDateTime now = ZonedDateTime.now();
         user.setActivated(false);
-        User dbUser = userRepository.save(user);
+        User dbUser = userRepository.save<% if (databaseType == 'sql') { %>AndFlush<% } %>(user);
         dbUser.setCreatedDate(now.minusDays(4));
-        userRepository.save(user);
+        userRepository.save<% if (databaseType == 'sql') { %>AndFlush<% } %>(user);
         List<User> users = userRepository.findAllByActivatedIsFalseAndCreatedDateBefore(now.minusDays(3));
         assertThat(users).isNotEmpty();
         userService.removeNotActivatedUsers();
@@ -181,9 +181,8 @@ public class UserServiceIntTest <% if (databaseType == 'cassandra') { %>extends 
         token.setTokenValue(tokenSeries + "-data");
         token.setTokenDate(localDate);
         token.setIpAddress("127.0.0.1");
-        token.setUserAgent("Test agent");<% if (databaseType == 'sql') { %>
-        persistentTokenRepository.saveAndFlush(token);<% } %><% if (databaseType == 'mongodb') { %>
-        persistentTokenRepository.save(token);<% } %>
+        token.setUserAgent("Test agent");
+        persistentTokenRepository.save<% if (databaseType == 'sql') { %>AndFlush<% } %>(token);
     }<% } %>
 
     @Test
@@ -192,7 +191,9 @@ public class UserServiceIntTest <% if (databaseType == 'cassandra') { %>extends 
     <%_ } _%>
     public void assertThatAnonymousUserIsNotGet() {
         user.setLogin(Constants.ANONYMOUS_USER);
-        userRepository.save(user);<% if (databaseType == 'sql' || databaseType == 'mongodb') { %>
+        if (!userRepository.findOneByLogin(Constants.ANONYMOUS_USER).isPresent()) {
+            userRepository.save<% if (databaseType == 'sql') { %>AndFlush<% } %>(user);
+        }<% if (databaseType == 'sql' || databaseType == 'mongodb') { %>
         final PageRequest pageable = new PageRequest(0, (int) userRepository.count());
         final Page<UserDTO> allManagedUsers = userService.getAllManagedUsers(pageable);
         assertThat(allManagedUsers.getContent().stream()<% } %><% if (databaseType == 'cassandra') { %>
