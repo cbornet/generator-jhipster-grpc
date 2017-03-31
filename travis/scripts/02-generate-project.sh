@@ -18,7 +18,6 @@ if [ "$JHIPSTER" == "app-ng2-gateway-uaa" ]; then
     cd "$UAA_APP_FOLDER"
     yarn link generator-jhipster-grpc
     yo jhipster --force --no-insight --with-entities --skip-checks
-    yo jhipster-grpc --force --all-entities
     ls -al "$UAA_APP_FOLDER"
 fi
 
