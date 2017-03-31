@@ -80,6 +80,9 @@ module.exports = yeoman.Base.extend({
             this.authenticationType = jhipsterVar.authenticationType;
             this.databaseType = jhipsterVar.databaseType;
             this.skipUserManagement = jhipsterVar.jhipsterConfig.skipUserManagement;
+            if (jhipsterVar.applicationType === 'gateway' && this.authenticationType === 'uaa') {
+                this.skipUserManagement = true;
+            }
             var javaDir = jhipsterVar.javaDir;
             var testDir = jhipsterVar.CONSTANTS.SERVER_TEST_SRC_DIR + jhipsterVar.packageFolder + '/';
             var protoDir = jhipsterVar.CONSTANTS.MAIN_DIR + 'proto/';

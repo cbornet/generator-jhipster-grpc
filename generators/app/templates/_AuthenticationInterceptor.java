@@ -11,7 +11,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;<% } %>
 import org.springframework.security.core.Authentication;<% if (authenticationType === 'session') { %>
 import org.springframework.security.core.AuthenticationException;<% } %>
-import org.springframework.security.core.context.SecurityContextHolder;<% if (authenticationType === 'oauth2') { %>
+import org.springframework.security.core.context.SecurityContextHolder;<% if (authenticationType === 'oauth2' || authenticationType === 'uaa') { %>
 import org.springframework.security.oauth2.provider.token.TokenStore;<% } %>
 import org.springframework.stereotype.Component;<% if (authenticationType === 'session') { %>
 import org.springframework.util.Base64Utils;<% } %>
@@ -38,7 +38,7 @@ public class AuthenticationInterceptor implements ServerInterceptor {
         this.tokenProvider = tokenProvider;
     }
 
-    <%_ } else if (authenticationType === 'oauth2') { _%>
+    <%_ } else if (authenticationType === 'oauth2' || authenticationType === 'uaa') { _%>
     private final TokenStore tokenStore;
 
     public AuthenticationInterceptor(TokenStore tokenStore) {
@@ -65,7 +65,7 @@ public class AuthenticationInterceptor implements ServerInterceptor {
                 <%_ } else if (authenticationType === 'jwt') { _%>
                 if (this.tokenProvider.validateToken(token)) {
                     Authentication authentication = this.tokenProvider.getAuthentication(token);
-                <%_ } else if (authenticationType === 'oauth2') { _%>
+                <%_ } else if (authenticationType === 'oauth2' || authenticationType === 'uaa') { _%>
                 Authentication authentication = this.tokenStore.readAuthentication(token);
                 if (authentication != null) {
                 <%_ } _%>
