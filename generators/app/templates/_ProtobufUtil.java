@@ -1,6 +1,6 @@
 package <%=packageName%>.grpc;
 
-<%_ if (databaseType === 'sql' || databaseType === 'mongodb') { _%>
+<%_ if ((databaseType === 'sql' || databaseType === 'mongodb') && !skipUserManagement) { _%>
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 <%_ } _%>
@@ -154,7 +154,7 @@ public abstract class ProtobufUtil {
         return builder.build();
     }
     <%_ } _%>
-    <%_ if (databaseType === 'sql' || databaseType === 'mongodb') { _%>
+    <%_ if ((databaseType === 'sql' || databaseType === 'mongodb') && !skipUserManagement) { _%>
 
     public static AuditEvent auditEventToAuditEventProto(org.springframework.boot.actuate.audit.AuditEvent event) throws JsonProcessingException {
         if (event == null) {

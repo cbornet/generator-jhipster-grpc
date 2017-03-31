@@ -72,13 +72,14 @@ module.exports = yeoman.Base.extend({
     },
 
     writing: {
-        writeTemplates: function () {
+        writeCommonFiles: function () {
             if (this.abort) return;
             this.mainClass = jhipsterVar.mainClassName;
             this.packageFolder = jhipsterVar.packageFolder;
             this.packageName = jhipsterVar.packageName;
             this.authenticationType = jhipsterVar.authenticationType;
             this.databaseType = jhipsterVar.databaseType;
+            this.skipUserManagement = jhipsterVar.jhipsterConfig.skipUserManagement;
             var javaDir = jhipsterVar.javaDir;
             var testDir = jhipsterVar.CONSTANTS.SERVER_TEST_SRC_DIR + jhipsterVar.packageFolder + '/';
             var protoDir = jhipsterVar.CONSTANTS.MAIN_DIR + 'proto/';
@@ -98,22 +99,6 @@ module.exports = yeoman.Base.extend({
             this.template('_AuthenticationInterceptor.java', javaDir + 'grpc/AuthenticationInterceptor.java');
             this.template('_ProtobufUtil.java', javaDir + 'grpc/ProtobufUtil.java');
 
-            this.template('_account.proto', protoPackageDir + 'account.proto');
-            this.template('_AccountService.java', javaDir + 'grpc/AccountService.java');
-            this.template('_AccountServiceIntTest.java', testDir + 'grpc/AccountServiceIntTest.java');
-            //Temporary fix
-            if (this.databaseType === 'cassandra') {
-                this.template('_UserRepository.java', javaDir + 'repository/UserRepository.java');
-            }
-            //Temporary fix
-            this.template('_UserServiceIntTest.java', testDir + 'service/UserServiceIntTest.java');
-
-            if (this.databaseType === 'sql' || this.databaseType === 'mongodb') {
-                this.template('_audit.proto', protoPackageDir + 'audit.proto');
-                this.template('_AuditGrpcService.java', javaDir + 'grpc/AuditGrpcService.java');
-                this.template('_AuditGrpcServiceIntTest.java', testDir + 'grpc/AuditGrpcServiceIntTest.java');
-            }
-
             this.template('_configprops.proto', protoPackageDir + 'configprops.proto');
             this.template('_ConfigurationPropertiesReportService.java', javaDir + 'grpc/ConfigurationPropertiesReportService.java');
             this.template('_ConfigurationPropertiesReportServiceIntTest.java', testDir + 'grpc/ConfigurationPropertiesReportServiceIntTest.java');
@@ -126,11 +111,6 @@ module.exports = yeoman.Base.extend({
             this.template('_HealthService.java', javaDir + 'grpc/HealthService.java');
             this.template('_HealthServiceIntTest.java', testDir + 'grpc/HealthServiceIntTest.java');
 
-            if (jhipsterVar.authenticationType === 'jwt') {
-                this.template('_jwt.proto', protoPackageDir + 'jwt.proto');
-                this.template('_JWTService.java', javaDir + 'grpc/JWTService.java');
-                this.template('_JWTServiceIntTest.java', testDir + 'grpc/JWTServiceIntTest.java');
-            }
             this.template('_loggers.proto', protoPackageDir + 'loggers.proto');
             this.template('_LoggersService.java', javaDir + 'grpc/LoggersService.java');
             this.template('_LoggersServiceIntTest.java', testDir + 'grpc/LoggersServiceIntTest.java');
@@ -143,21 +123,18 @@ module.exports = yeoman.Base.extend({
             this.template('_ProfileInfoService.java', javaDir + 'grpc/ProfileInfoService.java');
             this.template('_ProfileInfoServiceIntTest.java', testDir + 'grpc/ProfileInfoServiceIntTest.java');
 
-            this.template('_user.proto', protoPackageDir + 'user.proto');
-            this.template('_UserGrpcService.java', javaDir + 'grpc/UserGrpcService.java');
-            this.template('_UserProtoMapper.java', javaDir + 'grpc/UserProtoMapper.java');
-            this.template('_UserGrpcServiceIntTest.java', testDir + 'grpc/UserGrpcServiceIntTest.java');
-
             this.grpcVersion = '1.1.1';
             var grpcSpringVersion = '2.0.0';
             this.protocVersion = '3.1.0';
             var guavaVersion = '20.0';
+            var nettyVersion = '4.1.8.Final';
             if (jhipsterVar.databaseType === 'cassandra') {
                 // Downgrade grpc to get a compatible guava version
                 this.grpcVersion = '1.0.2';
                 grpcSpringVersion = '1.0.0';
                 this.protocVersion = '3.0.2';
                 guavaVersion = '19.0';
+                nettyVersion = '4.1.6.Final';
             }
 
             if (jhipsterVar.buildTool === 'maven') {
@@ -166,9 +143,9 @@ module.exports = yeoman.Base.extend({
                 jhipsterFunc.addMavenDependency('com.google.guava', 'guava', guavaVersion);
                 jhipsterFunc.addMavenDependency('io.grpc', 'grpc-protobuf', this.grpcVersion);
                 jhipsterFunc.addMavenDependency('io.grpc', 'grpc-stub', this.grpcVersion);
-                if (jhipsterVar.databaseType === 'cassandra') {
+                if (jhipsterVar.databaseType === 'cassandra' || ['microservice', 'gateway', 'uaa'].includes(jhipsterVar.applicationType)) {
                     // grpc-java needs netty 4.1
-                    jhipsterFunc.addMavenDependency('io.netty', 'netty-handler', '4.1.6.Final');
+                    jhipsterFunc.addMavenDependency('io.netty', 'netty-handler', nettyVersion);
                 }
                 jhipsterFunc.addMavenPlugin('org.xolstice.maven.plugins', 'protobuf-maven-plugin', '0.5.0',
                     '                ' +
@@ -216,16 +193,48 @@ module.exports = yeoman.Base.extend({
                 jhipsterFunc.addGradleDependency('compile', 'com.google.guava', 'guava', guavaVersion);
                 jhipsterFunc.addGradleDependency('compile', 'io.grpc', 'grpc-protobuf', this.grpcVersion);
                 jhipsterFunc.addGradleDependency('compile', 'io.grpc', 'grpc-stub', this.grpcVersion);
-                if (jhipsterVar.databaseType === 'cassandra') {
+                if (jhipsterVar.databaseType === 'cassandra' || ['microservice', 'gateway', 'uaa'].includes(jhipsterVar.applicationType)) {
                     // grpc-java needs netty 4.1
-                    jhipsterFunc.addGradleDependency('compile', 'io.netty', 'netty-handler', '4.1.6.Final');
+                    jhipsterFunc.addGradleDependency('compile', 'io.netty', 'netty-handler', nettyVersion);
                 }
                 jhipsterFunc.addGradlePlugin('com.google.protobuf', 'protobuf-gradle-plugin', '0.8.1');
                 jhipsterFunc.applyFromGradleScript('gradle/grpc');
             }
 
-            this.entities.forEach(entityName => {jhipsterFunc.updateEntityConfig('.jhipster/' + entityName + '.json', 'grpcService', true);});
+            if (this.skipUserManagement) return;
 
+            this.template('_account.proto', protoPackageDir + 'account.proto');
+            this.template('_AccountService.java', javaDir + 'grpc/AccountService.java');
+            this.template('_AccountServiceIntTest.java', testDir + 'grpc/AccountServiceIntTest.java');
+            //Temporary fix
+            if (this.databaseType === 'cassandra') {
+                this.template('_UserRepository.java', javaDir + 'repository/UserRepository.java');
+            }
+            //Temporary fix
+            this.template('_UserServiceIntTest.java', testDir + 'service/UserServiceIntTest.java');
+
+            if (this.databaseType === 'sql' || this.databaseType === 'mongodb') {
+                this.template('_audit.proto', protoPackageDir + 'audit.proto');
+                this.template('_AuditGrpcService.java', javaDir + 'grpc/AuditGrpcService.java');
+                this.template('_AuditGrpcServiceIntTest.java', testDir + 'grpc/AuditGrpcServiceIntTest.java');
+            }
+
+            if (jhipsterVar.authenticationType === 'jwt') {
+                this.template('_jwt.proto', protoPackageDir + 'jwt.proto');
+                this.template('_JWTService.java', javaDir + 'grpc/JWTService.java');
+                this.template('_JWTServiceIntTest.java', testDir + 'grpc/JWTServiceIntTest.java');
+            }
+
+            this.template('_user.proto', protoPackageDir + 'user.proto');
+            this.template('_UserGrpcService.java', javaDir + 'grpc/UserGrpcService.java');
+            this.template('_UserProtoMapper.java', javaDir + 'grpc/UserProtoMapper.java');
+            this.template('_UserGrpcServiceIntTest.java', testDir + 'grpc/UserGrpcServiceIntTest.java');
+
+        },
+
+        updateExistinfEntities() {
+            if (this.abort) return;
+            this.entities.forEach(entityName => {jhipsterFunc.updateEntityConfig('.jhipster/' + entityName + '.json', 'grpcService', true);});
         },
 
         registering: function () {
