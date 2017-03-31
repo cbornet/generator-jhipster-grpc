@@ -4,6 +4,9 @@ package <%=packageName%>.grpc;
 import <%=packageName%>.AbstractCassandraTest;
 <%_ } _%>
 import <%=packageName%>.<%=mainClass%>;
+<%_ if (authenticationType === 'uaa' && applicationType !== 'uaa') { _%>
+import <%=packageName%>.config.SecurityBeanOverrideConfiguration;
+<%_ } _%>
 
 import com.google.protobuf.Empty;
 import io.grpc.Server;
@@ -24,7 +27,7 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = <%=mainClass%>.class)
+@SpringBootTest(classes = <% if (authenticationType === 'uaa' && applicationType !== 'uaa') { %>{<%= mainClass %>.class, SecurityBeanOverrideConfiguration.class}<% } else { %><%=mainClass%>.class<% } %>)
 public class HealthServiceIntTest <% if (databaseType === 'cassandra') { %>extends AbstractCassandraTest <% } %>{
 
     @Autowired
