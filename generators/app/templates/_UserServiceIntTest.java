@@ -54,7 +54,7 @@ public class UserServiceIntTest <% if (databaseType == 'cassandra') { %>extends 
         <%_ if (databaseType !== 'sql') { _%>
         userRepository.deleteAll();
         <%_ } _%>
-        user = UserResourceIntTest.createEntity(<% if (databaseType === 'sql') { %>em<% } %>);
+        user = UserResourceIntTest.createEntity(<% if (databaseType === 'sql') { %>null<% } %>);
     }<% if ((databaseType == 'sql' || databaseType == 'mongodb') && authenticationType == 'session') { %>
 
     @Test
