@@ -4,6 +4,9 @@ package <%=packageName%>.grpc;
 import <%=packageName%>.AbstractCassandraTest;
 <%_ } _%>
 import <%=packageName%>.<%=mainClass%>;
+<%_ if (authenticationType === 'uaa' && applicationType !== 'uaa') { _%>
+import <%=packageName%>.config.SecurityBeanOverrideConfiguration;
+<%_ } _%>
 
 import com.google.protobuf.Empty;
 import io.grpc.Server;
@@ -22,7 +25,7 @@ import java.io.IOException;
 import java.util.Collection;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = <%=mainClass%>.class)
+@SpringBootTest(classes = <% if (authenticationType === 'uaa' && applicationType !== 'uaa') { %>{<%= mainClass %>.class, SecurityBeanOverrideConfiguration.class}<% } else { %><%=mainClass%>.class<% } %>)
 public class MetricServiceIntTest <% if (databaseType === 'cassandra') { %>extends AbstractCassandraTest <% } %>{
 
     @Autowired

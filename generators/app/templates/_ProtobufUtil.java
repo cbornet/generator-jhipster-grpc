@@ -1,7 +1,9 @@
 package <%=packageName%>.grpc;
 
+<%_ if ((databaseType === 'sql' || databaseType === 'mongodb') && !skipUserManagement) { _%>
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+<%_ } _%>
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Timestamp;
 import org.springframework.data.domain.Pageable;
@@ -69,6 +71,13 @@ public abstract class ProtobufUtil {
             .build();
     }
 
+    public static Timestamp dateToTimestamp(java.util.Date date) {
+        if (date == null) {
+            return null;
+        }
+        return instantToTimestamp(date.toInstant());
+    }
+
     public static BigDecimal decimalProtoToBigDecimal(Decimal decimal) {
         if (decimal == null) {
             return null;
@@ -132,7 +141,7 @@ public abstract class ProtobufUtil {
         if (token == null) {
             return null;
         }
-        PersistentToken.Builder builder = PersistentToken.newBuilder().setTokenDate(localDateToDateProto(token.getTokenDate()));
+        PersistentToken.Builder builder = PersistentToken.newBuilder().setTokenDate(<% if (databaseType == 'cassandra') { %>dateToTimestamp(token.getTokenDate())<% } else { %>localDateToDateProto(token.getTokenDate())<% } %>);
         if (token.getSeries() != null) {
             builder.setSeries(token.getSeries());
         }
@@ -145,6 +154,7 @@ public abstract class ProtobufUtil {
         return builder.build();
     }
     <%_ } _%>
+    <%_ if ((databaseType === 'sql' || databaseType === 'mongodb') && !skipUserManagement) { _%>
 
     public static AuditEvent auditEventToAuditEventProto(org.springframework.boot.actuate.audit.AuditEvent event) throws JsonProcessingException {
         if (event == null) {
@@ -152,7 +162,7 @@ public abstract class ProtobufUtil {
         }
         ObjectMapper mapper = new ObjectMapper();
         AuditEvent.Builder builder =  AuditEvent.newBuilder()
-            .setTimestamp(ProtobufUtil.instantToTimestamp(event.getTimestamp().toInstant()))
+            .setTimestamp(ProtobufUtil.dateToTimestamp(event.getTimestamp()))
             .setData(mapper.writeValueAsString(event.getData()));
         if (event.getPrincipal() != null) {
             builder.setPrincipal(event.getPrincipal());
@@ -162,5 +172,6 @@ public abstract class ProtobufUtil {
         }
         return builder.build();
     }
+    <%_ } _%>
 
 }

@@ -35,6 +35,7 @@ If you want to add CRUD gRPC services for an entity, just (re)generate it and co
 Current limitations:
 * entity creation/update will fail for entities with required relationships.
 * entities can have non-required relationships but the relationship will not be manageable by gRPC
+* doesn't work for applications using Gatling (see https://github.com/cbornet/generator-jhipster-grpc/issues/4)
 
 Note that entities must have a service layer (serviceClass or serviceImpl) or else they will be ignored by the generator (not having a common service layer between the REST resources and the gRPC endpoints would be bad design).
 

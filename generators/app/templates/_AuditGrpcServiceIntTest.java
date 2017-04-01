@@ -9,7 +9,7 @@ import <%=packageName%>.domain.PersistentAuditEvent;
 import <%=packageName%>.repository.PersistenceAuditEventRepository;
 import <%=packageName%>.service.AuditEventService;
 
-import com.google.protobuf.Int64Value;
+import com.google.protobuf.<%=idProtoWrappedType%>;
 import io.grpc.Server;
 import io.grpc.Status;
 import io.grpc.StatusException;
@@ -95,7 +95,7 @@ public class AuditGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ex
         auditEventRepository.save(auditEvent);
 
         // Get the audit
-        AuditEvent event = stub.getAuditEvent(Int64Value.newBuilder().setValue(auditEvent.getId()).build());
+        AuditEvent event = stub.getAuditEvent(<%=idProtoWrappedType%>.newBuilder().setValue(auditEvent.getId()).build());
         assertThat(event.getPrincipal()).isEqualTo(SAMPLE_PRINCIPAL);
     }
 
@@ -128,7 +128,7 @@ public class AuditGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ex
     public void getNonExistingAudit() throws Exception {
         // Get the audit
         try {
-            stub.getAuditEvent(Int64Value.newBuilder().setValue(Long.MAX_VALUE).build());
+            stub.getAuditEvent(<%=idProtoWrappedType%>.newBuilder().setValue(<% if (databaseType == 'sql') { %>Long.MAX_VALUE<% } else { %>"invalid id"<% } %>).build());
             failBecauseExceptionWasNotThrown(StatusException.class);
         } catch (StatusRuntimeException e) {
             assertThat(e.getStatus().getCode()).isEqualTo(Status.Code.NOT_FOUND);
