@@ -51,7 +51,7 @@ public abstract class <%=entityClass%>ProtoMapper extends ProtobufUtil {
     <%_ } _%>
     <%_ if ((fieldDomainType === 'byte[]' || fieldDomainType === 'ByteBuffer') && fieldTypeBlobContent != 'text') { _%>
     <%_ if (nullable) { _%>
-        if(<%= entityInstance %>Proto.get<%= fieldInJavaBeanMethod %>ContentTypeOneofCase() == <%= entityClass %>Proto.<%= fieldInJavaBeanMethod %>ContentTypeOneofCase.<%= fieldNameUnderscored.toUpperCase() %>) {
+        if(<%= entityInstance %>Proto.get<%= fieldInJavaBeanMethod %>ContentTypeOneofCase() == <%= entityClass %>Proto.<%= fieldInJavaBeanMethod %>ContentTypeOneofCase.<%= fieldNameUnderscored.toUpperCase() %>_CONTENT_TYPE) {
     <% } -%>
         <%=instanceName%>.set<%= fieldInJavaBeanMethod %>ContentType(<%=entityInstance%>Proto.get<%= fieldInJavaBeanMethod %>ContentType());
     <%_ if (nullable) { _%>
