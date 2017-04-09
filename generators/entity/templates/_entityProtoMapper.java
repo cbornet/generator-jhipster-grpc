@@ -31,6 +31,7 @@ public abstract class <%=entityClass%>ProtoMapper extends ProtobufUtil {
     var fieldValidate = fields[idx].fieldValidate;
     var fieldValidateRules = fields[idx].fieldValidateRules;
     var fieldDomainType = fields[idx].fieldDomainType;
+    var fieldTypeBlobContent = fields[idx].fieldTypeBlobContent;
     var fieldIsEnum = fields[idx].fieldIsEnum;
     var isProtobufCustomType = fields[idx].isProtobufCustomType;
     var fieldInJavaBeanMethod = fields[idx].fieldInJavaBeanMethod;
@@ -47,6 +48,15 @@ public abstract class <%=entityClass%>ProtoMapper extends ProtobufUtil {
         <%=instanceName%>.set<%= fieldInJavaBeanMethod %>(<% if (isProtobufCustomType) { %>ProtobufUtil.<% } %><% if(fieldDomainType === 'ZonedDateTime') { %>timestampToZonedDateTime(<% } %><% if(fieldDomainType === 'UUID') { %>UUID.fromString(<% } %><% if(fieldDomainType === 'LocalDate') { %>dateProtoToLocalDate(<% } %><% if(fieldDomainType === 'BigDecimal') { %>decimalProtoToBigDecimal(<% } %><% if(fieldIsEnum) { %><%=fieldDomainType%>.valueOf(<% } %><%=entityInstance%>Proto.get<%= fieldInJavaBeanMethod %>()<% if(fieldIsEnum) { %>.toString()<% } %><% if(fieldDomainType === 'byte[]') { %>.toByteArray()<% } %><% if(fieldDomainType === 'ByteBuffer') { %>.asReadOnlyByteBuffer()<% } %>)<% if(fieldIsEnum || isProtobufCustomType || fieldDomainType === 'UUID') { %>)<% } %>;
     <%_ if (nullable || isProtobufCustomType) { _%>
         }
+    <%_ } _%>
+    <%_ if ((fieldDomainType === 'byte[]' || fieldDomainType === 'ByteBuffer') && fieldTypeBlobContent != 'text') { _%>
+    <%_ if (nullable) { _%>
+        if(<%= entityInstance %>Proto.get<%= fieldInJavaBeanMethod %>ContentTypeOneofCase() == <%= entityClass %>Proto.<%= fieldInJavaBeanMethod %>ContentTypeOneofCase.<%= fieldNameUnderscored.toUpperCase() %>) {
+    <% } -%>
+        <%=instanceName%>.set<%= fieldInJavaBeanMethod %>ContentType(<%=entityInstance%>Proto.get<%= fieldInJavaBeanMethod %>ContentType());
+    <%_ if (nullable) { _%>
+        }
+    <%_ } _%>
     <%_ } _%>
 <%_ } _%>
         return <%=instanceName%>;

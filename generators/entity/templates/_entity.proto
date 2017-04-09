@@ -57,13 +57,17 @@ message <%=entityClass%>Proto {
         <%=idProtoType%> id = 1;
     }
 
-<%_ for (idx in fields) {
+<%_ var protobufFieldNumber = 2;
+
+    for (idx in fields) {
     var isOneOf = false;
     var indentOneOf = '';
     var fieldValidate = fields[idx].fieldValidate;
     var fieldValidateRules = fields[idx].fieldValidateRules;
     var fieldValidateRulesMaxlength = fields[idx].fieldValidateRulesMaxlength;
-    var fieldType = fields[idx].fieldProtobufType;
+    var fieldType = fields[idx].fieldType;
+    var fieldTypeBlobContent = fields[idx].fieldTypeBlobContent;
+    var fieldProtobufType = fields[idx].fieldProtobufType;
     var isProtobufCustomType = fields[idx].isProtobufCustomType;
     var fieldName = fields[idx].fieldName;
     var fieldNameUnderscored = fields[idx].fieldNameUnderscored;
@@ -76,8 +80,14 @@ message <%=entityClass%>Proto {
         javadoc = '// ' + fields[idx].javadoc.replace('\n', '\n    '+ indentOneOf + '// ') + '\n    '+ indentOneOf;
     }_%>
     <% if (isOneOf) { %>oneof <%=fieldNameUnderscored%>_oneof {
-        <% } %><%= javadoc %><%=fieldType%> <%=fieldNameUnderscored%> = <%=parseInt(idx) +2%>;<% if (isOneOf) { %>
+        <% } %><%= javadoc %><%=fieldProtobufType%> <%=fieldNameUnderscored%> = <%=protobufFieldNumber++%>;<% if (isOneOf) { %>
     }<% } %>
+    <%_ if ((fieldType === 'byte[]' || fieldType === 'ByteBuffer') && fieldTypeBlobContent != 'text') { _%>
+
+    <% if (isOneOf) { %>oneof <%=fieldNameUnderscored%>_content_type_oneof {
+        <% } %>string <%=fieldNameUnderscored%>_content_type = <%=protobufFieldNumber++%>;<% if (isOneOf) { %>
+    }<% } %>
+    <%_ } _%>
 
 <%_ } _%>
 }
