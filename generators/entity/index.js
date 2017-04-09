@@ -1,10 +1,12 @@
 'use strict';
 
-var yeoman = require('yeoman-generator');
-var chalk = require('chalk');
-var _ = require('lodash');
-var pluralize = require('pluralize');
-var packagejs = require(__dirname + '/../../package.json');
+const yeoman = require('yeoman-generator');
+const chalk = require('chalk');
+const _ = require('lodash');
+const randexp = require('randexp');
+const fs = require('fs');
+const pluralize = require('pluralize');
+const packagejs = require(__dirname + '/../../package.json');
 
 // Stores JHipster variables
 var jhipsterVar = { moduleName: 'grpc' };
@@ -72,8 +74,11 @@ module.exports = yeoman.Base.extend({
             if (!this.grpcService) {
                 return;
             }
+            this.mainClass = jhipsterVar.mainClassName;
             this.packageName = jhipsterVar.packageName;
             this.databaseType = jhipsterVar.databaseType;
+            this.authenticationType = jhipsterVar.authenticationType;
+            this.searchEngine = jhipsterVar.searchEngine;
             this.entityClass = this.entityConfig.entityClass;
             this.entityClassPlural = pluralize(this.entityClass);
             this.entityInstance = this.entityConfig.entityInstance;
@@ -92,6 +97,7 @@ module.exports = yeoman.Base.extend({
             } else {
                 this.entityJavadoc = '// ' + this.entityConfig.data.javadoc.replace('\n', '\n// ');
             }
+            this.fluentMethods = this.entityConfig.data.fluentMethods;
             this.fields = this.entityConfig.data.fields;
             this.fields.forEach(f => {
                 if (f.fieldTypeBlobContent === 'text') {
@@ -116,9 +122,11 @@ module.exports = yeoman.Base.extend({
                 return;
             }
             let grpcEntityDir = jhipsterVar.javaDir + '/grpc/entity/' + this.entityUnderscoredName ;
+            let grpcEntityTestDir = jhipsterVar.CONSTANTS.SERVER_TEST_SRC_DIR + jhipsterVar.packageFolder + '/' + '/grpc/entity/' + this.entityUnderscoredName ;
             this.template('_entity.proto', 'src/main/proto/' + jhipsterVar.packageFolder + '/entity/' + this.entityUnderscoredName + '.proto', this, {});
             this.template('_entityProtoMapper.java', grpcEntityDir + '/'+ this.entityClass + 'ProtoMapper.java', this, {});
             this.template('_entityGrpcService.java', grpcEntityDir + '/'+ this.entityClass + 'GrpcService.java', this, {});
+            this.template('_entityGrpcServiceIntTest.java', grpcEntityTestDir + '/'+ this.entityClass + 'GrpcServiceIntTest.java', this, { context: { randexp, _, chalkRed: chalk.red, fs, SERVER_TEST_SRC_DIR: grpcEntityTestDir } });
         },
 
         updateConfig: function () {
