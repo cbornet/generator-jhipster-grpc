@@ -354,7 +354,10 @@ _%>
         while(it.hasNext()) {
             <%= entityClass %>Proto <%= entityInstance %>Proto = it.next();
             if (<%= entityInstance %>Proto.getId() == saved<%= entityClass %>.getId()) {
-                <%= entityInstance %> = <%= entityInstance %>ProtoMapper.<%= entityInstance %>ProtoTo<%= entityClass %>(<%= entityInstance %>Proto);
+                <% if (dto == 'mapstruct') { %><%= entityClass %>DTO <% } %><%= instanceName %> = <%= entityInstance %>ProtoMapper.<%= entityInstance %>ProtoTo<%= instanceType %>(<%= entityInstance %>Proto);
+                <%_ if (dto == 'mapstruct') { _%>
+                <%= entityInstance %> = <%= entityInstance %>Mapper.<%= entityInstance %>DTOTo<%= entityClass %>(<%= entityInstance %>DTO);
+                <%_ } _%>
                 break;
             }
         }
