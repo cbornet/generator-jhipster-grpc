@@ -42,6 +42,7 @@ public class <%=entityClass%>GrpcService extends <%=entityClass%>ServiceGrpc.<%=
 
     }
 
+    @Override
     public void update<%=entityClass%>(<%=entityClass%>Proto request, StreamObserver<<%=entityClass%>Proto> responseObserver) {
         <%=instanceType%> <%=instanceName%> = <%=entityInstance%>ProtoMapper.<%=entityInstance%>ProtoTo<%=instanceType%>(request);
         <%=instanceName%> = <%=entityInstance%>Service.save(<%=instanceName%>);
@@ -50,12 +51,14 @@ public class <%=entityClass%>GrpcService extends <%=entityClass%>ServiceGrpc.<%=
         responseObserver.onCompleted();
     }
 
-    public void getAll<%=entityClass%>s(<% if (pagination !== 'no') { %>PageRequest<% } else { %>Empty<% } %> request, StreamObserver<<%=entityClass%>Proto> responseObserver) {
+    @Override
+    public void getAll<%=entityClassPlural%>(<% if (pagination !== 'no') { %>PageRequest<% } else { %>Empty<% } %> request, StreamObserver<<%=entityClass%>Proto> responseObserver) {
         <%=entityInstance%>Service.findAll(<% if (pagination !== 'no') { %>ProtobufUtil.pageRequestProtoToPageRequest(request)<% } %>)
             .forEach(<%=entityInstance%> -> responseObserver.onNext(<%=entityInstance%>ProtoMapper.<%=instanceName%>To<%=entityClass%>Proto(<%=entityInstance%>)));
         responseObserver.onCompleted();
     }
 
+    @Override
     public void get<%=entityClass%>(<%=idProtoWrappedType%> request, StreamObserver<<%=entityClass%>Proto> responseObserver) {
         <%=instanceType%> <%=instanceName%> = <%=entityInstance%>Service.findOne(request.getValue());
         if( <%=instanceName%> != null) {
@@ -66,6 +69,7 @@ public class <%=entityClass%>GrpcService extends <%=entityClass%>ServiceGrpc.<%=
         responseObserver.onCompleted();
     }
 
+    @Override
     public void delete<%=entityClass%>(<%=idProtoWrappedType%> request, StreamObserver<Empty> responseObserver) {
         <%=entityInstance%>Service.delete(request.getValue());
         responseObserver.onNext(Empty.newBuilder().build());

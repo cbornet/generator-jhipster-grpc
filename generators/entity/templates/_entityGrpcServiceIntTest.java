@@ -28,14 +28,8 @@ import org.junit.runner.RunWith;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
-import org.springframework.http.MediaType;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
-import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;<% if (databaseType == 'sql') { %>
-import org.springframework.transaction.annotation.Transactional;<% } %><% if (fieldsContainBlob == true) { %>
-import org.springframework.util.Base64Utils;<% } %>
+import org.springframework.test.context.junit4.SpringRunner;<% if (databaseType == 'sql') { %>
+import org.springframework.transaction.annotation.Transactional;<% } %>
 <% if (databaseType == 'sql') { %>
 import javax.persistence.EntityManager;<% } %><% if (fieldsContainLocalDate == true) { %>
 import java.time.LocalDate;<% } %><% if (fieldsContainZonedDateTime == true) { %>
@@ -46,13 +40,11 @@ import java.time.ZoneId;<% } %><% if (fieldsContainBigDecimal == true) { %>
 import java.math.BigDecimal;<% } %><% if (fieldsContainBlob == true && databaseType === 'cassandra') { %>
 import java.nio.ByteBuffer;<% } %>
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;<% if (databaseType == 'cassandra') { %>
 import java.util.UUID;<% } %>
-<% if (fieldsContainZonedDateTime == true) { %>
-import static <%=packageName%>.web.rest.TestUtil.sameInstant;<% } %>
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
-import static org.hamcrest.Matchers.hasItem;
 
 <%_ for (idx in fields) { if (fields[idx].fieldIsEnum == true) { _%>import <%=packageName%>.domain.enumeration.<%= fields[idx].fieldType %>;
 <%_ } } _%>
@@ -342,57 +334,36 @@ _%>
             stub.create<%= entityClass %>(<%= entityInstance %>Proto);
             failBecauseExceptionWasNotThrown(StatusRuntimeException.class);
         } catch (StatusRuntimeException e) {
-            assertThat(e.getStatus().getCode()).isEqualTo(Status.Code.INVALID_ARGUMENT);
+            assertThat(e.getStatus().getCode()).isEqualTo(Status.Code.ALREADY_EXISTS);
         }
 
         // Validate the Alice in the database
         List<<%= entityClass %>> <%= entityInstance %>List = <%= entityInstance %>Repository.findAll();
         assertThat(<%= entityInstance %>List).hasSize(databaseSizeBeforeCreate);
     }
-<% for (idx in fields) { %><% if (fields[idx].fieldValidate == true) {
-    let required = false;
-    if (fields[idx].fieldValidate == true && fields[idx].fieldValidateRules.indexOf('required') != -1) {
-        required = true;
-    }
-    if (required) { %>
-    @Test<% if (databaseType == 'sql') { %>
-    @Transactional<% } %>
-    public void check<%= fields[idx].fieldInJavaBeanMethod %>IsRequired() throws Exception {
-        int databaseSizeBeforeTest = <%= entityInstance %>Repository.findAll().size();
-        // set the field null
-        <%= entityInstance %>.set<%= fields[idx].fieldInJavaBeanMethod %>(null);
 
-        // Create the <%= entityClass %>, which fails.<% if (dto == 'mapstruct') { %>
-        <%= entityClass %>DTO <%= entityInstance %>DTO = <%= entityInstance %>Mapper.<%= entityInstance %>To<%= entityClass %>DTO(<%= entityInstance %>);<% } %>
-        <%= entityClass %>Proto <%= entityInstance %>Proto = <%= entityInstance %>ProtoMapper.<%=instanceName%>To<%=entityClass%>Proto(<%=instanceName%>);
-
-        try {
-            stub.create<%= entityClass %>(<%= entityInstance %>Proto);
-            failBecauseExceptionWasNotThrown(StatusRuntimeException.class);
-        } catch (StatusRuntimeException e) {
-            assertThat(e.getStatus().getCode()).isEqualTo(Status.Code.INVALID_ARGUMENT);
-        }
-
-        List<<%= entityClass %>> <%= entityInstance %>List = <%= entityInstance %>Repository.findAll();
-        assertThat(<%= entityInstance %>List).hasSize(databaseSizeBeforeTest);
-    }
-<%  } } } %>
     @Test<% if (databaseType == 'sql') { %>
     @Transactional<% } %>
     public void getAll<%= entityClassPlural %>() throws Exception {
         // Initialize the database
-        <%= entityInstance %>Repository.save<% if (databaseType == 'sql') { %>AndFlush<% } %>(<%= entityInstance %>);
+        <%= entityClass %> saved<%= entityClass %> = <%= entityInstance %>Repository.save<% if (databaseType == 'sql') { %>AndFlush<% } %>(<%= entityInstance %>);
 
-        // Get all the <%= entityInstance %>List
-        List<<%= entityClass %>Proto> <%= entityInstancePlural %> = new ArrayList<>();
-        stub.getAll<%= entityClassPlural %>(<% if (pagination !== 'no') { %>PageRequest<% } else { %>Empty<% } %>.getDefaultInstance()).forEachRemaining(<%= entityInstancePlural %>::add);
+        // Get all the <%= entityInstancePlural %>
+        <%= entityClass %> <%= entityInstance %> = null;
+        Iterator<<%= entityClass %>Proto> it = stub.getAll<%= entityClassPlural %>(<% if (pagination !== 'no') { %>PageRequest<% } else { %>Empty<% } %>.getDefaultInstance());
+        while(it.hasNext()) {
+            <%= entityClass %>Proto <%= entityInstance %>Proto = it.next();
+            if (<%= entityInstance %>Proto.getId() == saved<%= entityClass %>.getId()) {
+                <%= entityInstance %> = <%= entityInstance %>ProtoMapper.<%= entityInstance %>ProtoTo<%= entityClass %>(<%= entityInstance %>Proto);
+                break;
+            }
+        }
 
-        assertThat(<%= entityInstancePlural %>).extracting("id").contains(<%= entityInstance %>.getId());
         <%_ for (idx in fields) { _%>
             <%_ if ((fields[idx].fieldType == 'byte[]' || fields[idx].fieldType === 'ByteBuffer') && fields[idx].fieldTypeBlobContent != 'text') { _%>
-        assertThat(<%= entityInstancePlural %>).extracting("<%=fields[idx].fieldName%>ContentType").contains(<%='DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase()%>_CONTENT_TYPE);
+        assertThat(<%= entityInstance %>.get<%= fields[idx].fieldInJavaBeanMethod %>ContentType()).isEqualTo(<%='DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase()%>_CONTENT_TYPE);
             <%_ } _%>
-        assertThat(<%= entityInstancePlural %>).extracting("<%=fields[idx].fieldName%>").contains(<% if ((fields[idx].fieldType == 'byte[]' || fields[idx].fieldType === 'ByteBuffer') && fields[idx].fieldTypeBlobContent != 'text') { %>Base64Utils.encodeToString(<% } else if (fields[idx].fieldType == 'ZonedDateTime') { %>sameInstant(<% } %><%='DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase()%><% if ((fields[idx].fieldType == 'byte[]' || fields[idx].fieldType === 'ByteBuffer') && fields[idx].fieldTypeBlobContent != 'text') { %><% if (databaseType == 'cassandra') { %>.array()<% } %>)<% } else if (fields[idx].fieldType == 'Integer') { %><% } else if (fields[idx].fieldType == 'Long') { %>.intValue()<% } else if (fields[idx].fieldType == 'Float' || fields[idx].fieldType == 'Double') { %>.doubleValue()<% } else if (fields[idx].fieldType == 'BigDecimal') { %>.intValue()<% } else if (fields[idx].fieldType == 'Boolean') { %>.booleanValue()<% } else if (fields[idx].fieldType == 'ZonedDateTime') { %>)<% } else { %>.toString()<% } %>);
+        assertThat(<%= entityInstance %>.<% if (fields[idx].fieldType == 'Boolean') { %>is<% } else { %>get<% } %><%= fields[idx].fieldInJavaBeanMethod %>()).isEqualTo(<%='DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase()%>);
         <%_ } _%>
     }
 
@@ -405,12 +376,11 @@ _%>
         // Get the <%= entityInstance %>
         <%= entityClass %>Proto <%= entityInstance %>Proto = stub.get<%= entityClass %>(<%=idProtoWrappedType%>.newBuilder().setValue(<%= entityInstance %>.getId()).build());
 
-        assertThat(<%= entityInstance %>Proto.getId()).isEqualTo(<%= entityInstance %>.getId());
         <%_ for (idx in fields) { _%>
             <%_ if ((fields[idx].fieldType == 'byte[]' || fields[idx].fieldType === 'ByteBuffer') && fields[idx].fieldTypeBlobContent != 'text') { _%>
-        //assertThat(<%= entityInstance %>Proto.get<%= fields[idx].fieldInJavaBeanMethod %>ContentType()).isEqualTo(<%='DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase()%>_CONTENT_TYPE);
+        assertThat(<%= entityInstance %>.get<%= fields[idx].fieldInJavaBeanMethod %>ContentType()).isEqualTo(<%='DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase()%>_CONTENT_TYPE);
             <%_ } _%>
-        assertThat(<%= entityInstance %>Proto.get<%= fields[idx].fieldInJavaBeanMethod %>()).isEqualTo(<% if ((fields[idx].fieldType == 'byte[]' || fields[idx].fieldType === 'ByteBuffer') && fields[idx].fieldTypeBlobContent != 'text') { %>Base64Utils.encodeToString(<% } else if (fields[idx].fieldType == 'ZonedDateTime') { %>sameInstant(<% } %><%='DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase()%><% if ((fields[idx].fieldType == 'byte[]' || fields[idx].fieldType === 'ByteBuffer') && fields[idx].fieldTypeBlobContent != 'text') { %><% if (databaseType == 'cassandra') { %>.array()<% } %>)<% } else if (fields[idx].fieldType == 'Integer') { %><% } else if (fields[idx].fieldType == 'Long') { %>.intValue()<% } else if (fields[idx].fieldType == 'Float' || fields[idx].fieldType == 'Double') { %>.doubleValue()<% } else if (fields[idx].fieldType == 'BigDecimal') { %>.intValue()<% } else if (fields[idx].fieldType == 'Boolean') { %>.booleanValue()<% } else if (fields[idx].fieldType == 'ZonedDateTime') { %>)<% } else { %>.toString()<% } %>);
+        assertThat(<%= entityInstance %>.<% if (fields[idx].fieldType == 'Boolean') { %>is<% } else { %>get<% } %><%= fields[idx].fieldInJavaBeanMethod %>()).isEqualTo(<%='DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase()%>);
         <%_ } _%>
     }
 
