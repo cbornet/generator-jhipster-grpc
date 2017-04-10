@@ -77,6 +77,7 @@ module.exports = yeoman.Base.extend({
             this.mainClass = jhipsterVar.mainClassName;
             this.packageName = jhipsterVar.packageName;
             this.databaseType = jhipsterVar.databaseType;
+            this.applicationType = jhipsterVar.applicationType;
             this.authenticationType = jhipsterVar.authenticationType;
             this.searchEngine = jhipsterVar.searchEngine;
             this.entityClass = this.entityConfig.entityClass;
