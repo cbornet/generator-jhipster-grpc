@@ -30,8 +30,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;<% if (databaseType == 'sql') { %>
 import org.springframework.transaction.annotation.Transactional;<% } %>
-<% if (databaseType == 'sql') { %>
-import javax.persistence.EntityManager;<% } %><% if (fieldsContainLocalDate == true) { %>
+<% if (fieldsContainLocalDate == true) { %>
 import java.time.LocalDate;<% } %><% if (fieldsContainZonedDateTime == true) { %>
 import java.time.Instant;
 import java.time.ZonedDateTime;
@@ -39,7 +38,6 @@ import java.time.ZoneOffset;<% } %><% if (fieldsContainLocalDate == true || fiel
 import java.time.ZoneId;<% } %><% if (fieldsContainBigDecimal == true) { %>
 import java.math.BigDecimal;<% } %><% if (fieldsContainBlob == true && databaseType === 'cassandra') { %>
 import java.nio.ByteBuffer;<% } %>
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;<% if (databaseType == 'cassandra') { %>
 import java.util.UUID;<% } %>
@@ -396,7 +394,7 @@ _%>
     public void getNonExisting<%= entityClass %>() throws Exception {
         try {
             // Get the <%= entityInstance %>
-            stub.get<%= entityClass %>(<%=idProtoWrappedType%>.newBuilder().setValue(<% if (databaseType == 'sql' || databaseType == 'mongodb') { %>Long.MAX_VALUE<% if (databaseType == 'mongodb') { %>.toString()<% }} %><% if (databaseType == 'cassandra') { %>UUID.randomUUID().toString()<% } %>).build());
+            stub.get<%= entityClass %>(<%=idProtoWrappedType%>.newBuilder().setValue(<% if (databaseType == 'sql') { %>Long.MAX_VALUE<% } else if (databaseType == 'mongodb') { %>String.valueOf(Long.MAX_VALUE)<% } else if (databaseType == 'cassandra') { %>UUID.randomUUID().toString()<% } %>).build());
             failBecauseExceptionWasNotThrown(StatusRuntimeException.class);
         } catch (StatusRuntimeException e) {
             assertThat(e.getStatus().getCode()).isEqualTo(Status.Code.NOT_FOUND);
