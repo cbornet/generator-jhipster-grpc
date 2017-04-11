@@ -429,7 +429,7 @@ _%>
             <%_ } _%>
         <%_ } _%>
         <%_ if (dto == 'mapstruct') { _%>
-        <%= entityClass %>DTO updated<%= entityInstance %>DTO = <%= entityInstance %>Mapper.<%= entityInstance %>To<%= entityClass %>DTO(updated<%= entityClass %>);
+        <%= entityClass %>DTO updated<%= entityClass %>DTO = <%= entityInstance %>Mapper.<%= entityInstance %>To<%= entityClass %>DTO(updated<%= entityClass %>);
         <%_ } _%>
         <%= entityClass %>Proto <%= entityInstance %>Proto = <%= entityInstance %>ProtoMapper.<%=instanceName%>To<%=entityClass%>Proto(updated<%=instanceType%>);
 
