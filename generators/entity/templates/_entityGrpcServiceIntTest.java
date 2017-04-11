@@ -274,6 +274,9 @@ _%>
 
     @Before
     public void initTest() {
+        <%_ for (field of fields.filter(f => f.fieldType === 'ByteBuffer')) { _%>
+        <%='DEFAULT_' + field.fieldNameUnderscored.toUpperCase()%>.rewind();
+        <%_ } _%>
         <%_ if (databaseType == 'mongodb' || databaseType == 'cassandra') { _%>
         <%= entityInstance %>Repository.deleteAll();
         <%_ } if (searchEngine == 'elasticsearch') { _%>
