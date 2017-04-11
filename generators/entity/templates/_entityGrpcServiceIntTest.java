@@ -429,9 +429,9 @@ _%>
             <%_ } _%>
         <%_ } _%>
         <%_ if (dto == 'mapstruct') { _%>
-        <%= entityClass %>DTO <%= entityInstance %>DTO = <%= entityInstance %>Mapper.<%= entityInstance %>To<%= entityClass %>DTO(updated<%= entityClass %>);
+        <%= entityClass %>DTO updated<%= entityInstance %>DTO = <%= entityInstance %>Mapper.<%= entityInstance %>To<%= entityClass %>DTO(updated<%= entityClass %>);
         <%_ } _%>
-        <%= entityClass %>Proto <%= entityInstance %>Proto = <%= entityInstance %>ProtoMapper.<%=instanceName%>To<%=entityClass%>Proto(<%=instanceName%>);
+        <%= entityClass %>Proto <%= entityInstance %>Proto = <%= entityInstance %>ProtoMapper.<%=instanceName%>To<%=entityClass%>Proto(updated<%=instanceType%>);
 
         stub.update<%= entityClass %>(<%= entityInstance %>Proto);
 
