@@ -22,6 +22,8 @@ To install this module:
 yarn add global generator-jhipster-grpc
 ```
 
+Note : the current module is tested and works well with Jhipster v4.1.0.
+
 # Usage
 
 At the root of your project directory:
@@ -66,20 +68,21 @@ TODOs:
 - [ ] Client-side load-balancing with service discovery (micro-services)
 - [ ] Generator tests
 - [ ] Sample/demo project
-- [ ] Generated code tests
-- [ ] CI
+- [x] ~~Generated code tests~~
+- [x] ~~Travis CI~~
 
 Mappings:
 
 | JHipster | Protobuf      | 
 |:--------:|:-------------:|
-| Integer  | sint32 |
-| Long     | sint64 |
+| Integer  | int32 |
+| Long     | int64 |
 | String   | string |
 | Float   | float |
 | Double   | double |
 | Boolean   | bool |
 | Blob (byte[]) | bytes |
+| ByteBuffer | bytes |
 | ZonedDateTime | google.protobuf.Timestamp |
 | LocalDate | util.Date |
 | BigDecimal | util.Decimal |
