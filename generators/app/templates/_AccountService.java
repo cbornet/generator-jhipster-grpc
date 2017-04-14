@@ -140,7 +140,8 @@ public class AccountService extends AccountServiceGrpc.AccountServiceImplBase {
                         user.getFirstName().isEmpty() ? null : user.getFirstName(),
                         user.getLastName().isEmpty() ? null : user.getLastName(),
                         user.getEmail().isEmpty() ? null : user.getEmail(),
-                        user.getLangKey().isEmpty() ? null : user.getLangKey()
+                        user.getLangKey().isEmpty() ? null : user.getLangKey()<% if (databaseType === 'mongodb' || databaseType === 'sql') { %>,
+                        user.getImageUrl().isEmpty() ? null : user.getImageUrl()<% } %>
                     );
                     responseObserver.onNext(Empty.newBuilder().build());
                     responseObserver.onCompleted();

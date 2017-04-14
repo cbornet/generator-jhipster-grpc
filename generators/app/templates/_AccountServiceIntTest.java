@@ -425,13 +425,13 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
         stub.saveAccount(userProto);
 
         User updatedUser = userRepository.findOneByLogin(userProto.getLogin()).orElse(null);
-        assertThat(updatedUser.getFirstName()).isEqualTo(userProto.getFirstName());
-        assertThat(updatedUser.getLastName()).isEqualTo(userProto.getLastName());
+        assertThat(updatedUser.getFirstName()).isEqualTo(UPDATED_FIRSTNAME);
+        assertThat(updatedUser.getLastName()).isEqualTo(UPDATED_LASTNAME);
         assertThat(updatedUser.getEmail()).isEqualTo(userProto.getEmail());
-        assertThat(updatedUser.getLangKey()).isEqualTo(userProto.getLangKey());
+        assertThat(updatedUser.getLangKey()).isEqualTo(UPDATED_LANGKEY);
         assertThat(updatedUser.getPassword()).isEqualTo(user.getPassword());<% if (databaseType == 'mongodb' || databaseType == 'sql') { %>
-        assertThat(updatedUser.getImageUrl()).isEqualTo(user.getImageUrl());<% } %>
-        assertThat(updatedUser.getActivated()).isEqualTo(user.getActivated());
+        assertThat(updatedUser.getImageUrl()).isEqualTo(UPDATED_IMAGEURL);<% } %>
+        assertThat(updatedUser.getActivated()).isEqualTo(true);
         assertThat(updatedUser.getAuthorities()).isEmpty();
     }
 
