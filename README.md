@@ -22,7 +22,9 @@ To install this module:
 yarn add global generator-jhipster-grpc
 ```
 
-Note : the current module is tested and works well with Jhipster v4.1.0.
+Compatibility :
+- JHipster 4.1.0, 4.1.1 and inferior (Note : never tested with <4.1.0) : module version 0.7.0
+- JHipster 4.2.0, 4.3.0 and superior : module version 0.8.0+
 
 # Usage
 
