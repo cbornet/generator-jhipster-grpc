@@ -9,22 +9,24 @@ import <%=packageName%>.domain.enumeration.<%=fields[idx].fieldType%>;
 import <%=packageName%>.grpc.ProtobufUtil;<% if (dto === 'mapstruct') { %>
 import <%=packageName%>.service.dto.<%=instanceType%>;<% } %>
 
-import org.mapstruct.Mapper;
-import org.mapstruct.NullValueCheckStrategy;<% if (databaseType === 'cassandra') { %>
+import org.mapstruct.*;<% if (databaseType === 'cassandra') { %>
 
 import java.util.UUID;<% } %>
 
 @Mapper(componentModel = "spring", nullValueCheckStrategy = NullValueCheckStrategy.ALWAYS)
 public abstract class <%=entityClass%>ProtoMapper extends ProtobufUtil {
 
-    public <%=instanceType%> <%=entityInstance%>ProtoTo<%=instanceType%>(<%=entityClass%>Proto <%=entityInstance%>Proto) {
-        if ( <%=entityInstance%>Proto == null ) {
-            return null;
-        }
-        <%=instanceType%> <%=instanceName%> = new <%=instanceType%>();
+    abstract <%=instanceType%> <%=entityInstance%>ProtoTo<%=instanceType%>(<%=entityClass%>Proto <%=entityInstance%>Proto);
 
-        if(<%=entityInstance%>Proto.getIdOneofCase() == <%=entityClass%>Proto.IdOneofCase.ID) {
-            <%=instanceName%>.setId(<% if (databaseType === 'cassandra') { %>UUID.fromString(<% } %><%=entityInstance%>Proto.getId()<% if (databaseType === 'cassandra') { %>)<% } %>);
+    @AfterMapping
+    // Set back null fields : necessary until https://github.com/google/protobuf/issues/2984 is fixed
+    public void <%=entityInstance%>ProtoTo<%=instanceType%>(<%=entityClass%>Proto <%=entityInstance%>Proto, @MappingTarget <%=instanceType%> <%=instanceName%>) {
+        if ( <%=entityInstance%>Proto == null ) {
+            return;
+        }
+
+        if(<%=entityInstance%>Proto.getIdOneofCase() != <%=entityClass%>Proto.IdOneofCase.ID) {
+            <%=instanceName%>.setId(null);
         }
 <%_ for (idx in fields) {
     var nullable = false;
@@ -32,7 +34,6 @@ public abstract class <%=entityClass%>ProtoMapper extends ProtobufUtil {
     var fieldValidateRules = fields[idx].fieldValidateRules;
     var fieldDomainType = fields[idx].fieldDomainType;
     var fieldTypeBlobContent = fields[idx].fieldTypeBlobContent;
-    var fieldIsEnum = fields[idx].fieldIsEnum;
     var isProtobufCustomType = fields[idx].isProtobufCustomType;
     var fieldInJavaBeanMethod = fields[idx].fieldInJavaBeanMethod;
     var fieldNameUnderscored = fields[idx].fieldNameUnderscored;
@@ -40,37 +41,18 @@ public abstract class <%=entityClass%>ProtoMapper extends ProtobufUtil {
         nullable = true;
     }_%>
     <%_ if (nullable) { _%>
-        if(<%= entityInstance %>Proto.get<%= fieldInJavaBeanMethod %>OneofCase() == <%= entityClass %>Proto.<%= fieldInJavaBeanMethod %>OneofCase.<%= fieldNameUnderscored.toUpperCase() %>) {
-    <% } -%>
-    <%_ if (isProtobufCustomType) { _%>
-        if(<%= entityInstance %>Proto.has<%= fieldInJavaBeanMethod %>()) {
-    <% } -%>
-        <%=instanceName%>.set<%= fieldInJavaBeanMethod %>(<% if (isProtobufCustomType) { %>ProtobufUtil.<% } %><% if(fieldDomainType === 'ZonedDateTime') { %>timestampToZonedDateTime(<% } %><% if(fieldDomainType === 'UUID') { %>UUID.fromString(<% } %><% if(fieldDomainType === 'LocalDate') { %>dateProtoToLocalDate(<% } %><% if(fieldDomainType === 'BigDecimal') { %>decimalProtoToBigDecimal(<% } %><% if(fieldIsEnum) { %><%=fieldDomainType%>.valueOf(<% } %><%=entityInstance%>Proto.get<%= fieldInJavaBeanMethod %>()<% if(fieldIsEnum) { %>.toString()<% } %><% if(fieldDomainType === 'byte[]') { %>.toByteArray()<% } %><% if(fieldDomainType === 'ByteBuffer') { %>.asReadOnlyByteBuffer()<% } %>)<% if(fieldIsEnum || isProtobufCustomType || fieldDomainType === 'UUID') { %>)<% } %>;
-    <%_ if (nullable || isProtobufCustomType) { _%>
+        if(<%= entityInstance %>Proto.get<%= fieldInJavaBeanMethod %>OneofCase() != <%= entityClass %>Proto.<%= fieldInJavaBeanMethod %>OneofCase.<%= fieldNameUnderscored.toUpperCase() %>) {
+            <%=instanceName%>.set<%= fieldInJavaBeanMethod %>(null);
         }
-    <%_ } _%>
-    <%_ if ((fieldDomainType === 'byte[]' || fieldDomainType === 'ByteBuffer') && fieldTypeBlobContent != 'text') { _%>
-    <%_ if (nullable) { _%>
-        if(<%= entityInstance %>Proto.get<%= fieldInJavaBeanMethod %>ContentTypeOneofCase() == <%= entityClass %>Proto.<%= fieldInJavaBeanMethod %>ContentTypeOneofCase.<%= fieldNameUnderscored.toUpperCase() %>_CONTENT_TYPE) {
-    <% } -%>
-        <%=instanceName%>.set<%= fieldInJavaBeanMethod %>ContentType(<%=entityInstance%>Proto.get<%= fieldInJavaBeanMethod %>ContentType());
-    <%_ if (nullable) { _%>
+        <%_ if ((fieldDomainType === 'byte[]' || fieldDomainType === 'ByteBuffer') && fieldTypeBlobContent != 'text') { _%>
+        if(<%= entityInstance %>Proto.get<%= fieldInJavaBeanMethod %>ContentTypeOneofCase() != <%= entityClass %>Proto.<%= fieldInJavaBeanMethod %>ContentTypeOneofCase.<%= fieldNameUnderscored.toUpperCase() %>_CONTENT_TYPE) {
+            <%=instanceName%>.set<%= fieldInJavaBeanMethod %>ContentType(null);
         }
-    <%_ } _%>
+        <%_ } _%>
     <%_ } _%>
 <%_ } _%>
-        return <%=instanceName%>;
     }
 
-<%_ for (idx in fields) {
-    if(fields[idx].fieldIsEnum) {
-        var fieldType = fields[idx].fieldType;
-        var fieldName = fieldType _%>
-    <%=fieldType%>Proto convert<%=fieldType%>To<%=fieldType%>Proto(<%=fieldType%> enumValue) {
-        return <%=fieldType%>Proto.valueOf(enumValue.toString());
-    }
-
-<%_ }} _%>
     <%=entityClass%>Proto.Builder create<%=entityClass%>Proto () {
         return <%=entityClass%>Proto.newBuilder();
     }
@@ -84,4 +66,14 @@ public abstract class <%=entityClass%>ProtoMapper extends ProtobufUtil {
         return <%=instanceName%>To<%=entityClass%>ProtoBuilder(<%=instanceName%>).build();
     }
 
+<%_ for (idx in fields) {
+    if(fields[idx].fieldIsEnum) {
+        var fieldType = fields[idx].fieldType;
+        var fieldName = fieldType _%>
+    abstract <%=fieldType%>Proto convert<%=fieldType%>To<%=fieldType%>Proto(<%=fieldType%> enumValue);
+
+    @ValueMapping(source = "UNRECOGNIZED", target = MappingConstants.NULL)
+    abstract <%=fieldType%> convert<%=fieldType%>ProtoTo<%=fieldType%>(<%=fieldType%>Proto enumValue);
+
+<%_ }} _%>
 }

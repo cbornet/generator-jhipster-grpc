@@ -25,17 +25,11 @@ public abstract class ProtobufUtil {
     private static final Pageable DEFAULT_PAGE_REQUEST = new org.springframework.data.domain.PageRequest(0, 20);
 
     public static LocalDate dateProtoToLocalDate(Date date) {
-        if (date == null) {
-            return null;
-        }
-        return LocalDate.of(date.getYear(), date.getMonth(), date.getDay());
+        return date == null ? null : LocalDate.of(date.getYear(), date.getMonth(), date.getDay());
     }
 
     public static Date localDateToDateProto(LocalDate date) {
-        if (date == null) {
-            return null;
-        }
-        return Date.newBuilder()
+        return date == null ? null : Date.newBuilder()
             .setYear(date.getYear())
             .setMonth(date.getMonthValue())
             .setDay(date.getDayOfMonth())
@@ -43,10 +37,7 @@ public abstract class ProtobufUtil {
     }
 
     public static ZonedDateTime timestampToZonedDateTime(Timestamp timestamp) {
-        if (timestamp == null) {
-            return null;
-        }
-        return ZonedDateTime.ofInstant(
+        return timestamp == null ? null : ZonedDateTime.ofInstant(
             Instant.ofEpochSecond(
                 timestamp.getSeconds(),
                 timestamp.getNanos()),
@@ -55,65 +46,53 @@ public abstract class ProtobufUtil {
     }
 
     public static Timestamp zonedDateTimeToTimestamp(ZonedDateTime zonedDateTime) {
-        if (zonedDateTime == null) {
-            return null;
-        }
-        return instantToTimestamp(zonedDateTime.toInstant());
+        return zonedDateTime == null ? null : instantToTimestamp(zonedDateTime.toInstant());
     }
 
     public static Timestamp instantToTimestamp(Instant instant) {
-        if (instant == null) {
-            return null;
-        }
-        return Timestamp.newBuilder()
+        return instant == null ? null :  Timestamp.newBuilder()
             .setSeconds(instant.getEpochSecond())
             .setNanos(instant.getNano())
             .build();
     }
 
     public static Timestamp dateToTimestamp(java.util.Date date) {
-        if (date == null) {
-            return null;
-        }
-        return instantToTimestamp(date.toInstant());
+        return date == null ? null : instantToTimestamp(date.toInstant());
     }
 
     public static BigDecimal decimalProtoToBigDecimal(Decimal decimal) {
-        if (decimal == null) {
-            return null;
-        }
-        return BigDecimal.valueOf(decimal.getUnscaledVal(), decimal.getScale());
+        return decimal == null ? null : BigDecimal.valueOf(decimal.getUnscaledVal(), decimal.getScale());
     }
 
     public static Decimal bigDecimalToDecimalProto(BigDecimal decimal) {
-        if (decimal == null) {
-            return null;
-        }
-        return Decimal.newBuilder()
+        return decimal == null ? null : Decimal.newBuilder()
             .setUnscaledVal(decimal.unscaledValue().longValue())
             .setScale(decimal.scale())
             .build();
     }
 
     public static ByteString bytesToByteString(byte[] bytes) {
-        if (bytes == null) {
-            return null;
-        }
-        return ByteString.copyFrom(bytes);
+        return bytes == null ? null : ByteString.copyFrom(bytes);
+    }
+
+    public static byte[] ByteStringToBytes(ByteString byteString) {
+        return byteString == null ? null : byteString.toByteArray();
     }
 
     public static ByteString byteBufferToByteString(ByteBuffer buffer) {
-        if (buffer == null) {
-            return null;
-        }
-        return ByteString.copyFrom(buffer);
+        return buffer == null ? null : ByteString.copyFrom(buffer);
+    }
+
+    public static ByteBuffer byteStringToByteBuffer(ByteString byteString) {
+        return byteString == null ? null : byteString.asReadOnlyByteBuffer();
     }
 
     public static String uuidToString(UUID uuid) {
-        if (uuid == null) {
-            return null;
-        }
-        return uuid.toString();
+        return uuid == null ? null : uuid.toString();
+    }
+
+    public static UUID uuidToString(String uuid) {
+        return uuid == null ? null : UUID.fromString(uuid);
     }
 
     public static org.springframework.data.domain.PageRequest pageRequestProtoToPageRequest(PageRequest pageRequestProto) {
