@@ -101,7 +101,7 @@ module.exports = yeoman.Base.extend({
             this.template('_decimal.proto', protoDir + 'util/decimal.proto', this, {});
             this.template('_pagination.proto', protoDir + 'util/pagination.proto', this, {});
             this.template('_AuthenticationInterceptor.java', javaDir + 'grpc/AuthenticationInterceptor.java');
-            this.template('_ProtobufUtil.java', javaDir + 'grpc/ProtobufUtil.java');
+            this.template('_ProtobufMappers.java', javaDir + 'grpc/ProtobufMappers.java');
 
             this.template('_configprops.proto', protoPackageDir + 'configprops.proto');
             this.template('_ConfigurationPropertiesReportService.java', javaDir + 'grpc/ConfigurationPropertiesReportService.java');

@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-public abstract class ProtobufUtil {
+public abstract class ProtobufMappers {
 
     private static final int DEFAULT_MAX_PAGE_SIZE = 2000;
     private static final Pageable DEFAULT_PAGE_REQUEST = new org.springframework.data.domain.PageRequest(0, 20);
@@ -91,7 +91,7 @@ public abstract class ProtobufUtil {
         return uuid == null ? null : uuid.toString();
     }
 
-    public static UUID uuidToString(String uuid) {
+    public static UUID stringToUuid(String uuid) {
         return uuid == null || uuid.isEmpty() ? null : UUID.fromString(uuid);
     }
 
@@ -141,7 +141,7 @@ public abstract class ProtobufUtil {
         }
         ObjectMapper mapper = new ObjectMapper();
         AuditEvent.Builder builder =  AuditEvent.newBuilder()
-            .setTimestamp(ProtobufUtil.dateToTimestamp(event.getTimestamp()))
+            .setTimestamp(dateToTimestamp(event.getTimestamp()))
             .setData(mapper.writeValueAsString(event.getData()));
         if (event.getPrincipal() != null) {
             builder.setPrincipal(event.getPrincipal());

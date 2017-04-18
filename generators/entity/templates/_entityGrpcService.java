@@ -5,7 +5,7 @@ import <%=packageName%>.domain.<%=instanceType%>;<% } %>
 import <%=packageName%>.grpc.AuthenticationInterceptor;
 <%_ if (pagination !== 'no') { _%>
 import <%=packageName%>.grpc.PageRequest;
-import <%=packageName%>.grpc.ProtobufUtil;
+import <%=packageName%>.grpc.ProtobufMappers;
 <%_ } _%>
 import <%=packageName%>.service.<%=entityClass%>Service;<% if (dto === 'mapstruct') { %>
 import <%=packageName%>.service.dto.<%=instanceType%>;<% } %>
@@ -53,7 +53,7 @@ public class <%=entityClass%>GrpcService extends <%=entityClass%>ServiceGrpc.<%=
 
     @Override
     public void getAll<%=entityClassPlural%>(<% if (pagination !== 'no') { %>PageRequest<% } else { %>Empty<% } %> request, StreamObserver<<%=entityClass%>Proto> responseObserver) {
-        <%=entityInstance%>Service.findAll(<% if (pagination !== 'no') { %>ProtobufUtil.pageRequestProtoToPageRequest(request)<% } %>)
+        <%=entityInstance%>Service.findAll(<% if (pagination !== 'no') { %>ProtobufMappers.pageRequestProtoToPageRequest(request)<% } %>)
             .forEach(<%=entityInstance%> -> responseObserver.onNext(<%=entityInstance%>ProtoMapper.<%=instanceName%>To<%=entityClass%>Proto(<%=entityInstance%>)));
         responseObserver.onCompleted();
     }

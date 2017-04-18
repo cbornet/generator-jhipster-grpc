@@ -34,7 +34,7 @@ public class MetricService extends MetricServiceGrpc.MetricServiceImplBase {
                 Metric.Builder builder = Metric.newBuilder()
                     .setName(metric.getName());
                 if(metric.getTimestamp() != null) {
-                    builder.setTimestamp(ProtobufUtil.dateToTimestamp(metric.getTimestamp()));
+                    builder.setTimestamp(ProtobufMappers.dateToTimestamp(metric.getTimestamp()));
                 }
                 if (metric.getValue() instanceof Long || metric.getValue() instanceof Integer) {
                     builder.setLongValue(metric.getValue().longValue());

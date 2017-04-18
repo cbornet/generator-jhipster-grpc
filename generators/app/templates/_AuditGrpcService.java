@@ -29,15 +29,15 @@ public class AuditGrpcService extends AuditServiceGrpc.AuditServiceImplBase {
     public void getAuditEvents(AuditRequest request, StreamObserver<AuditEvent> responseObserver) {
         Page<org.springframework.boot.actuate.audit.AuditEvent> auditEvents;
         if (request.hasFromDate() || request.hasToDate()) {
-            LocalDateTime fromDate = request.hasFromDate() ? ProtobufUtil.dateProtoToLocalDate(request.getFromDate()).atTime(0, 0) : null;
-            LocalDateTime toDate = request.hasToDate() ? ProtobufUtil.dateProtoToLocalDate(request.getToDate()).atTime(23, 59) : null;
-            auditEvents= auditEventService.findByDates(fromDate, toDate, ProtobufUtil.pageRequestProtoToPageRequest(request.getPaginationParams()));
+            LocalDateTime fromDate = request.hasFromDate() ? ProtobufMappers.dateProtoToLocalDate(request.getFromDate()).atTime(0, 0) : null;
+            LocalDateTime toDate = request.hasToDate() ? ProtobufMappers.dateProtoToLocalDate(request.getToDate()).atTime(23, 59) : null;
+            auditEvents= auditEventService.findByDates(fromDate, toDate, ProtobufMappers.pageRequestProtoToPageRequest(request.getPaginationParams()));
         } else {
-            auditEvents = auditEventService.findAll(ProtobufUtil.pageRequestProtoToPageRequest(request.getPaginationParams()));
+            auditEvents = auditEventService.findAll(ProtobufMappers.pageRequestProtoToPageRequest(request.getPaginationParams()));
         }
         try {
             for(org.springframework.boot.actuate.audit.AuditEvent event : auditEvents) {
-                responseObserver.onNext(ProtobufUtil.auditEventToAuditEventProto(event));
+                responseObserver.onNext(ProtobufMappers.auditEventToAuditEventProto(event));
             }
             responseObserver.onCompleted();
         } catch (JsonProcessingException e) {
@@ -51,7 +51,7 @@ public class AuditGrpcService extends AuditServiceGrpc.AuditServiceImplBase {
         Optional<org.springframework.boot.actuate.audit.AuditEvent> auditEvent = auditEventService.find(id.getValue());
         if (auditEvent.isPresent()) {
             try {
-                responseObserver.onNext(ProtobufUtil.auditEventToAuditEventProto(auditEvent.get()));
+                responseObserver.onNext(ProtobufMappers.auditEventToAuditEventProto(auditEvent.get()));
                 responseObserver.onCompleted();
             } catch (JsonProcessingException e) {
                 responseObserver.onError(e);

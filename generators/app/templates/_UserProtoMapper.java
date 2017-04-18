@@ -9,10 +9,10 @@ import org.mapstruct.NullValueCheckStrategy;
 
 import java.util.HashSet;
 
-@Mapper(componentModel = "spring", nullValueCheckStrategy = NullValueCheckStrategy.ALWAYS)
-public abstract class UserProtoMapper extends ProtobufUtil {
+@Mapper(componentModel = "spring", nullValueCheckStrategy = NullValueCheckStrategy.ALWAYS, uses = {ProtobufMappers.class})
+public interface UserProtoMapper {
 
-    public UserDTO userProtoToUserDTO(UserProto userProto) {
+    default UserDTO userProtoToUserDTO(UserProto userProto) {
         if ( userProto == null ) {
             return null;
         }
@@ -29,15 +29,15 @@ public abstract class UserProtoMapper extends ProtobufUtil {
             userProto.getLangKey().isEmpty() ? null : userProto.getLangKey(),
             <%_ if (databaseType == 'mongodb' || databaseType == 'sql') { _%>
             userProto.getCreatedBy().isEmpty() ? null : userProto.getCreatedBy(),
-            timestampToZonedDateTime(userProto.getCreatedDate()),
+            ProtobufMappers.timestampToZonedDateTime(userProto.getCreatedDate()),
             userProto.getLastModifiedBy().isEmpty() ? null: userProto.getLastModifiedBy(),
-            timestampToZonedDateTime(userProto.getLastModifiedDate()),
+            ProtobufMappers.timestampToZonedDateTime(userProto.getLastModifiedDate()),
             <%_ } _%>
             new HashSet<>(userProto.getAuthoritiesList())
         );
     }
 
-    public UserProto userDTOToUserProto(UserDTO userDTO) {
+    default UserProto userDTOToUserProto(UserDTO userDTO) {
         if (userDTO == null) {
             return null;
         }
@@ -49,13 +49,13 @@ public abstract class UserProtoMapper extends ProtobufUtil {
         return builder.build();
     }
 
-    UserProto.Builder createUserProto () {
+    default UserProto.Builder createUserProto () {
         return UserProto.newBuilder();
     }
 
-    protected abstract UserProto.Builder userDTOToUserProtoBuilder (UserDTO userDTO);
+    UserProto.Builder userDTOToUserProtoBuilder (UserDTO userDTO);
 
-    public UserProto userToUserProto(User user) {
+    default UserProto userToUserProto(User user) {
         if (user == null) {
             return null;
         }
@@ -63,6 +63,15 @@ public abstract class UserProtoMapper extends ProtobufUtil {
     }
 
     @Mapping(target = "password", ignore = true)
-    protected abstract UserProto.Builder userToUserProtoBuilder (User user);
+    UserProto.Builder userToUserProtoBuilder (User user);
+
+    default User userFromId(<% if (databaseType == 'mongodb' || databaseType == 'cassandra') { %>String<% } else { %>Long<% } %> id) {
+        if (id == null) {
+            return null;
+        }
+        User user = new User();
+        user.setId(id);
+        return user;
+    }
 
 }

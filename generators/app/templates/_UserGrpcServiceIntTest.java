@@ -9,7 +9,6 @@ import <%=packageName%>.repository.UserRepository;
 import <%=packageName%>.security.AuthoritiesConstants;
 import <%=packageName%>.service.MailService;
 import <%=packageName%>.service.UserService;
-import <%=packageName%>.web.rest.UserResourceIntTest;
 
 <%_ if (databaseType === 'cassandra') { _%>
 import com.google.protobuf.Empty;
@@ -30,8 +29,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 <%_ if (databaseType === 'sql') { _%>
 import org.springframework.transaction.annotation.Transactional;
-<%_ } _%>
 
+import javax.persistence.EntityManager;
+<%_ } _%>
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -108,12 +108,36 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
         mockServer.shutdownNow();
     }
 
+        /**
+     * Create a User.
+     *
+     * This is a static method, as tests for other entities might also need it,
+     * if they test an entity which has a required relationship to the User entity.
+     */
+    public static User createEntity(<% if (databaseType === 'sql') { %>EntityManager em<% } %>) {
+        User user = new User();
+        <%_ if (databaseType === 'cassandra') { _%>
+        user.setId(UUID.randomUUID().toString());
+        <%_ } _%>
+        user.setLogin(DEFAULT_LOGIN);
+        user.setPassword(RandomStringUtils.random(60));
+        user.setActivated(true);
+        user.setEmail(DEFAULT_EMAIL);
+        user.setFirstName(DEFAULT_FIRSTNAME);
+        user.setLastName(DEFAULT_LASTNAME);
+        <%_ if (databaseType !== 'cassandra') { _%>
+        user.setImageUrl(DEFAULT_IMAGEURL);
+        <%_ } _%>
+        user.setLangKey(DEFAULT_LANGKEY);
+        return user;
+    }
+
     @Before
     public void initTest() {
         <%_ if (databaseType !== 'sql') { _%>
         userRepository.deleteAll();
         <%_ } _%>
-        user = UserResourceIntTest.createEntity(<% if (databaseType === 'sql') { %>null<% } %>);
+        user = createEntity(<% if (databaseType === 'sql') { %>null<% } %>);
     }
 
     @Test
@@ -352,9 +376,9 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
             .setLangKey(UPDATED_LANGKEY)
             <%_ if (databaseType !== 'cassandra') { _%>
             .setCreatedBy(updatedUser.getCreatedBy())
-            .setCreatedDate(ProtobufUtil.zonedDateTimeToTimestamp(updatedUser.getCreatedDate()))
+            .setCreatedDate(ProtobufMappers.zonedDateTimeToTimestamp(updatedUser.getCreatedDate()))
             .setLastModifiedBy(updatedUser.getLastModifiedBy())
-            .setLastModifiedDate(ProtobufUtil.zonedDateTimeToTimestamp(updatedUser.getLastModifiedDate()))
+            .setLastModifiedDate(ProtobufMappers.zonedDateTimeToTimestamp(updatedUser.getLastModifiedDate()))
             <%_ } _%>
             .addAuthorities(AuthoritiesConstants.USER)
             .build();
@@ -400,9 +424,9 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
             .setLangKey(UPDATED_LANGKEY)
             <%_ if (databaseType !== 'cassandra') { _%>
             .setCreatedBy(updatedUser.getCreatedBy())
-            .setCreatedDate(ProtobufUtil.zonedDateTimeToTimestamp(updatedUser.getCreatedDate()))
+            .setCreatedDate(ProtobufMappers.zonedDateTimeToTimestamp(updatedUser.getCreatedDate()))
             .setLastModifiedBy(updatedUser.getLastModifiedBy())
-            .setLastModifiedDate(ProtobufUtil.zonedDateTimeToTimestamp(updatedUser.getLastModifiedDate()))
+            .setLastModifiedDate(ProtobufMappers.zonedDateTimeToTimestamp(updatedUser.getLastModifiedDate()))
             <%_ } _%>
             .addAuthorities(AuthoritiesConstants.USER)
             .build();
@@ -464,9 +488,9 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
             .setLangKey(updatedUser.getLangKey())
             <%_ if (databaseType !== 'cassandra') { _%>
             .setCreatedBy(updatedUser.getCreatedBy())
-            .setCreatedDate(ProtobufUtil.zonedDateTimeToTimestamp(updatedUser.getCreatedDate()))
+            .setCreatedDate(ProtobufMappers.zonedDateTimeToTimestamp(updatedUser.getCreatedDate()))
             .setLastModifiedBy(updatedUser.getLastModifiedBy())
-            .setLastModifiedDate(ProtobufUtil.zonedDateTimeToTimestamp(updatedUser.getLastModifiedDate()))
+            .setLastModifiedDate(ProtobufMappers.zonedDateTimeToTimestamp(updatedUser.getLastModifiedDate()))
             <%_ } _%>
             .addAuthorities(AuthoritiesConstants.USER)
             .build();
@@ -521,9 +545,9 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
             .setLangKey(updatedUser.getLangKey())
             <%_ if (databaseType !== 'cassandra') { _%>
             .setCreatedBy(updatedUser.getCreatedBy())
-            .setCreatedDate(ProtobufUtil.zonedDateTimeToTimestamp(updatedUser.getCreatedDate()))
+            .setCreatedDate(ProtobufMappers.zonedDateTimeToTimestamp(updatedUser.getCreatedDate()))
             .setLastModifiedBy(updatedUser.getLastModifiedBy())
-            .setLastModifiedDate(ProtobufUtil.zonedDateTimeToTimestamp(updatedUser.getLastModifiedDate()))
+            .setLastModifiedDate(ProtobufMappers.zonedDateTimeToTimestamp(updatedUser.getLastModifiedDate()))
             <%_ } _%>
             .addAuthorities(AuthoritiesConstants.USER)
             .build();

@@ -109,6 +109,26 @@ module.exports = yeoman.Base.extend({
                 f.fieldProtobufType = getProtobufType(f.fieldDomainType);
                 f.isProtobufCustomType = isProtobufCustomType(f.fieldProtobufType);
             });
+            this.relationships = this.entityConfig.data.relationships;
+            this.relationships.forEach(r => {
+                r.relationshipNameUnderscored = _.snakeCase(r.relationshipName).toLowerCase();
+                r.otherEntityNameUnderscored = _.snakeCase(r.otherEntityName).toLowerCase();
+                r.otherEntityFieldUnderscored = _.snakeCase(r.otherEntityField).toLowerCase();
+                if(r.otherEntityNameCapitalized === 'User') {
+                    r.otherEntityProtobufType = this.packageName + '.UserProto';
+                    r.otherEntityProtoMapper = this.packageName + '.grpc.UserProtoMapper';
+                    r.otherEntityTest = this.packageName + '.grpc.UserGrpcServiceIntTest';
+                    r.otherEntityProtobufFile = jhipsterVar.packageFolder + '/user.proto';
+                } else {
+                    r.otherEntityProtobufType = this.packageName + '.entity.' + r.otherEntityNameCapitalized + 'Proto';
+                    r.otherEntityProtoMapper = this.packageName + '.grpc.entity.' + r.otherEntityNameUnderscored +
+                        '.' + r.otherEntityNameCapitalized + 'ProtoMapper';
+                    r.otherEntityTest = this.packageName + '.grpc.entity.' + r.otherEntityNameUnderscored +
+                        '.' + r.otherEntityNameCapitalized + 'GrpcServiceIntTest';
+                    r.otherEntityProtobufFile = jhipsterVar.packageFolder + '/entity/' + r.otherEntityNameUnderscored + '.proto';
+                }
+            });
+
             if (this.databaseType === 'sql') {
                 this.idProtoType = 'int64';
                 this.idProtoWrappedType = 'Int64Value';

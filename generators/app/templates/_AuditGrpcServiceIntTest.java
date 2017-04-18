@@ -105,8 +105,8 @@ public class AuditGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ex
         auditEventRepository.save(auditEvent);
 
         AuditRequest request = AuditRequest.newBuilder()
-            .setFromDate(ProtobufUtil.localDateToDateProto(SAMPLE_TIMESTAMP.minusDays(1).toLocalDate()))
-            .setToDate(ProtobufUtil.localDateToDateProto(SAMPLE_TIMESTAMP.plusDays(1).toLocalDate()))
+            .setFromDate(ProtobufMappers.localDateToDateProto(SAMPLE_TIMESTAMP.minusDays(1).toLocalDate()))
+            .setToDate(ProtobufMappers.localDateToDateProto(SAMPLE_TIMESTAMP.plusDays(1).toLocalDate()))
             .build();
         assertThat(stub.getAuditEvents(request)).extracting("principal").contains(SAMPLE_PRINCIPAL);
     }
@@ -118,8 +118,8 @@ public class AuditGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ex
 
         // Query audits but expect no results
         AuditRequest request = AuditRequest.newBuilder()
-            .setFromDate(ProtobufUtil.localDateToDateProto(SAMPLE_TIMESTAMP.minusDays(2).toLocalDate()))
-            .setToDate(ProtobufUtil.localDateToDateProto(SAMPLE_TIMESTAMP.minusDays(1).toLocalDate()))
+            .setFromDate(ProtobufMappers.localDateToDateProto(SAMPLE_TIMESTAMP.minusDays(2).toLocalDate()))
+            .setToDate(ProtobufMappers.localDateToDateProto(SAMPLE_TIMESTAMP.minusDays(1).toLocalDate()))
             .build();
         assertThat(stub.getAuditEvents(request)).isEmpty();
     }

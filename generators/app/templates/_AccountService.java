@@ -181,7 +181,7 @@ public class AccountService extends AccountServiceGrpc.AccountServiceImplBase {
         Optional<User> user = userRepository.findOneByLogin(SecurityUtils.getCurrentUserLogin());
         if (user.isPresent()) {
             persistentTokenRepository.findByUser(user.get()).forEach( persistentToken ->
-                responseObserver.onNext(ProtobufUtil.persistentTokenToPersistentTokenProto(persistentToken))
+                responseObserver.onNext(ProtobufMappers.persistentTokenToPersistentTokenProto(persistentToken))
             );
         } else {
             responseObserver.onError(Status.INTERNAL.asException());

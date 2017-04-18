@@ -12,6 +12,9 @@ import "google/protobuf/wrappers.proto";<% if (fieldsContainBigDecimal) { %>
 import "util/decimal.proto";<% } %><% if (fieldsContainLocalDate) { %>
 import "util/date.proto";<% } %><% if (pagination !== 'no') { %>
 import "util/pagination.proto";<% } %>
+<%_ for (r of relationships.filter(r => r.relationshipType == 'many-to-many' && r.ownerSide == true)) { _%>
+import "<%= r.otherEntityProtobufFile %>";
+<%_ } _%>
 
 // gRPC service providing CRUD methods for entity <%=entityClass%>
 service <%=entityClass%>Service {
@@ -59,25 +62,25 @@ message <%=entityClass%>Proto {
 
 <%_ var protobufFieldNumber = 2;
 
-    for (idx in fields) {
+for (field of fields) {
     var isOneOf = false;
     var indentOneOf = '';
-    var fieldValidate = fields[idx].fieldValidate;
-    var fieldValidateRules = fields[idx].fieldValidateRules;
-    var fieldValidateRulesMaxlength = fields[idx].fieldValidateRulesMaxlength;
-    var fieldType = fields[idx].fieldType;
-    var fieldTypeBlobContent = fields[idx].fieldTypeBlobContent;
-    var fieldProtobufType = fields[idx].fieldProtobufType;
-    var isProtobufCustomType = fields[idx].isProtobufCustomType;
-    var fieldName = fields[idx].fieldName;
-    var fieldNameUnderscored = fields[idx].fieldNameUnderscored;
+    var fieldValidate = field.fieldValidate;
+    var fieldValidateRules = field.fieldValidateRules;
+    var fieldValidateRulesMaxlength = field.fieldValidateRulesMaxlength;
+    var fieldType = field.fieldType;
+    var fieldTypeBlobContent = field.fieldTypeBlobContent;
+    var fieldProtobufType = field.fieldProtobufType;
+    var isProtobufCustomType = field.isProtobufCustomType;
+    var fieldName = field.fieldName;
+    var fieldNameUnderscored = field.fieldNameUnderscored;
     if (!isProtobufCustomType && !(fieldValidate && fieldValidateRules.indexOf('required') != -1)) {
         isOneOf = true;
         indentOneOf = '    ';
     }
     var javadoc = '';
-    if(fields[idx].javadoc !== undefined) {
-        javadoc = '// ' + fields[idx].javadoc.replace('\n', '\n    '+ indentOneOf + '// ') + '\n    '+ indentOneOf;
+    if(field.javadoc !== undefined) {
+        javadoc = '// ' + fields.javadoc.replace('\n', '\n    '+ indentOneOf + '// ') + '\n    '+ indentOneOf;
     }_%>
     <% if (isOneOf) { %>oneof <%=fieldNameUnderscored%>_oneof {
         <% } %><%= javadoc %><%=fieldProtobufType%> <%=fieldNameUnderscored%> = <%=protobufFieldNumber++%>;<% if (isOneOf) { %>
@@ -88,6 +91,18 @@ message <%=entityClass%>Proto {
         <% } %>string <%=fieldNameUnderscored%>_content_type = <%=protobufFieldNumber++%>;<% if (isOneOf) { %>
     }<% } %>
     <%_ } _%>
+<%_ }
+for (r of relationships) { _%>
+    <%_ if (r.relationshipType == 'many-to-many' && r.ownerSide == true) { _%>
+    repeated <%= r.otherEntityProtobufType %> <%= r.relationshipFieldNamePlural %> = <%=protobufFieldNumber++%>;
+    <%_ } else if (r.relationshipType == 'many-to-one' || (r.relationshipType == 'one-to-one' && r.ownerSide == true)) { _%>
+    <% if (r.relationshipValidate !== true) { %>oneof <%= r.relationshipNameUnderscored %>_id_oneof {
+        <% } %>int64 <%= r.relationshipNameUnderscored %>_id = <%=protobufFieldNumber++%>;<% if (r.relationshipValidate !== true) { %>
+    }<% } %>
+    <%_ if (r.otherEntityFieldCapitalized !='Id' && r.otherEntityFieldCapitalized != '') { _%>
+    <% if (r.relationshipValidate !== true) { %>oneof <%= r.relationshipNameUnderscored %>_<%= r.otherEntityFieldUnderscored %>_oneof {
+        <% } %>string <%= r.relationshipNameUnderscored %>_<%= r.otherEntityFieldUnderscored %> = <%=protobufFieldNumber++%>;<% if (r.relationshipValidate !== true) { %>
+    }<% } %>
+    <%_ }}} _%>
 
-<%_ } _%>
 }

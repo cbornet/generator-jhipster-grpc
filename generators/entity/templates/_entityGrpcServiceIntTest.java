@@ -8,9 +8,17 @@ import <%=packageName%>.config.SecurityBeanOverrideConfiguration;
 import <%=packageName%>.domain.<%= entityClass %>;<% if (pagination !== 'no') { %>
 import <%=packageName%>.grpc.PageRequest;<% } else { %>
 import com.google.protobuf.Empty;<% } %>
-import <%=packageName%>.repository.<%= entityClass %>Repository;
-import <%=packageName%>.service.<%= entityClass %>Service;<% if (searchEngine == 'elasticsearch') { %>
-import <%=packageName%>.repository.search.<%= entityClass %>SearchRepository;<% } if (dto == 'mapstruct') { %>
+<%_ for (r of relationships) { // import entities in required relationships
+        if (r.relationshipValidate != null && r.relationshipValidate === true) { _%>
+import <%=packageName%>.domain.<%= r.otherEntityNameCapitalized %>;
+<%_ } } _%>
+<%_ for (r of relationships) { // import entities in required relationships
+        if (r.relationshipValidate != null && r.relationshipValidate === true) { _%>
+import <%=r.otherEntityTest%>;
+<%_ } } _%>
+import <%=packageName%>.repository.<%= entityClass %>Repository;<% if (searchEngine == 'elasticsearch') { %>
+import <%=packageName%>.repository.search.<%= entityClass %>SearchRepository;<% } %>
+import <%=packageName%>.service.<%= entityClass %>Service;<% if (dto == 'mapstruct') { %>
 import <%=packageName%>.service.dto.<%= entityClass %>DTO;
 import <%=packageName%>.service.mapper.<%= entityClass %>Mapper;<% } %>
 import <%=packageName%>.web.rest.TestUtil;
@@ -30,7 +38,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;<% if (databaseType == 'sql') { %>
 import org.springframework.transaction.annotation.Transactional;<% } %>
-<% if (fieldsContainLocalDate == true) { %>
+<% if (databaseType == 'sql') { %>
+import javax.persistence.EntityManager;<% } %><% if (fieldsContainLocalDate == true) { %>
 import java.time.LocalDate;<% } %><% if (fieldsContainZonedDateTime == true) { %>
 import java.time.Instant;
 import java.time.ZonedDateTime;
@@ -225,6 +234,11 @@ _%>
 
     @Autowired
     private <%= entityClass %>SearchRepository <%= entityInstance %>SearchRepository;<% } %>
+<%_ if (databaseType == 'sql') { _%>
+
+    @Autowired
+    private EntityManager em;
+<%_ } _%>
 
     private Server mockServer;
 
@@ -255,7 +269,7 @@ _%>
      * This is a static method, as tests for other entities might also need it,
      * if they test an entity which requires the current entity.
      */
-    public static <%= entityClass %> createEntity() {
+    public static <%= entityClass %> createEntity(<% if (databaseType == 'sql') { %>EntityManager em<% } %>) {
         <%_ if (fluentMethods) { _%>
         <%= entityClass %> <%= entityInstance %> = new <%= entityClass %>()<% for (idx in fields) { %>
             .<%= fields[idx].fieldName %>(<%='DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase()%>)<% if ((fields[idx].fieldType == 'byte[]' || fields[idx].fieldType === 'ByteBuffer') && fields[idx].fieldTypeBlobContent != 'text') { %>
@@ -269,6 +283,24 @@ _%>
                 <%_ } _%>
             <%_ } _%>
         <%_ } _%>
+        <%_ for (idx in relationships) {
+            const relationshipValidate = relationships[idx].relationshipValidate;
+            const otherEntityNameCapitalized = relationships[idx].otherEntityNameCapitalized;
+            const relationshipFieldName = relationships[idx].relationshipFieldName;
+            const relationshipType = relationships[idx].relationshipType;
+            const relationshipNameCapitalizedPlural = relationships[idx].relationshipNameCapitalizedPlural;
+            const relationshipNameCapitalized = relationships[idx].relationshipNameCapitalized;
+            if (relationshipValidate != null && relationshipValidate === true) { _%>
+        // Add required entity
+        <%= otherEntityNameCapitalized %> <%= relationshipFieldName %> = <%= otherEntityNameCapitalized %>GrpcServiceIntTest.createEntity(em);
+        em.persist(<%= relationshipFieldName %>);
+        em.flush();
+            <%_ if (relationshipType == 'many-to-many') { _%>
+        <%= entityInstance %>.get<%= relationshipNameCapitalizedPlural %>().add(<%= relationshipFieldName %>);
+            <%_ } else { _%>
+        <%= entityInstance %>.set<%= relationshipNameCapitalized %>(<%= relationshipFieldName %>);
+            <%_ } _%>
+        <%_ } } _%>
         return <%= entityInstance %>;
     }
 
@@ -282,7 +314,7 @@ _%>
         <%_ } if (searchEngine == 'elasticsearch') { _%>
         <%= entityInstance %>SearchRepository.deleteAll();
         <%_ } _%>
-        <%= entityInstance %> = createEntity();
+        <%= entityInstance %> = createEntity(<% if (databaseType == 'sql') { %>em<% } %>);
     }
 
     @Test<% if (databaseType == 'sql') { %>
@@ -363,6 +395,7 @@ _%>
             }
         }
 
+        assertThat(found<%= entityClass %>).isNotNull();
         <%_ for (idx in fields) { _%>
             <%_ if ((fields[idx].fieldType == 'byte[]' || fields[idx].fieldType === 'ByteBuffer') && fields[idx].fieldTypeBlobContent != 'text') { _%>
         assertThat(found<%= entityClass %>.get<%= fields[idx].fieldInJavaBeanMethod %>ContentType()).isEqualTo(<%='DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase()%>_CONTENT_TYPE);
