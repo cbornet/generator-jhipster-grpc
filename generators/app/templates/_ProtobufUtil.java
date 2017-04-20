@@ -92,7 +92,7 @@ public abstract class ProtobufUtil {
     }
 
     public static UUID uuidToString(String uuid) {
-        return uuid == null ? null : UUID.fromString(uuid);
+        return uuid == null || uuid.isEmpty() ? null : UUID.fromString(uuid);
     }
 
     public static org.springframework.data.domain.PageRequest pageRequestProtoToPageRequest(PageRequest pageRequestProto) {
