@@ -38,13 +38,14 @@ If you want to add CRUD gRPC services for an entity, just (re)generate it and co
 
 Notes :
 * doesn't work for applications using Gatling (see https://github.com/cbornet/generator-jhipster-grpc/issues/4)
-* entities must have a service layer (serviceClass or serviceImpl) or else they will be ignored by the generator (not having a common service layer between the REST resources and the gRPC endpoints would be bad design).
+* for the moment entities must have a service layer (serviceClass or serviceImpl)
 * just like with DTOs, entities that are referenced by another entity in a relationship (many-to-many owned side, many-to-one or one-to-ine owned side) currently must be grpc activated and thus have a service layer. The service layer constraint should be relaxed in a future release since it's only the gRPC mapper which is required.
 
 TODOs:
 - [x] ~~Generate existing entities~~
 - [x] ~~Support Gradle~~
 - [x] ~~Entities without DTOs~~
+- [ ] Entities without service
 - [x] ~~Entities with pagination~~
 - [x] ~~Support Cassandra~~
 - [x] ~~Support Mongo~~
