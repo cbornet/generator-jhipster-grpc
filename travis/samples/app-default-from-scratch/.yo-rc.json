@@ -1,9 +1,9 @@
 {
   "generator-jhipster": {
     "applicationType": "monolith",
-    "baseName": "jhipsterSampleApplication",
-    "packageName": "io.github.jhipster.sample",
-    "packageFolder": "io/github/jhipster/sample",
+    "baseName": "jhipsterGrpcSampleApplication",
+    "packageName": "io.github.cbornet.jhipstergrpcsample",
+    "packageFolder": "io/github/cbornet/jhipstergrpcsample",
     "authenticationType": "session",
     "hibernateCache": "ehcache",
     "clusteredHttpSession": false,
