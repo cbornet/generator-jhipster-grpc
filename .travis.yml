@@ -13,6 +13,8 @@ addons:
     - google-chrome
     packages:
     - google-chrome-stable
+  sonarqube:
+    organization: jhipster-grpc
 cache:
   yarn: true
   directories:
