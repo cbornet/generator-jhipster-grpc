@@ -96,7 +96,7 @@ public class AuthenticationInterceptor implements ServerInterceptor {
             decoded = Base64Utils.decode(base64Token.getBytes(Charset.forName("UTF-8")));
         }
         catch (IllegalArgumentException e) {
-            throw new BadCredentialsException("Failed to decode basic authentication token");
+            throw new BadCredentialsException("Failed to decode basic authentication token", e);
         }
         String token = new String(decoded, Charset.forName("UTF-8"));
         int delim = token.indexOf(":");
