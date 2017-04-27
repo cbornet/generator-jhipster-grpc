@@ -3,9 +3,9 @@ package <%=packageName%>.grpc;
 import <%=packageName%>.security.AuthoritiesConstants;<% if (authenticationType === 'jwt') { %>
 import <%=packageName%>.security.jwt.TokenProvider;<% } %>
 import io.grpc.*;
-import io.grpc.Status;<% if (authenticationType === 'session') { %>
+import io.grpc.Status;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.slf4j.LoggerFactory;<% if (authenticationType === 'session') { %>
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;<% } %>
@@ -22,9 +22,9 @@ import java.nio.charset.Charset;<% } %>
 @Component
 public class AuthenticationInterceptor implements ServerInterceptor {
 
-    <%_ if (authenticationType === 'session') { _%>
     private final Logger log = LoggerFactory.getLogger(AuthenticationInterceptor.class);
 
+    <%_ if (authenticationType === 'session') { _%>
     private final AuthenticationManager authenticationManager;
 
     public AuthenticationInterceptor(AuthenticationManager authenticationManager) {
@@ -61,7 +61,7 @@ public class AuthenticationInterceptor implements ServerInterceptor {
                     String[] credentials = decodeToken(token);
                     Authentication authentication =
                         new UsernamePasswordAuthenticationToken(credentials[0], credentials[1]);
-                    authenticationManager.authenticate(authentication);
+                    authentication = authenticationManager.authenticate(authentication);
                 <%_ } else if (authenticationType === 'jwt') { _%>
                 if (this.tokenProvider.validateToken(token)) {
                     Authentication authentication = this.tokenProvider.getAuthentication(token);
@@ -71,22 +71,25 @@ public class AuthenticationInterceptor implements ServerInterceptor {
                 <%_ } _%>
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                     if (authentication.getAuthorities().stream()
-                        .noneMatch(grantedAuthority -> grantedAuthority.getAuthority().equals(AuthoritiesConstants.ANONYMOUS))
+                        .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals(AuthoritiesConstants.ANONYMOUS))
                         ) {
-                        return serverCallHandler.startCall(serverCall, metadata);
-                    } else {
+                        log.error("Anonymous user permission denied");
                         serverCall.close(Status.PERMISSION_DENIED, metadata);
                     }
+                    return serverCallHandler.startCall(serverCall, metadata);
                 }<% if (authenticationType === 'session') { %> catch (AuthenticationException e) {
                     log.error("Cannot authenticate", e);
                     serverCall.close(Status.UNAUTHENTICATED, metadata);
+                    return serverCallHandler.startCall(serverCall, metadata);
                 }<% } %>
             }
         }
+        log.error("Missing basic authorization metadata");
         serverCall.close(Status.UNAUTHENTICATED, metadata);
-        return null;
+        return serverCallHandler.startCall(serverCall, metadata);
     }
     <%_ if (authenticationType === 'session') { _%>
+
     private String[] decodeToken(String base64Token) {
         byte[] decoded;
         try {
