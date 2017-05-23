@@ -44,9 +44,10 @@ import org.springframework.transaction.annotation.Transactional;<% } %>
 <%_ if (databaseType == 'sql') { _%>
 import javax.persistence.EntityManager;
 <%_ } _%>
-import java.io.IOException;<% if (databaseType == 'sql' || databaseType == 'mongodb') { %>
+import java.io.IOException;
+import java.time.temporal.ChronoUnit;<% if (databaseType == 'sql' || databaseType == 'mongodb') { %>
 import java.time.LocalDate;<% } %>
-import java.time.ZonedDateTime;
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -673,9 +674,8 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
     public void testFinishPasswordReset() {
         User user = UserResourceIntTest.createEntity(<% if (databaseType == 'sql') { %>null<% } %>);
         user.setLogin("grpc-finish-password-reset");
-        user.setEmail("grpc-finish-password-reset@example.com");<% if (databaseType == 'sql' || databaseType == 'mongodb') { %>
-        user.setResetDate(ZonedDateTime.now().plusDays(1));<% } else { %>
-        user.setResetDate(new java.util.Date(ZonedDateTime.now().plusDays(1).toEpochSecond() * 1000));<% } %>
+        user.setEmail("grpc-finish-password-reset@example.com");
+        user.setResetDate(Instant.now().plus(1, ChronoUnit.DAYS));
         user.setResetKey("reset key");
         userRepository.save<% if (databaseType == 'sql') { %>AndFlush<% } %>(user);
 

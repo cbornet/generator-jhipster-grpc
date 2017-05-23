@@ -6,7 +6,7 @@ option java_package = "<%=packageName%>.grpc.entity.<%=entityUnderscoredName%>";
 
 package <%=packageName%>.entity;
 
-import "google/protobuf/empty.proto";<% if (fieldsContainZonedDateTime) { %>
+import "google/protobuf/empty.proto";<% if (fieldsContainZonedDateTime || fieldsContainInstant) { %>
 import "google/protobuf/timestamp.proto";<% } %>
 import "google/protobuf/wrappers.proto";<% if (fieldsContainBigDecimal) { %>
 import "util/decimal.proto";<% } %><% if (fieldsContainLocalDate) { %>

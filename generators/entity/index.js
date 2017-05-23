@@ -88,6 +88,7 @@ module.exports = yeoman.Base.extend({
             this.dto = this.entityConfig.data.dto || 'no';
             this.instanceType = (this.dto === 'mapstruct') ? this.entityClass + 'DTO' : this.entityClass;
             this.instanceName = (this.dto === 'mapstruct') ? this.entityInstance + 'DTO' : this.entityInstance;
+            this.fieldsContainInstant = this.entityConfig.fieldsContainInstant;
             this.fieldsContainZonedDateTime = this.entityConfig.fieldsContainZonedDateTime;
             this.fieldsContainLocalDate = this.entityConfig.fieldsContainLocalDate;
             this.fieldsContainBigDecimal = this.entityConfig.fieldsContainBigDecimal;

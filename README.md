@@ -84,6 +84,7 @@ Mappings:
 | Boolean   | bool |
 | Blob (byte[]) | bytes |
 | ByteBuffer | bytes |
+| Instant | google.protobuf.Timestamp |
 | ZonedDateTime | google.protobuf.Timestamp |
 | LocalDate | util.Date |
 | BigDecimal | util.Decimal |

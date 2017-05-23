@@ -29,9 +29,9 @@ public interface UserProtoMapper {
             userProto.getLangKey().isEmpty() ? null : userProto.getLangKey(),
             <%_ if (databaseType == 'mongodb' || databaseType == 'sql') { _%>
             userProto.getCreatedBy().isEmpty() ? null : userProto.getCreatedBy(),
-            ProtobufMappers.timestampToZonedDateTime(userProto.getCreatedDate()),
+            ProtobufMappers.timestampToInstant(userProto.getCreatedDate()),
             userProto.getLastModifiedBy().isEmpty() ? null: userProto.getLastModifiedBy(),
-            ProtobufMappers.timestampToZonedDateTime(userProto.getLastModifiedDate()),
+            ProtobufMappers.timestampToInstant(userProto.getLastModifiedDate()),
             <%_ } _%>
             new HashSet<>(userProto.getAuthoritiesList())
         );

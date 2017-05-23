@@ -214,10 +214,6 @@ module.exports = yeoman.Base.extend({
             this.template('_AccountService.java', javaDir + 'grpc/AccountService.java');
             this.template('_AccountServiceIntTest.java', testDir + 'grpc/AccountServiceIntTest.java');
             //Temporary fix
-            if (this.databaseType === 'cassandra') {
-                this.template('_UserRepository.java', javaDir + 'repository/UserRepository.java');
-            }
-            //Temporary fix
             this.template('_UserServiceIntTest.java', testDir + 'service/UserServiceIntTest.java');
 
             if (this.databaseType === 'sql' || this.databaseType === 'mongodb') {

@@ -40,8 +40,8 @@ import org.springframework.test.context.junit4.SpringRunner;<% if (databaseType 
 import org.springframework.transaction.annotation.Transactional;<% } %>
 <% if (databaseType == 'sql') { %>
 import javax.persistence.EntityManager;<% } %><% if (fieldsContainLocalDate == true) { %>
-import java.time.LocalDate;<% } %><% if (fieldsContainZonedDateTime == true) { %>
-import java.time.Instant;
+import java.time.LocalDate;<% } %><% if (fieldsContainZonedDateTime == true || fieldsContainInstant == true) { %>
+import java.time.Instant;<% } %><% if (fieldsContainZonedDateTime == true) { %>
 import java.time.ZonedDateTime;
 import java.time.ZoneOffset;<% } %><% if (fieldsContainLocalDate == true || fieldsContainZonedDateTime == true) { %>
 import java.time.ZoneId;<% } %><% if (fieldsContainBigDecimal == true) { %>
@@ -195,6 +195,10 @@ _%>
 
     private static final LocalDate <%=defaultValueName %> = LocalDate.ofEpochDay(0L);
     private static final LocalDate <%=updatedValueName %> = LocalDate.now(ZoneId.systemDefault());
+    <%_ } else if (fieldType == 'Instant') { _%>
+
+    private static final Instant <%=defaultValueName %> = Instant.ofEpochMilli(0L);
+    private static final Instant <%=updatedValueName %> = Instant.now();
     <%_ } else if (fieldType == 'ZonedDateTime') { _%>
 
     private static final ZonedDateTime <%=defaultValueName %> = ZonedDateTime.ofInstant(Instant.ofEpochMilli(0L), ZoneOffset.UTC);
@@ -324,7 +328,7 @@ _%>
 
         // Create the <%= entityClass %>
         <%_ if (dto == 'mapstruct') { _%>
-        <%= entityClass %>DTO <%= entityInstance %>DTO = <%= entityInstance %>Mapper.<%= entityInstance %>To<%= entityClass %>DTO(<%= entityInstance %>);
+        <%= entityClass %>DTO <%= entityInstance %>DTO = <%= entityInstance %>Mapper.toDto(<%= entityInstance %>);
         <%_ } _%>
         <%= entityClass %>Proto <%= entityInstance %>Proto = <%= entityInstance %>ProtoMapper.<%=instanceName%>To<%=entityClass%>Proto(<%=instanceName%>);
 
@@ -359,7 +363,7 @@ _%>
         // Create the <%= entityClass %> with an existing ID
         <%= entityInstance %>.setId(<% if (databaseType == 'sql') { %>1L<% } else if (databaseType == 'mongodb') { %>"existing_id"<% } else if (databaseType == 'cassandra') { %>UUID.randomUUID()<% } %>);
         <%_ if (dto == 'mapstruct') { _%>
-        <%= entityClass %>DTO <%= entityInstance %>DTO = <%= entityInstance %>Mapper.<%= entityInstance %>To<%= entityClass %>DTO(<%= entityInstance %>);
+        <%= entityClass %>DTO <%= entityInstance %>DTO = <%= entityInstance %>Mapper.toDto(<%= entityInstance %>);
         <%_ } _%>
         <%= entityClass %>Proto <%= entityInstance %>Proto = <%= entityInstance %>ProtoMapper.<%=instanceName%>To<%=entityClass%>Proto(<%=instanceName%>);
 
@@ -389,7 +393,7 @@ _%>
             if (saved<%= entityClass %>.getId()<% if (databaseType == 'cassandra') { %>.toString()<% } %>.equals(<%= entityInstance %>Proto.getId())) {
                 <% if (dto == 'mapstruct') { %><%= entityClass %>DTO <%= entityInstance %>DTO<% } else { %>found<%= entityClass %><% } %> = <%= entityInstance %>ProtoMapper.<%= entityInstance %>ProtoTo<%= instanceType %>(<%= entityInstance %>Proto);
                 <%_ if (dto == 'mapstruct') { _%>
-                found<%= entityClass %> = <%= entityInstance %>Mapper.<%= entityInstance %>DTOTo<%= entityClass %>(<%= entityInstance %>DTO);
+                found<%= entityClass %> = <%= entityInstance %>Mapper.toEntity(<%= entityInstance %>DTO);
                 <%_ } _%>
                 break;
             }
@@ -414,7 +418,7 @@ _%>
         <%= entityClass %>Proto <%= entityInstance %>Proto = stub.get<%= entityClass %>(<%=idProtoWrappedType%>.newBuilder().setValue(<%= entityInstance %>.getId()<% if (databaseType == 'cassandra') { %>.toString()<% } %>).build());
         <% if (dto == 'mapstruct') { %><%= entityClass %>DTO <%= entityInstance %>DTO<% } else { %><%= entityClass %> found<%= entityClass %><% } %> = <%= entityInstance %>ProtoMapper.<%= entityInstance %>ProtoTo<%= instanceType %>(<%= entityInstance %>Proto);
         <%_ if (dto == 'mapstruct') { _%>
-        <%= entityClass %> found<%= entityClass %> = <%= entityInstance %>Mapper.<%= entityInstance %>DTOTo<%= entityClass %>(<%= entityInstance %>DTO);
+        <%= entityClass %> found<%= entityClass %> = <%= entityInstance %>Mapper.toEntity(<%= entityInstance %>DTO);
         <%_ } _%>
 
         <%_ for (idx in fields) { _%>
@@ -465,7 +469,7 @@ _%>
             <%_ } _%>
         <%_ } _%>
         <%_ if (dto == 'mapstruct') { _%>
-        <%= entityClass %>DTO updated<%= entityClass %>DTO = <%= entityInstance %>Mapper.<%= entityInstance %>To<%= entityClass %>DTO(updated<%= entityClass %>);
+        <%= entityClass %>DTO updated<%= entityClass %>DTO = <%= entityInstance %>Mapper.toDto(updated<%= entityClass %>);
         <%_ } _%>
         <%= entityClass %>Proto <%= entityInstance %>Proto = <%= entityInstance %>ProtoMapper.<%=instanceName%>To<%=entityClass%>Proto(updated<%=instanceType%>);
 
@@ -498,7 +502,7 @@ _%>
         int databaseSizeBeforeUpdate = <%= entityInstance %>Repository.findAll().size();
 
         // Create the <%= entityClass %><% if (dto == 'mapstruct') { %>
-        <%= entityClass %>DTO <%= entityInstance %>DTO = <%= entityInstance %>Mapper.<%= entityInstance %>To<%= entityClass %>DTO(<%= entityInstance %>);<% } %>
+        <%= entityClass %>DTO <%= entityInstance %>DTO = <%= entityInstance %>Mapper.toDto(<%= entityInstance %>);<% } %>
         <%= entityClass %>Proto <%= entityInstance %>Proto = <%= entityInstance %>ProtoMapper.<%=instanceName%>To<%=entityClass%>Proto(<%=instanceName%>);
 
         // If the entity doesn't have an ID, it will be created instead of just being updated

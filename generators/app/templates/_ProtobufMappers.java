@@ -49,6 +49,11 @@ public abstract class ProtobufMappers {
         return zonedDateTime == null ? null : instantToTimestamp(zonedDateTime.toInstant());
     }
 
+
+    public static Instant timestampToInstant(Timestamp timestamp) {
+        return timestamp == null ? null : Instant.ofEpochSecond(timestamp.getSeconds(), timestamp.getNanos());
+    }
+
     public static Timestamp instantToTimestamp(Instant instant) {
         return instant == null ? null :  Timestamp.newBuilder()
             .setSeconds(instant.getEpochSecond())

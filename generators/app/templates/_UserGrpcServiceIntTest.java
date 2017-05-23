@@ -376,9 +376,9 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
             .setLangKey(UPDATED_LANGKEY)
             <%_ if (databaseType !== 'cassandra') { _%>
             .setCreatedBy(updatedUser.getCreatedBy())
-            .setCreatedDate(ProtobufMappers.zonedDateTimeToTimestamp(updatedUser.getCreatedDate()))
+            .setCreatedDate(ProtobufMappers.instantToTimestamp(updatedUser.getCreatedDate()))
             .setLastModifiedBy(updatedUser.getLastModifiedBy())
-            .setLastModifiedDate(ProtobufMappers.zonedDateTimeToTimestamp(updatedUser.getLastModifiedDate()))
+            .setLastModifiedDate(ProtobufMappers.instantToTimestamp(updatedUser.getLastModifiedDate()))
             <%_ } _%>
             .addAuthorities(AuthoritiesConstants.USER)
             .build();
@@ -424,9 +424,9 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
             .setLangKey(UPDATED_LANGKEY)
             <%_ if (databaseType !== 'cassandra') { _%>
             .setCreatedBy(updatedUser.getCreatedBy())
-            .setCreatedDate(ProtobufMappers.zonedDateTimeToTimestamp(updatedUser.getCreatedDate()))
+            .setCreatedDate(ProtobufMappers.instantToTimestamp(updatedUser.getCreatedDate()))
             .setLastModifiedBy(updatedUser.getLastModifiedBy())
-            .setLastModifiedDate(ProtobufMappers.zonedDateTimeToTimestamp(updatedUser.getLastModifiedDate()))
+            .setLastModifiedDate(ProtobufMappers.instantToTimestamp(updatedUser.getLastModifiedDate()))
             <%_ } _%>
             .addAuthorities(AuthoritiesConstants.USER)
             .build();
@@ -488,9 +488,9 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
             .setLangKey(updatedUser.getLangKey())
             <%_ if (databaseType !== 'cassandra') { _%>
             .setCreatedBy(updatedUser.getCreatedBy())
-            .setCreatedDate(ProtobufMappers.zonedDateTimeToTimestamp(updatedUser.getCreatedDate()))
+            .setCreatedDate(ProtobufMappers.instantToTimestamp(updatedUser.getCreatedDate()))
             .setLastModifiedBy(updatedUser.getLastModifiedBy())
-            .setLastModifiedDate(ProtobufMappers.zonedDateTimeToTimestamp(updatedUser.getLastModifiedDate()))
+            .setLastModifiedDate(ProtobufMappers.instantToTimestamp(updatedUser.getLastModifiedDate()))
             <%_ } _%>
             .addAuthorities(AuthoritiesConstants.USER)
             .build();
@@ -545,9 +545,9 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
             .setLangKey(updatedUser.getLangKey())
             <%_ if (databaseType !== 'cassandra') { _%>
             .setCreatedBy(updatedUser.getCreatedBy())
-            .setCreatedDate(ProtobufMappers.zonedDateTimeToTimestamp(updatedUser.getCreatedDate()))
+            .setCreatedDate(ProtobufMappers.instantToTimestamp(updatedUser.getCreatedDate()))
             .setLastModifiedBy(updatedUser.getLastModifiedBy())
-            .setLastModifiedDate(ProtobufMappers.zonedDateTimeToTimestamp(updatedUser.getLastModifiedDate()))
+            .setLastModifiedDate(ProtobufMappers.instantToTimestamp(updatedUser.getLastModifiedDate()))
             <%_ } _%>
             .addAuthorities(AuthoritiesConstants.USER)
             .build();
