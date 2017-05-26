@@ -12,7 +12,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.util.Optional;
 
 public class AuditGrpcService extends AuditServiceGrpc.AuditServiceImplBase {
@@ -29,8 +30,19 @@ public class AuditGrpcService extends AuditServiceGrpc.AuditServiceImplBase {
     public void getAuditEvents(AuditRequest request, StreamObserver<AuditEvent> responseObserver) {
         Page<org.springframework.boot.actuate.audit.AuditEvent> auditEvents;
         if (request.hasFromDate() || request.hasToDate()) {
-            LocalDateTime fromDate = request.hasFromDate() ? ProtobufMappers.dateProtoToLocalDate(request.getFromDate()).atTime(0, 0) : null;
-            LocalDateTime toDate = request.hasToDate() ? ProtobufMappers.dateProtoToLocalDate(request.getToDate()).atTime(23, 59) : null;
+            Instant fromDate = request.hasFromDate() ?
+                ProtobufMappers
+                    .dateProtoToLocalDate(request.getFromDate())
+                    .atStartOfDay(ZoneId.systemDefault())
+                    .toInstant()
+                : null;
+            Instant toDate = request.hasToDate() ?
+                ProtobufMappers
+                    .dateProtoToLocalDate(request.getToDate())
+                    .atStartOfDay(ZoneId.systemDefault())
+                    .plusDays(1)
+                    .toInstant()
+                : null;
             auditEvents= auditEventService.findByDates(fromDate, toDate, ProtobufMappers.pageRequestProtoToPageRequest(request.getPaginationParams()));
         } else {
             auditEvents = auditEventService.findAll(ProtobufMappers.pageRequestProtoToPageRequest(request.getPaginationParams()));

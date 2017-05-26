@@ -26,9 +26,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.time.Instant;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
@@ -40,7 +38,7 @@ public class AuditGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ex
 
     private static final String SAMPLE_PRINCIPAL = "SAMPLE_PRINCIPAL";
     private static final String SAMPLE_TYPE = "SAMPLE_TYPE";
-    private static final LocalDateTime SAMPLE_TIMESTAMP = LocalDateTime.parse("2015-08-04T10:11:30");
+    private static final Instant SAMPLE_TIMESTAMP = Instant.parse("2015-08-04T10:11:30Z");
 
     @Autowired
     private PersistenceAuditEventRepository auditEventRepository;
@@ -105,8 +103,8 @@ public class AuditGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ex
         auditEventRepository.save(auditEvent);
 
         AuditRequest request = AuditRequest.newBuilder()
-            .setFromDate(ProtobufMappers.localDateToDateProto(SAMPLE_TIMESTAMP.minusDays(1).toLocalDate()))
-            .setToDate(ProtobufMappers.localDateToDateProto(SAMPLE_TIMESTAMP.plusDays(1).toLocalDate()))
+            .setFromDate(Date.newBuilder().setYear(2015).setMonth(8).setDay(1))
+            .setToDate(Date.newBuilder().setYear(2015).setMonth(8).setDay(20))
             .build();
         assertThat(stub.getAuditEvents(request)).extracting("principal").contains(SAMPLE_PRINCIPAL);
     }
@@ -118,8 +116,8 @@ public class AuditGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ex
 
         // Query audits but expect no results
         AuditRequest request = AuditRequest.newBuilder()
-            .setFromDate(ProtobufMappers.localDateToDateProto(SAMPLE_TIMESTAMP.minusDays(2).toLocalDate()))
-            .setToDate(ProtobufMappers.localDateToDateProto(SAMPLE_TIMESTAMP.minusDays(1).toLocalDate()))
+            .setFromDate(Date.newBuilder().setYear(2015).setMonth(9).setDay(1))
+            .setToDate(Date.newBuilder().setYear(2015).setMonth(9).setDay(20))
             .build();
         assertThat(stub.getAuditEvents(request)).isEmpty();
     }
