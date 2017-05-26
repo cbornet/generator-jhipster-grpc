@@ -24,7 +24,9 @@ yarn add global generator-jhipster-grpc
 
 Compatibility :
 - JHipster 4.1.0, 4.1.1 and inferior (Note : never tested with <4.1.0) : module version 0.7.0
-- JHipster 4.2.0, 4.3.0 and superior : module version 0.8.0, 0.9.0+
+- JHipster 4.2.0, 4.3.0 : module version 0.8.0, 0.9.0
+- JHipster 4.4.0, 4.4.1  : module version 0.10.0
+- JHipster 4.5.0, 4.5.1 and superior : module version 0.11.0
 
 # Usage
 
