@@ -26,7 +26,7 @@ Compatibility :
 - JHipster 4.1.0, 4.1.1 and inferior (Note : never tested with <4.1.0) : module version 0.7.0
 - JHipster 4.2.0, 4.3.0 : module version 0.8.0, 0.9.0
 - JHipster 4.4.0, 4.4.1  : module version 0.10.0
-- JHipster 4.5.0, 4.5.1, 4.5.2 : module version 0.11.0
+- JHipster 4.5.0, 4.5.1, 4.5.2, 4.5.3 : module version 0.11.0
 - Nightly build of master with JHipster master : [![Build Status][travis-image-nightly]][travis-url]
 
 # Usage
