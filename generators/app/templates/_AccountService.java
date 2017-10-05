@@ -1,7 +1,7 @@
 package <%=packageName%>.grpc;
 
 import <%=packageName%>.domain.User;
-<%_ if (authenticationType == 'session') { _%>
+<%_ if (authenticationType === 'session') { _%>
 import <%=packageName%>.repository.PersistentTokenRepository;
 <%_ } _%>
 import <%=packageName%>.repository.UserRepository;
@@ -39,17 +39,17 @@ public class AccountService extends AccountServiceGrpc.AccountServiceImplBase {
 
     private final MailService mailService;
 
-    <%_ if (authenticationType == 'session') { _%>
+    <%_ if (authenticationType === 'session') { _%>
     private final PersistentTokenRepository persistentTokenRepository;
 
     <%_ } _%>
     private final UserProtoMapper userProtoMapper;
 
-    public AccountService(UserRepository userRepository, UserService userService, MailService mailService, <% if (authenticationType == 'session') { %>PersistentTokenRepository persistentTokenRepository, <% } %>UserProtoMapper userProtoMapper) {
+    public AccountService(UserRepository userRepository, UserService userService, MailService mailService, <% if (authenticationType === 'session') { %>PersistentTokenRepository persistentTokenRepository, <% } %>UserProtoMapper userProtoMapper) {
         this.userRepository = userRepository;
         this.userService = userService;
         this.mailService = mailService;
-        <%_ if (authenticationType == 'session') { _%>
+        <%_ if (authenticationType === 'session') { _%>
         this.persistentTokenRepository = persistentTokenRepository;
         <%_ } _%>
         this.userProtoMapper = userProtoMapper;
@@ -58,9 +58,11 @@ public class AccountService extends AccountServiceGrpc.AccountServiceImplBase {
     @Override
     public void registerAccount(UserProto userProto, StreamObserver<Empty> responseObserver) {
         log.debug("gRPC request to register account {}", userProto.getLogin());
-        if (userRepository.findOneByLogin(userProto.getLogin().toLowerCase()).isPresent()) {
+        if (!checkPasswordLength(userProto.getPassword())) {
+            responseObserver.onError(Status.INVALID_ARGUMENT.withDescription("Incorrect password").asException());
+        } else if (userRepository.findOneByLogin(userProto.getLogin().toLowerCase()).isPresent()) {
             responseObserver.onError(Status.ALREADY_EXISTS.withDescription("Login already in use").asException());
-        } else if (userRepository.findOneByEmail(userProto.getEmail()).isPresent()) {
+        } else if (userRepository.findOneByEmailIgnoreCase(userProto.getEmail()).isPresent()) {
             responseObserver.onError(Status.ALREADY_EXISTS.withDescription("Email already in use").asException());
         } else {
             try {
@@ -69,7 +71,7 @@ public class AccountService extends AccountServiceGrpc.AccountServiceImplBase {
                     userProto.getPassword().isEmpty() ? null : userProto.getPassword(),
                     userProto.getFirstName().isEmpty() ? null : userProto.getFirstName(),
                     userProto.getLastName().isEmpty() ? null : userProto.getLastName(),
-                    userProto.getEmail().isEmpty() ? null : userProto.getEmail().toLowerCase(),<% if (databaseType == 'mongodb' || databaseType == 'sql') { %>
+                    userProto.getEmail().isEmpty() ? null : userProto.getEmail().toLowerCase(),<% if (databaseType === 'mongodb' || databaseType === 'sql') { %>
                     userProto.getImageUrl().isEmpty() ? null : userProto.getImageUrl(),<% } %>
                     userProto.getLangKey().isEmpty() ? null : userProto.getLangKey()
                 );
@@ -129,7 +131,7 @@ public class AccountService extends AccountServiceGrpc.AccountServiceImplBase {
 
     @Override
     public void saveAccount(UserProto user, StreamObserver<Empty> responseObserver) {
-        Optional<User> existingUser = userRepository.findOneByEmail(user.getEmail());
+        Optional<User> existingUser = userRepository.findOneByEmailIgnoreCase(user.getEmail());
         if (existingUser.isPresent() && (!existingUser.get().getLogin().equalsIgnoreCase(SecurityUtils.getCurrentUserLogin()))) {
             responseObserver.onError(Status.ALREADY_EXISTS.withDescription("Email already in use").asException());
         } else {
@@ -175,7 +177,7 @@ public class AccountService extends AccountServiceGrpc.AccountServiceImplBase {
         }
     }
 
-    <%_ if (authenticationType == 'session') { _%>
+    <%_ if (authenticationType === 'session') { _%>
     @Override
     public void getCurrentSessions(Empty request, StreamObserver<PersistentToken> responseObserver) {
         Optional<User> user = userRepository.findOneByLogin(SecurityUtils.getCurrentUserLogin());
@@ -192,7 +194,7 @@ public class AccountService extends AccountServiceGrpc.AccountServiceImplBase {
     public void invalidateSession(StringValue series, StreamObserver<Empty> responseObserver) {
         userRepository.findOneByLogin(SecurityUtils.getCurrentUserLogin()).ifPresent(u ->
             persistentTokenRepository.findByUser(u).stream()
-                .filter(persistentToken -> StringUtils.equals(persistentToken.getSeries(), series.getValue()))<% if (databaseType == 'sql' || databaseType == 'mongodb') { %>
+                .filter(persistentToken -> StringUtils.equals(persistentToken.getSeries(), series.getValue()))<% if (databaseType === 'sql' || databaseType === 'mongodb') { %>
                 .findAny().ifPresent(t -> persistentTokenRepository.delete(series.getValue())));<% } else { %>
                 .findAny().ifPresent(persistentTokenRepository::delete));<% } %>
         responseObserver.onNext(Empty.newBuilder().build());

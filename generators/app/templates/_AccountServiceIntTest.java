@@ -259,7 +259,32 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
         } catch (StatusRuntimeException e) {
             assertThat(e.getStatus().getCode()).isEqualTo(Status.Code.INVALID_ARGUMENT);
         }
-        assertThat(userRepository.findOneByEmail("grpc-register-invalid@example.com")).isNotPresent();
+        assertThat(userRepository.findOneByEmailIgnoreCase("grpc-register-invalid@example.com")).isNotPresent();
+    }
+
+    @Test<% if (databaseType == 'sql') { %>
+    @Transactional<% } %>
+    public void testRegisterNullPassword() throws Exception {
+        // Good
+        UserProto invalidUser = UserProto.newBuilder()
+            .setLogin("grpc-register-null-password")
+            .setFirstName(DEFAULT_FIRSTNAME)
+            .setLastName(DEFAULT_LASTNAME)
+            .setEmail("grpc-register-null-password@example.com")
+            .setActivated(true)<% if (databaseType == 'mongodb' || databaseType == 'sql') { %>
+            .setImageUrl(DEFAULT_IMAGEURL)<% } %>
+            .setLangKey(DEFAULT_LANGKEY)
+            .addAuthorities(AuthoritiesConstants.USER)
+            .build();
+
+        try {
+            stub.registerAccount(invalidUser);
+            failBecauseExceptionWasNotThrown(StatusRuntimeException.class);
+        } catch (StatusRuntimeException e) {
+            assertThat(e.getStatus().getCode()).isEqualTo(Status.Code.INVALID_ARGUMENT);<% if (databaseType == 'sql') { %>
+            em.clear();<% } %>
+        }
+        assertThat(userRepository.findOneByEmailIgnoreCase("grpc-register-null-password@example.com")).isNotPresent();
     }
 
     @Test<% if (databaseType == 'sql') { %>
@@ -305,7 +330,7 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
             assertThat(e.getStatus().getCode()).isEqualTo(Status.Code.ALREADY_EXISTS);<% if (databaseType == 'sql') { %>
             em.clear();<% } %>
         }
-        assertThat(userRepository.findOneByEmail("grpc-register-duplicate-login2@example.com")).isNotPresent();
+        assertThat(userRepository.findOneByEmailIgnoreCase("grpc-register-duplicate-login2@example.com")).isNotPresent();
     }
 
     @Test<% if (databaseType == 'sql') { %>
@@ -475,7 +500,7 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
             failBecauseExceptionWasNotThrown(StatusRuntimeException.class);
         } catch (StatusRuntimeException e) {
             assertThat(e.getStatus().getCode()).isEqualTo(Status.Code.INVALID_ARGUMENT);
-            assertThat(userRepository.findOneByEmail("Invalid email")).isNotPresent();
+            assertThat(userRepository.findOneByEmailIgnoreCase("Invalid email")).isNotPresent();
         } finally {
             userRepository.delete(user);
         }

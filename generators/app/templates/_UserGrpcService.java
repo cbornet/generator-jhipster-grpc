@@ -46,7 +46,7 @@ public class UserGrpcService extends UserServiceGrpc.UserServiceImplBase {
             // Lowercase the user login before comparing with database
         } else if (userRepository.findOneByLogin(userProto.getLogin().toLowerCase()).isPresent()) {
             responseObserver.onError(Status.ALREADY_EXISTS.withDescription("Login already in use").asException());
-        } else if (userRepository.findOneByEmail(userProto.getEmail()).isPresent()) {
+        } else if (userRepository.findOneByEmailIgnoreCase(userProto.getEmail()).isPresent()) {
             responseObserver.onError(Status.ALREADY_EXISTS.withDescription("Email already in use").asException());
         } else {
             User newUser = userService.createUser(userProtoMapper.userProtoToUserDTO(userProto));
@@ -59,7 +59,7 @@ public class UserGrpcService extends UserServiceGrpc.UserServiceImplBase {
     @Override
     public void updateUser(UserProto userProto, StreamObserver<UserProto> responseObserver) {
         log.debug("gRPC request to update User : {}", userProto);
-        Optional<User> existingUser = userRepository.findOneByEmail(userProto.getEmail());
+        Optional<User> existingUser = userRepository.findOneByEmailIgnoreCase(userProto.getEmail());
         if (existingUser.isPresent() && (!existingUser.get().getId().equals(userProto.getId()))) {
             responseObserver.onError(Status.ALREADY_EXISTS.withDescription("Email already in use").asException());
             return;
