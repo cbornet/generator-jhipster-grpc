@@ -66,15 +66,20 @@ public class AccountService extends AccountServiceGrpc.AccountServiceImplBase {
             responseObserver.onError(Status.ALREADY_EXISTS.withDescription("Email already in use").asException());
         } else {
             try {
-                User newUser = userService.createUser(
+                User newUser = userService.registerUser(new ManagedUserVM(
+                    null,
                     userProto.getLogin().isEmpty() ? null : userProto.getLogin(),
                     userProto.getPassword().isEmpty() ? null : userProto.getPassword(),
                     userProto.getFirstName().isEmpty() ? null : userProto.getFirstName(),
                     userProto.getLastName().isEmpty() ? null : userProto.getLastName(),
-                    userProto.getEmail().isEmpty() ? null : userProto.getEmail().toLowerCase(),<% if (databaseType === 'mongodb' || databaseType === 'sql') { %>
-                    userProto.getImageUrl().isEmpty() ? null : userProto.getImageUrl(),<% } %>
-                    userProto.getLangKey().isEmpty() ? null : userProto.getLangKey()
-                );
+                    userProto.getEmail().isEmpty() ? null : userProto.getEmail().toLowerCase(),
+                    true,
+                    <%_ if (databaseType === 'mongodb' || databaseType === 'sql') { _%>
+                    userProto.getImageUrl().isEmpty() ? null : userProto.getImageUrl(),
+                    <%_ } _%>
+                    userProto.getLangKey().isEmpty() ? null : userProto.getLangKey(),
+                    <% if (databaseType === 'mongodb' || databaseType === 'sql') { %>null, null, null, null, <% } %>null
+                ));
                 mailService.sendCreationEmail(newUser);
                 responseObserver.onNext(Empty.newBuilder().build());
                 responseObserver.onCompleted();
