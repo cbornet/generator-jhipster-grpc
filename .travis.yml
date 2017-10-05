@@ -68,7 +68,7 @@ before_install:
   # Repo for Yarn
   - curl -o- -L https://yarnpkg.com/install.sh | bash
   - export PATH=$HOME/.yarn/bin:$PATH
-  - yarn global add yo bower gulp-cli generator-jhipster@4.5.3
+  - yarn global add yo bower gulp-cli generator-jhipster@4.9.0
 install:
   - cd "$TRAVIS_BUILD_DIR"/
   - yarn install
@@ -81,10 +81,3 @@ script:
   - $JHIPSTER_SCRIPTS/04-tests.sh
   - $JHIPSTER_SCRIPTS/05-run.sh
   - $JHIPSTER_SCRIPTS/06-sonar.sh
-#notifications:
-#  webhooks:
-#    urls:
-#      - https://webhooks.gitter.im/e/479b810ad42c816679fb
-#    on_success: always  # options: [always|never|change] default: always
-#    on_failure: always  # options: [always|never|change] default: always
-#    on_start: false     # default: false
