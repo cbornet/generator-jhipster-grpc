@@ -84,6 +84,7 @@ public class AccountService extends RxAccountServiceGrpc.AccountServiceImplBase 
                         <%_ } _%>
                         userProto.getLangKey().isEmpty() ? null : userProto.getLangKey()
                     );
+                <%_ if (databaseType === 'sql') { _%>
                 } catch (TransactionSystemException e) {
                     if (e.getOriginalException().getCause() instanceof ConstraintViolationException) {
                         log.info("Invalid user", e);
@@ -91,6 +92,7 @@ public class AccountService extends RxAccountServiceGrpc.AccountServiceImplBase 
                     } else {
                         throw e;
                     }
+                <%_ } _%>
                 } catch (ConstraintViolationException e) {
                     log.error("Invalid user", e);
                     throw Status.INVALID_ARGUMENT.withDescription("Invalid user").asException();

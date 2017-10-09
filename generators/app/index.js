@@ -213,6 +213,8 @@ module.exports = yeoman.Base.extend({
                 jhipsterFunc.addGradleDependency('compile', 'com.google.guava', 'guava', guavaVersion);
                 jhipsterFunc.addGradleDependency('compile', 'io.grpc', 'grpc-protobuf', this.grpcVersion);
                 jhipsterFunc.addGradleDependency('compile', 'io.grpc', 'grpc-stub', this.grpcVersion);
+                jhipsterFunc.addGradleDependency('compile', 'io.reactivex.rxjava2', 'rxjava', '2.1.5');
+                jhipsterFunc.addGradleDependency('compile', 'com.salesforce.servicelibs', 'rxgrpc-stub', '0.6.1');
                 if (jhipsterVar.databaseType === 'cassandra' || ['microservice', 'gateway', 'uaa'].includes(jhipsterVar.applicationType)) {
                     // grpc-java needs netty 4.1
                     jhipsterFunc.addGradleDependency('compile', 'io.netty', 'netty-handler', nettyVersion);
