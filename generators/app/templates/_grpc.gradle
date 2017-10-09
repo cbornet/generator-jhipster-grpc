@@ -5,6 +5,9 @@ protobuf {
         artifact = 'com.google.protobuf:protoc:<%= protocVersion %>'
     }
     plugins {
+        rxjava {
+            artifact = 'com.salesforce.servicelibs:rxgrpc:0.6.1'
+        }
         grpc {
             artifact = 'io.grpc:protoc-gen-grpc-java:<%= grpcVersion %>'
         }
