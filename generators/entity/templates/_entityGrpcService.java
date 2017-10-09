@@ -1,77 +1,80 @@
 package <%=packageName%>.grpc.entity.<%=entityUnderscoredName%>;
 
-<% if (dto !== 'mapstruct') { %>
-import <%=packageName%>.domain.<%=instanceType%>;<% } %>
 import <%=packageName%>.grpc.AuthenticationInterceptor;
 <%_ if (pagination !== 'no') { _%>
 import <%=packageName%>.grpc.PageRequest;
 import <%=packageName%>.grpc.ProtobufMappers;
 <%_ } _%>
-import <%=packageName%>.service.<%=entityClass%>Service;<% if (dto === 'mapstruct') { %>
+import <%=packageName%>.service.<%= entityClass %>Service;<% if (dto === 'mapstruct') { %>
 import <%=packageName%>.service.dto.<%=instanceType%>;<% } %>
 
 import com.google.protobuf.Empty;
 import com.google.protobuf.<%=idProtoWrappedType%>;
 import io.grpc.Status;
-import io.grpc.stub.StreamObserver;
+import io.reactivex.Flowable;
+import io.reactivex.Single;
 import org.lognet.springboot.grpc.GRpcService;
 
+import java.util.Optional;
+
 /**
- * gRPC service providing CRUD methods for entity <%=entityClass%>.
+ * gRPC service providing CRUD methods for entity <%= entityClass %>.
  */
 @GRpcService(interceptors = {AuthenticationInterceptor.class})
-public class <%=entityClass%>GrpcService extends Rx<%=entityClass%>ServiceGrpc.<%=entityClass%>ServiceImplBase{
+public class <%= entityClass %>GrpcService extends Rx<%= entityClass %>ServiceGrpc.<%= entityClass %>ServiceImplBase {
 
-    private final <%=entityClass%>Service <%=entityInstance%>Service;
+    private final <%= entityClass %>Service <%= entityInstance %>Service;
 
-    private final <%=entityClass%>ProtoMapper <%=entityInstance%>ProtoMapper;
+    private final <%= entityClass %>ProtoMapper <%= entityInstance %>ProtoMapper;
 
-    public <%=entityClass%>GrpcService(<%=entityClass%>Service <%=entityInstance%>Service, <%=entityClass%>ProtoMapper <%=entityInstance%>ProtoMapper) {
-        this.<%=entityInstance%>Service = <%=entityInstance%>Service;
-        this.<%=entityInstance%>ProtoMapper = <%=entityInstance%>ProtoMapper;
+    public <%= entityClass %>GrpcService(<%= entityClass %>Service <%= entityInstance %>Service, <%= entityClass %>ProtoMapper <%= entityInstance %>ProtoMapper) {
+        this.<%= entityInstance %>Service = <%= entityInstance %>Service;
+        this.<%= entityInstance %>ProtoMapper = <%= entityInstance %>ProtoMapper;
     }
 
     @Override
-    public void create<%=entityClass%>(<%=entityClass%>Proto request, StreamObserver<<%=entityClass%>Proto> responseObserver) {
-        if( request.getIdOneofCase() == <%=entityClass%>Proto.IdOneofCase.ID) {
-            responseObserver.onError(Status.ALREADY_EXISTS.asException());
-            responseObserver.onCompleted();
-        } else {
-            update<%=entityClass%>(request, responseObserver);
-        }
+    public Single<<%= entityClass %>Proto> create<%= entityClass %>(Single<<%= entityClass %>Proto> request) {
+        return update<%= entityClass %>(request
+            .filter(<%= entityInstance %>Proto -> <%= entityInstance %>Proto.getIdOneofCase() != <%= entityClass %>Proto.IdOneofCase.ID)
+            .switchIfEmpty(Single.error(Status.ALREADY_EXISTS.asException()))
+        );
     }
 
     @Override
-    public void update<%=entityClass%>(<%=entityClass%>Proto request, StreamObserver<<%=entityClass%>Proto> responseObserver) {
-        <%=instanceType%> <%=instanceName%> = <%=entityInstance%>ProtoMapper.<%=entityInstance%>ProtoTo<%=instanceType%>(request);
-        <%=instanceName%> = <%=entityInstance%>Service.save(<%=instanceName%>);
-        <%=entityClass%>Proto result = <%=entityInstance%>ProtoMapper.<%=instanceName%>To<%=entityClass%>Proto(<%=instanceName%>);
-        responseObserver.onNext(result);
-        responseObserver.onCompleted();
+    public Single<<%= entityClass %>Proto> update<%= entityClass %>(Single<<%= entityClass %>Proto> request) {
+        return request
+            .map(<%= entityInstance %>ProtoMapper::<%= entityInstance %>ProtoTo<%= instanceType %>)
+            .map(<%= entityInstance %>Service::save)
+            .map(<%= entityInstance %>ProtoMapper::<%= instanceName %>To<%= entityClass %>Proto);
     }
 
     @Override
-    public void getAll<%=entityClassPlural%>(<% if (pagination !== 'no') { %>PageRequest<% } else { %>Empty<% } %> request, StreamObserver<<%=entityClass%>Proto> responseObserver) {
-        <%=entityInstance%>Service.findAll(<% if (pagination !== 'no') { %>ProtobufMappers.pageRequestProtoToPageRequest(request)<% } %>)
-            .forEach(<%=entityInstance%> -> responseObserver.onNext(<%=entityInstance%>ProtoMapper.<%=instanceName%>To<%=entityClass%>Proto(<%=entityInstance%>)));
-        responseObserver.onCompleted();
+    public Flowable<<%= entityClass %>Proto> getAll<%= entityClassPlural %>(Single<<% if (pagination !== 'no') { %>PageRequest<% } else { %>Empty<% } %>> request) {
+        return request
+            <%_ if (pagination !== 'no') { _%>
+            .map(ProtobufMappers::pageRequestProtoToPageRequest)
+            .map(<%= entityInstance %>Service::findAll)
+            <%_ } else { _%>
+            .map(e -> <%= entityInstance %>Service.findAll())
+            <%_ } _%>
+            .flatMapPublisher(Flowable::fromIterable)
+            .map(<%= entityInstance %>ProtoMapper::<%= instanceName %>To<%= entityClass %>Proto);
     }
 
     @Override
-    public void get<%=entityClass%>(<%=idProtoWrappedType%> request, StreamObserver<<%=entityClass%>Proto> responseObserver) {
-        <%=instanceType%> <%=instanceName%> = <%=entityInstance%>Service.findOne(request.getValue());
-        if( <%=instanceName%> != null) {
-            responseObserver.onNext(<%=entityInstance%>ProtoMapper.<%=instanceName%>To<%=entityClass%>Proto(<%=instanceName%>));
-        } else {
-            responseObserver.onError(Status.NOT_FOUND.asException());
-        }
-        responseObserver.onCompleted();
+    public Single<<%= entityClass %>Proto> get<%= entityClass %>(Single<Int64Value> request) {
+        return request
+            .map(Int64Value::getValue)
+            .map(id -> Optional.ofNullable(<%= entityInstance %>Service.findOne(id)).orElseThrow(Status.NOT_FOUND::asException))
+            .map(<%= entityInstance %>ProtoMapper::<%= instanceName %>To<%= entityClass %>Proto);
     }
 
     @Override
-    public void delete<%=entityClass%>(<%=idProtoWrappedType%> request, StreamObserver<Empty> responseObserver) {
-        <%=entityInstance%>Service.delete(request.getValue());
-        responseObserver.onNext(Empty.newBuilder().build());
-        responseObserver.onCompleted();
+    public Single<Empty> delete<%= entityClass %>(Single<Int64Value> request) {
+        return request
+            .map(Int64Value::getValue)
+            .doOnSuccess(<%= entityInstance %>Service::delete)
+            .map(id -> Empty.newBuilder().build());
     }
+
 }
