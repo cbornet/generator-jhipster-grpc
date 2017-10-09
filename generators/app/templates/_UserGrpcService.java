@@ -92,23 +92,20 @@ public class UserGrpcService extends RxUserServiceGrpc.UserServiceImplBase {
     }
 
     @Override
-    public void getUser(StringValue login, StreamObserver<UserProto> responseObserver) {
-        log.debug("gRPC request to get User : {}", login.getValue());
-        Optional<User> user = userService.getUserWithAuthoritiesByLogin(login.getValue());
-        if(user.isPresent()) {
-            responseObserver.onNext(userProtoMapper.userToUserProto(user.get()));
-            responseObserver.onCompleted();
-        } else {
-            responseObserver.onError(Status.NOT_FOUND.asException());
-        }
+    public Single<UserProto> getUser(Single<StringValue> request) {
+        return request
+            .map(StringValue::getValue)
+            .doOnSuccess(login -> log.debug("gRPC request to get User : {}", login))
+            .map(login -> userService.getUserWithAuthoritiesByLogin(login).orElseThrow(Status.NOT_FOUND::asException))
+            .map(userProtoMapper::userToUserProto);
     }
 
     @Override
-    public void deleteUser(StringValue login, StreamObserver<Empty> responseObserver) {
-        log.debug("gRPC request to delete User: {}", login.getValue());
-        userService.deleteUser(login.getValue());
-        responseObserver.onNext(Empty.newBuilder().build());
-        responseObserver.onCompleted();
+    public Single<Empty> deleteUser(Single<StringValue> request) {
+        return request
+            .map(StringValue::getValue)
+            .doOnSuccess(login -> log.debug("gRPC request to delete User: {}", login))
+            .doOnSuccess(userService::deleteUser)
+            .map(l -> Empty.newBuilder().build());
     }
-
 }

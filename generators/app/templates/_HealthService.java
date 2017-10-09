@@ -62,4 +62,3 @@ public class HealthService extends RxHealthServiceGrpc.HealthServiceImplBase {
     }
 
 }
-

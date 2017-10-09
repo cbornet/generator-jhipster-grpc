@@ -20,7 +20,7 @@ import org.lognet.springboot.grpc.GRpcService;
  * gRPC service providing CRUD methods for entity <%=entityClass%>.
  */
 @GRpcService(interceptors = {AuthenticationInterceptor.class})
-public class <%=entityClass%>GrpcService extends <%=entityClass%>ServiceGrpc.<%=entityClass%>ServiceImplBase{
+public class <%=entityClass%>GrpcService extends Rx<%=entityClass%>ServiceGrpc.<%=entityClass%>ServiceImplBase{
 
     private final <%=entityClass%>Service <%=entityInstance%>Service;
 
@@ -39,7 +39,6 @@ public class <%=entityClass%>GrpcService extends <%=entityClass%>ServiceGrpc.<%=
         } else {
             update<%=entityClass%>(request, responseObserver);
         }
-
     }
 
     @Override
