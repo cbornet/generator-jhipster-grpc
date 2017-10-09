@@ -62,17 +62,17 @@ public class <%= entityClass %>GrpcService extends Rx<%= entityClass %>ServiceGr
     }
 
     @Override
-    public Single<<%= entityClass %>Proto> get<%= entityClass %>(Single<Int64Value> request) {
+    public Single<<%= entityClass %>Proto> get<%= entityClass %>(Single<<%= idProtoWrappedType %>> request) {
         return request
-            .map(Int64Value::getValue)
+            .map(<%= idProtoWrappedType %>::getValue)
             .map(id -> Optional.ofNullable(<%= entityInstance %>Service.findOne(id)).orElseThrow(Status.NOT_FOUND::asException))
             .map(<%= entityInstance %>ProtoMapper::<%= instanceName %>To<%= entityClass %>Proto);
     }
 
     @Override
-    public Single<Empty> delete<%= entityClass %>(Single<Int64Value> request) {
+    public Single<Empty> delete<%= entityClass %>(Single<<%= idProtoWrappedType %>> request) {
         return request
-            .map(Int64Value::getValue)
+            .map(<%= idProtoWrappedType %>::getValue)
             .doOnSuccess(<%= entityInstance %>Service::delete)
             .map(id -> Empty.newBuilder().build());
     }
