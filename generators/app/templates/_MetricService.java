@@ -1,7 +1,8 @@
 package <%=packageName%>.grpc;
 
 import com.google.protobuf.Empty;
-import io.grpc.stub.StreamObserver;
+import io.reactivex.Flowable;
+import io.reactivex.Single;
 import org.lognet.springboot.grpc.GRpcService;
 import org.springframework.boot.actuate.endpoint.PublicMetrics;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
@@ -12,7 +13,7 @@ import java.util.Collection;
 import java.util.List;
 
 @GRpcService(interceptors = {AuthenticationInterceptor.class})
-public class MetricService extends MetricServiceGrpc.MetricServiceImplBase {
+public class MetricService extends RxMetricServiceGrpc.MetricServiceImplBase {
 
     private final List<PublicMetrics> publicMetrics;
 
@@ -28,12 +29,16 @@ public class MetricService extends MetricServiceGrpc.MetricServiceImplBase {
     }
 
     @Override
-    public void getMetrics(Empty request, StreamObserver<Metric> responseObserver) {
-        for (PublicMetrics publicMetric : this.publicMetrics) {
-            for (org.springframework.boot.actuate.metrics.Metric<?> metric : publicMetric.metrics()) {
+    public Flowable<Metric> getMetrics(Single<Empty> request) {
+        return request
+            .map(empty -> publicMetrics)
+            .flatMapPublisher(Flowable::fromIterable)
+            .map(PublicMetrics::metrics)
+            .flatMap(Flowable::fromIterable)
+            .map(metric -> {
                 Metric.Builder builder = Metric.newBuilder()
                     .setName(metric.getName());
-                if(metric.getTimestamp() != null) {
+                if (metric.getTimestamp() != null) {
                     builder.setTimestamp(ProtobufMappers.dateToTimestamp(metric.getTimestamp()));
                 }
                 if (metric.getValue() instanceof Long || metric.getValue() instanceof Integer) {
@@ -43,10 +48,8 @@ public class MetricService extends MetricServiceGrpc.MetricServiceImplBase {
                 } else {
                     builder.setStringValue(metric.getValue().toString());
                 }
-                responseObserver.onNext(builder.build());
-            }
-        }
-        responseObserver.onCompleted();
+                return builder.build();
+            });
     }
 
 }
