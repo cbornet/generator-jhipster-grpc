@@ -192,15 +192,14 @@ public class AccountService extends RxAccountServiceGrpc.AccountServiceImplBase 
     public Single<Empty> invalidateSession(Single<StringValue> request) {
         return request
             .map(StringValue::getValue)
-            .filter(series -> userRepository
+            .doOnSuccess(series -> userRepository
                 .findOneByLogin(SecurityUtils.getCurrentUserLogin())
                 .map(persistentTokenRepository::findByUser)
                 .orElse(new ArrayList<>())
                 .stream()
                 .filter(persistentToken -> StringUtils.equals(persistentToken.getSeries(), series))
-                .count() > 0)
-            .doOnSuccess(persistentTokenRepository::delete)
-            .toSingle("")
+                .forEach(persistentTokenRepository::delete)
+            )
             .map(s -> Empty.newBuilder().build());
     }
 
