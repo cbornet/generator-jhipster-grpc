@@ -14,7 +14,10 @@ import <%=packageName%>.web.rest.vm.ManagedUserVM;
 import com.google.protobuf.Empty;
 import com.google.protobuf.StringValue;
 import io.grpc.Status;
-import io.grpc.stub.StreamObserver;
+<%_ if (authenticationType === 'session') { _%>
+import io.reactivex.Flowable;
+<%_ } _%>
+import io.reactivex.Single;
 import org.apache.commons.lang3.StringUtils;
 import org.lognet.springboot.grpc.GRpcService;
 import org.slf4j.Logger;
@@ -26,10 +29,13 @@ import org.springframework.transaction.TransactionSystemException;
 <%_ } _%>
 
 import javax.validation.ConstraintViolationException;
+<%_ if (authenticationType === 'session') { _%>
+import java.util.ArrayList;
+<%_ } _%>
 import java.util.Optional;
 
 @GRpcService
-public class AccountService extends AccountServiceGrpc.AccountServiceImplBase {
+public class AccountService extends RxAccountServiceGrpc.AccountServiceImplBase {
 
     private final Logger log = LoggerFactory.getLogger(AccountService.class);
 
@@ -56,92 +62,91 @@ public class AccountService extends AccountServiceGrpc.AccountServiceImplBase {
     }
 
     @Override
-    public void registerAccount(UserProto userProto, StreamObserver<Empty> responseObserver) {
-        log.debug("gRPC request to register account {}", userProto.getLogin());
-        if (!checkPasswordLength(userProto.getPassword())) {
-            responseObserver.onError(Status.INVALID_ARGUMENT.withDescription("Incorrect password").asException());
-        } else if (userRepository.findOneByLogin(userProto.getLogin().toLowerCase()).isPresent()) {
-            responseObserver.onError(Status.ALREADY_EXISTS.withDescription("Login already in use").asException());
-        } else if (userRepository.findOneByEmailIgnoreCase(userProto.getEmail()).isPresent()) {
-            responseObserver.onError(Status.ALREADY_EXISTS.withDescription("Email already in use").asException());
-        } else {
-            try {
-                User newUser = userService.registerUser(new ManagedUserVM(
-                    null,
-                    userProto.getLogin().isEmpty() ? null : userProto.getLogin(),
-                    userProto.getPassword().isEmpty() ? null : userProto.getPassword(),
-                    userProto.getFirstName().isEmpty() ? null : userProto.getFirstName(),
-                    userProto.getLastName().isEmpty() ? null : userProto.getLastName(),
-                    userProto.getEmail().isEmpty() ? null : userProto.getEmail().toLowerCase(),
-                    true,
-                    <%_ if (databaseType === 'mongodb' || databaseType === 'sql') { _%>
-                    userProto.getImageUrl().isEmpty() ? null : userProto.getImageUrl(),
-                    <%_ } _%>
-                    userProto.getLangKey().isEmpty() ? null : userProto.getLangKey(),
-                    <% if (databaseType === 'mongodb' || databaseType === 'sql') { %>null, null, null, null, <% } %>null
-                ));
-                mailService.sendCreationEmail(newUser);
-                responseObserver.onNext(Empty.newBuilder().build());
-                responseObserver.onCompleted();
-            <%_ if (databaseType === 'sql') { _%>
-            } catch (TransactionSystemException e) {
-                if(e.getOriginalException().getCause() instanceof ConstraintViolationException) {
-                    log.info("Invalid user", e);
-                    responseObserver.onError(Status.INVALID_ARGUMENT.withDescription("Invalid user").asException());
-                } else {
-                    throw e;
+    public Single<Empty> registerAccount(Single<UserProto> request) {
+        return request
+            .doOnSuccess(userProto -> log.debug("gRPC request to register account {}", userProto.getLogin()))
+            .filter(userProto -> checkPasswordLength(userProto.getPassword()))
+            .switchIfEmpty(Single.error(Status.INVALID_ARGUMENT.withDescription("Incorrect password").asException()))
+            .filter(userProto -> !userRepository.findOneByLogin(userProto.getLogin().toLowerCase()).isPresent())
+            .switchIfEmpty(Single.error(Status.ALREADY_EXISTS.withDescription("Login already in use").asException()))
+            .filter(userProto -> !userRepository.findOneByEmailIgnoreCase(userProto.getEmail()).isPresent())
+            .switchIfEmpty(Single.error(Status.ALREADY_EXISTS.withDescription("Email already in use").asException()))
+            .map(userProto -> new ManagedUserVM(
+                null,
+                userProto.getLogin().isEmpty() ? null : userProto.getLogin(),
+                userProto.getPassword().isEmpty() ? null : userProto.getPassword(),
+                userProto.getFirstName().isEmpty() ? null : userProto.getFirstName(),
+                userProto.getLastName().isEmpty() ? null : userProto.getLastName(),
+                userProto.getEmail().isEmpty() ? null : userProto.getEmail().toLowerCase(),
+                true,
+                <%_ if (databaseType === 'mongodb' || databaseType === 'sql') { _%>
+                userProto.getImageUrl().isEmpty() ? null : userProto.getImageUrl(),
+                <%_ } _%>
+                userProto.getLangKey().isEmpty() ? null : userProto.getLangKey(),
+                <% if (databaseType === 'mongodb' || databaseType === 'sql') { %>null, null, null, null, <% } %>null
+            ))
+            .map(user -> {
+                try {
+                    return userService.registerUser(user);
+                <%_ if (databaseType === 'sql') { _%>
+                } catch (TransactionSystemException e) {
+                    if (e.getOriginalException().getCause() instanceof ConstraintViolationException) {
+                        log.info("Invalid user", e);
+                        throw Status.INVALID_ARGUMENT.withDescription("Invalid user").asException();
+                    } else {
+                        throw e;
+                    }
+                <%_ } _%>
+                } catch (ConstraintViolationException e) {
+                    log.error("Invalid user", e);
+                    throw Status.INVALID_ARGUMENT.withDescription("Invalid user").asException();
                 }
-            <%_ } _%>
-            } catch (ConstraintViolationException e) {
-                log.error("Invalid user", e);
-                responseObserver.onError(Status.INVALID_ARGUMENT.withDescription("Invalid user").asException());
+            })
+            .doOnSuccess(mailService::sendCreationEmail)
+            .map(u -> Empty.newBuilder().build());
+    }
+
+    @Override
+    public Single<UserProto> activateAccount(Single<StringValue> request) {
+        return request
+            .map(StringValue::getValue)
+            .map(key -> userService.activateRegistration(key).orElseThrow(Status.INTERNAL::asException))
+            .map(userProtoMapper::userToUserProto);
+    }
+
+    @Override
+    public Single<StringValue> isAuthenticated(Single<Empty> request) {
+        return request.map(e -> {
+            log.debug("gRPC request to check if the current user is authenticated");
+            Authentication principal = SecurityContextHolder.getContext().getAuthentication();
+            StringValue.Builder builder = StringValue.newBuilder();
+            if (principal != null) {
+                builder.setValue(principal.getName());
             }
-        }
-
+            return builder.build();
+        });
     }
 
     @Override
-    public void activateAccount(StringValue key, StreamObserver<UserProto> responseObserver) {
-        Optional<User> user = userService.activateRegistration(key.getValue());
-        if (user.isPresent()) {
-            responseObserver.onNext(userProtoMapper.userToUserProto(user.get()));
-            responseObserver.onCompleted();
-        } else {
-            responseObserver.onError(Status.INTERNAL.asException());
-        }
+    public Single<UserProto> getAccount(Single<Empty> request) {
+        return request
+            .map(e -> Optional.ofNullable(userService.getUserWithAuthorities()).orElseThrow(Status.INTERNAL::asException))
+            .map(UserDTO::new)
+            .map(userProtoMapper::userDTOToUserProto);
     }
 
     @Override
-    public void isAuthenticated(Empty request, StreamObserver<StringValue> responseObserver) {
-        log.debug("gRPC request to check if the current user is authenticated");
-        Authentication principal = SecurityContextHolder.getContext().getAuthentication();
-        StringValue.Builder builder = StringValue.newBuilder();
-        if (principal != null ) {
-            builder.setValue(principal.getName());
-        }
-        responseObserver.onNext(builder.build());
-        responseObserver.onCompleted();
-    }
-
-    @Override
-    public void getAccount(Empty request, StreamObserver<UserProto> responseObserver) {
-        User user = userService.getUserWithAuthorities();
-        if (user != null) {
-            responseObserver.onNext(userProtoMapper.userDTOToUserProto(new UserDTO(user)));
-            responseObserver.onCompleted();
-        } else {
-            responseObserver.onError(Status.INTERNAL.asException());
-        }
-    }
-
-    @Override
-    public void saveAccount(UserProto user, StreamObserver<Empty> responseObserver) {
-        Optional<User> existingUser = userRepository.findOneByEmailIgnoreCase(user.getEmail());
-        if (existingUser.isPresent() && (!existingUser.get().getLogin().equalsIgnoreCase(SecurityUtils.getCurrentUserLogin()))) {
-            responseObserver.onError(Status.ALREADY_EXISTS.withDescription("Email already in use").asException());
-        } else {
-            existingUser = userRepository.findOneByLogin(SecurityUtils.getCurrentUserLogin());
-            if (existingUser.isPresent()) {
+    public Single<Empty> saveAccount(Single<UserProto> request) {
+        return request
+            .filter(user -> !userRepository.findOneByEmailIgnoreCase(user.getEmail())
+                .map(User::getLogin)
+                .map(login -> !login.equalsIgnoreCase(SecurityUtils.getCurrentUserLogin()))
+                .isPresent()
+            )
+            .switchIfEmpty(Single.error(Status.ALREADY_EXISTS.withDescription("Email already in use").asException()))
+            .filter(user -> userRepository.findOneByLogin(SecurityUtils.getCurrentUserLogin()).isPresent())
+            .switchIfEmpty(Single.error(Status.INTERNAL.asException()))
+            .doOnSuccess(user -> {
                 try {
                     userService.updateUser(
                         user.getFirstName().isEmpty() ? null : user.getFirstName(),
@@ -150,89 +155,82 @@ public class AccountService extends AccountServiceGrpc.AccountServiceImplBase {
                         user.getLangKey().isEmpty() ? null : user.getLangKey()<% if (databaseType === 'mongodb' || databaseType === 'sql') { %>,
                         user.getImageUrl().isEmpty() ? null : user.getImageUrl()<% } %>
                     );
-                    responseObserver.onNext(Empty.newBuilder().build());
-                    responseObserver.onCompleted();
                 <%_ if (databaseType === 'sql') { _%>
                 } catch (TransactionSystemException e) {
-                    if(e.getOriginalException().getCause() instanceof ConstraintViolationException) {
+                    if (e.getOriginalException().getCause() instanceof ConstraintViolationException) {
                         log.info("Invalid user", e);
-                        responseObserver.onError(Status.INVALID_ARGUMENT.withDescription("Invalid user").asException());
+                        throw Status.INVALID_ARGUMENT.withDescription("Invalid user").asRuntimeException();
                     } else {
                         throw e;
                     }
                 <%_ } _%>
                 } catch (ConstraintViolationException e) {
                     log.error("Invalid user", e);
-                    responseObserver.onError(Status.INVALID_ARGUMENT.withDescription("Invalid user").asException());
+                    throw Status.INVALID_ARGUMENT.withDescription("Invalid user").asRuntimeException();
                 }
-            } else {
-                responseObserver.onError(Status.INTERNAL.asException());
-            }
-        }
+            })
+            .map(u -> Empty.newBuilder().build());
     }
 
     @Override
-    public void changePassword(StringValue password, StreamObserver<Empty> responseObserver) {
-        if (!checkPasswordLength(password.getValue())) {
-            responseObserver.onError(Status.INVALID_ARGUMENT.withDescription("Incorrect password").asException());
-        } else {
-            userService.changePassword(password.getValue());
-            responseObserver.onNext(Empty.newBuilder().build());
-            responseObserver.onCompleted();
-        }
+    public Single<Empty> changePassword(Single<StringValue> request) {
+        return request
+            .map(StringValue::getValue)
+            .filter(AccountService::checkPasswordLength)
+            .switchIfEmpty(Single.error(Status.INVALID_ARGUMENT.withDescription("Incorrect password").asException()))
+            .doOnSuccess(userService::changePassword)
+            .map(p -> Empty.newBuilder().build());
     }
 
     <%_ if (authenticationType === 'session') { _%>
     @Override
-    public void getCurrentSessions(Empty request, StreamObserver<PersistentToken> responseObserver) {
-        Optional<User> user = userRepository.findOneByLogin(SecurityUtils.getCurrentUserLogin());
-        if (user.isPresent()) {
-            persistentTokenRepository.findByUser(user.get()).forEach( persistentToken ->
-                responseObserver.onNext(ProtobufMappers.persistentTokenToPersistentTokenProto(persistentToken))
-            );
-        } else {
-            responseObserver.onError(Status.INTERNAL.asException());
-        }
+    public Flowable<PersistentToken> getCurrentSessions(Single<Empty> request) {
+        return request
+            .map(e -> userRepository.findOneByLogin(SecurityUtils.getCurrentUserLogin()).orElseThrow(Status.INTERNAL::asException))
+            .map(persistentTokenRepository::findByUser)
+            .flatMapPublisher(Flowable::fromIterable)
+            .map(ProtobufMappers::persistentTokenToPersistentTokenProto);
     }
 
     @Override
-    public void invalidateSession(StringValue series, StreamObserver<Empty> responseObserver) {
-        userRepository.findOneByLogin(SecurityUtils.getCurrentUserLogin()).ifPresent(u ->
-            persistentTokenRepository.findByUser(u).stream()
-                .filter(persistentToken -> StringUtils.equals(persistentToken.getSeries(), series.getValue()))<% if (databaseType === 'sql' || databaseType === 'mongodb') { %>
-                .findAny().ifPresent(t -> persistentTokenRepository.delete(series.getValue())));<% } else { %>
-                .findAny().ifPresent(persistentTokenRepository::delete));<% } %>
-        responseObserver.onNext(Empty.newBuilder().build());
-        responseObserver.onCompleted();
+    public Single<Empty> invalidateSession(Single<StringValue> request) {
+        return request
+            .map(StringValue::getValue)
+            .filter(series -> userRepository
+                .findOneByLogin(SecurityUtils.getCurrentUserLogin())
+                .map(persistentTokenRepository::findByUser)
+                .orElse(new ArrayList<>())
+                .stream()
+                .filter(persistentToken -> StringUtils.equals(persistentToken.getSeries(), series))
+                .count() > 0)
+            .doOnSuccess(persistentTokenRepository::delete)
+            .toSingle("")
+            .map(s -> Empty.newBuilder().build());
     }
 
     <%_ } _%>
     @Override
-    public void requestPasswordReset(StringValue mail, StreamObserver<Empty> responseObserver) {
-        Optional<User> user = userService.requestPasswordReset(mail.getValue());
-        if (user.isPresent()) {
-            mailService.sendPasswordResetMail(user.get());
-            responseObserver.onNext(Empty.newBuilder().build());
-            responseObserver.onCompleted();
-        } else {
-            responseObserver.onError(Status.INVALID_ARGUMENT.withDescription("e-mail address not registered").asException());
-        }
+    public Single<Empty> requestPasswordReset(Single<StringValue> request) {
+        return request
+            .map(StringValue::getValue)
+            .map(mail -> userService.requestPasswordReset(mail)
+                .orElseThrow(Status.INVALID_ARGUMENT.withDescription("e-mail address not registered")::asException)
+            )
+            .doOnSuccess(mailService::sendPasswordResetMail)
+            .map(u -> Empty.newBuilder().build());
     }
 
     @Override
-    public void finishPasswordReset(KeyAndPassword keyAndPassword, StreamObserver<Empty> responseObserver) {
-        if (!checkPasswordLength(keyAndPassword.getNewPassword())) {
-            responseObserver.onError(Status.INVALID_ARGUMENT.withDescription("Incorrect password").asException());
-        } else {
-            Optional<User> user = userService.completePasswordReset(keyAndPassword.getNewPassword(), keyAndPassword.getKey());
-            if (user.isPresent()) {
-                mailService.sendPasswordResetMail(user.get());
-                responseObserver.onNext(Empty.newBuilder().build());
-                responseObserver.onCompleted();
-            } else {
-                responseObserver.onError(Status.INTERNAL.asException());
-            }
-        }
+    public Single<Empty> finishPasswordReset(Single<KeyAndPassword> request) {
+        return request
+            .filter(keyAndPassword -> checkPasswordLength(keyAndPassword.getNewPassword()))
+            .switchIfEmpty(Single.error(Status.INVALID_ARGUMENT.withDescription("Incorrect password").asException()))
+            .map(keyAndPassword -> userService
+                .completePasswordReset(keyAndPassword.getNewPassword(), keyAndPassword.getKey())
+                .orElseThrow(Status.INTERNAL::asException)
+            )
+            .doOnSuccess(mailService::sendPasswordResetMail)
+            .map(user -> Empty.newBuilder().build());
     }
 
     private static boolean checkPasswordLength(String password) {

@@ -150,6 +150,8 @@ module.exports = yeoman.Base.extend({
                 jhipsterFunc.addMavenDependency('com.google.guava', 'guava', guavaVersion);
                 jhipsterFunc.addMavenDependency('io.grpc', 'grpc-protobuf', this.grpcVersion);
                 jhipsterFunc.addMavenDependency('io.grpc', 'grpc-stub', this.grpcVersion);
+                jhipsterFunc.addMavenDependency('io.reactivex.rxjava2', 'rxjava', '2.1.5');
+                jhipsterFunc.addMavenDependency('com.salesforce.servicelibs', 'rxgrpc-stub', '0.6.1');
                 if (jhipsterVar.databaseType === 'cassandra' || ['microservice', 'gateway', 'uaa'].includes(jhipsterVar.applicationType)) {
                     // grpc-java needs netty 4.1
                     jhipsterFunc.addMavenDependency('io.netty', 'netty-handler', nettyVersion);
@@ -167,6 +169,17 @@ module.exports = yeoman.Base.extend({
                     '            <goal>compile</goal>' + '\n                ' +
                     '            <goal>compile-custom</goal>' + '\n                ' +
                     '        </goals>' + '\n                ' +
+                    '        <configuration>' + '\n                ' +
+                    '            <protocPlugins>' + '\n                ' +
+                    '                <protocPlugin>' + '\n                ' +
+                    '                    <id>rxgrpc</id>' + '\n                ' +
+                    '                    <groupId>com.salesforce.servicelibs</groupId>' + '\n                ' +
+                    '                    <artifactId>rxgrpc</artifactId>' + '\n                ' +
+                    '                    <version>0.6.1</version>' + '\n                ' +
+                    '                    <mainClass>com.salesforce.rxgrpc.RxGrpcGenerator</mainClass>' + '\n                ' +
+                    '                </protocPlugin>' + '\n                ' +
+                    '            </protocPlugins>' + '\n                ' +
+                    '        </configuration>' + '\n                ' +
                     '    </execution>' + '\n                ' +
                     '</executions>'
                 );
