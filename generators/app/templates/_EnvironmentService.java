@@ -4,13 +4,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.protobuf.Empty;
 import io.grpc.Status;
-import io.grpc.StatusRuntimeException;
-import io.grpc.stub.StreamObserver;
+import io.reactivex.Single;
 import org.lognet.springboot.grpc.GRpcService;
 import org.springframework.boot.actuate.endpoint.EnvironmentEndpoint;
 
 @GRpcService(interceptors = {AuthenticationInterceptor.class})
-public class EnvironmentService extends EnvironmentServiceGrpc.EnvironmentServiceImplBase {
+public class EnvironmentService extends RxEnvironmentServiceGrpc.EnvironmentServiceImplBase {
 
     private final EnvironmentEndpoint endpoint;
 
@@ -19,16 +18,16 @@ public class EnvironmentService extends EnvironmentServiceGrpc.EnvironmentServic
     }
 
     @Override
-    public void getEnv(Empty request, StreamObserver<Environment> responseObserver) {
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-            responseObserver.onNext(Environment.newBuilder()
-                .setValue(mapper.writeValueAsString(endpoint.invoke()))
-                .build()
-            );
-        } catch (JsonProcessingException e) {
-            throw new StatusRuntimeException(Status.INTERNAL.withCause(e));
-        }
-        responseObserver.onCompleted();
+    public Single<Environment> getEnv(Single<Empty> request) {
+        return request.map( empty -> {
+            ObjectMapper mapper = new ObjectMapper();
+            try {
+                return Environment.newBuilder()
+                    .setValue(mapper.writeValueAsString(endpoint.invoke()))
+                    .build();
+            } catch (JsonProcessingException e) {
+                throw Status.INTERNAL.withCause(e).asRuntimeException();
+            }
+        });
     }
 }

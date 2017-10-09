@@ -1,8 +1,7 @@
 package <%=packageName%>.grpc;
 
-
 import com.google.protobuf.Empty;
-import io.grpc.stub.StreamObserver;
+import io.reactivex.Single;
 import org.lognet.springboot.grpc.GRpcService;
 import org.springframework.boot.actuate.health.CompositeHealthIndicator;
 import org.springframework.boot.actuate.health.HealthAggregator;
@@ -12,7 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @GRpcService
-public class HealthService extends HealthServiceGrpc.HealthServiceImplBase {
+public class HealthService extends RxHealthServiceGrpc.HealthServiceImplBase {
 
     private final Map<String, org.springframework.boot.actuate.health.HealthIndicator> healthIndicators;
 
@@ -31,15 +30,16 @@ public class HealthService extends HealthServiceGrpc.HealthServiceImplBase {
     }
 
     @Override
-    public void getHealth(Empty request, StreamObserver<Health> responseObserver) {
+    public Single<Health> getHealth(Single<Empty> request) {
         Map<String, HealthIndicator> healthIndicatorProtos = new HashMap<>();
         this.healthIndicators.forEach((key, indicator) -> healthIndicatorProtos.put(key, healthIndicatorToHealthIndicatorProto(indicator)));
 
-        responseObserver.onNext(Health.newBuilder()
-            .setStatus(Status.valueOf(this.healthIndicator.health().getStatus().toString()))
-            .putAllHealthIndicators(healthIndicatorProtos)
-            .build());
-        responseObserver.onCompleted();
+        return request.map( e ->
+            Health.newBuilder()
+                .setStatus(Status.valueOf(this.healthIndicator.health().getStatus().toString()))
+                .putAllHealthIndicators(healthIndicatorProtos)
+                .build()
+        );
     }
 
     public HealthIndicator healthIndicatorToHealthIndicatorProto(org.springframework.boot.actuate.health.HealthIndicator healthIndicator) {
@@ -62,3 +62,4 @@ public class HealthService extends HealthServiceGrpc.HealthServiceImplBase {
     }
 
 }
+
