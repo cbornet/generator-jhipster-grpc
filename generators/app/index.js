@@ -207,6 +207,11 @@ module.exports = yeoman.Base.extend({
                     '</project>'
                 );
             } else {
+                this.copy('mvnw', 'mvnw');
+                this.copy('mvnw.cmd', 'mvnw.cmd');
+                this.copy('.mvn/wrapper/maven-wrapper.jar', '.mvn/wrapper/maven-wrapper.jar');
+                this.copy('.mvn/wrapper/maven-wrapper.properties', '.mvn/wrapper/maven-wrapper.properties');
+                this.template('_rxgrpc-pom.xml', 'gradle/rxgrpc-pom.xml');
                 this.template('_grpc.gradle', 'gradle/grpc.gradle');
                 jhipsterFunc.addGradleDependency('compile', 'org.lognet', 'grpc-spring-boot-starter', grpcSpringVersion);
                 // Resolve conflict with springfox

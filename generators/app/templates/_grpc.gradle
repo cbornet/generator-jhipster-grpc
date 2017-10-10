@@ -1,20 +1,25 @@
-apply plugin: 'com.google.protobuf'
+import org.gradle.internal.os.OperatingSystem
 
-protobuf {
-    protoc {
-        artifact = 'com.google.protobuf:protoc:<%= protocVersion %>'
+/*
+ * The protobuf-maven-plugin is used because
+ * the rxgrpc plugin is a native Java one (not directly executable) and this is
+ * not supported by the gradle plugin at the moment
+ */
+
+task generateProtobuf(type:Exec) {
+    if (OperatingSystem.current().isWindows()) {
+        commandLine 'cmd', '/c', 'mvnw.cmd generate-sources -f gradle/rxgrpc-pom.xml'
+    } else {
+        commandLine 'sh', '-c', 'sh mvnw generate-sources -f gradle/rxgrpc-pom.xml'
     }
-    plugins {
-        rxjava {
-            artifact = 'com.salesforce.servicelibs:rxgrpc:0.6.1'
-        }
-        grpc {
-            artifact = 'io.grpc:protoc-gen-grpc-java:<%= grpcVersion %>'
-        }
-    }
-    generateProtoTasks {
-        ofSourceSet('main')*.plugins {
-            grpc { }
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir file("${project.buildDir.path}/generated/source/proto/main/java")
         }
     }
 }
+
+compileJava.dependsOn(generateProtobuf)
