@@ -8,9 +8,9 @@ import org.gradle.internal.os.OperatingSystem
 
 task generateProtobuf(type:Exec) {
     if (OperatingSystem.current().isWindows()) {
-        commandLine 'cmd', '/c', 'mvnw.cmd generate-sources -f gradle/rxgrpc-pom.xml'
+        commandLine 'cmd', '/c', '.mvn/mvnw.cmd generate-sources -f gradle/rxgrpc-pom.xml'
     } else {
-        commandLine 'sh', '-c', 'sh mvnw generate-sources -f gradle/rxgrpc-pom.xml'
+        commandLine 'sh', '-c', 'sh .mvn/mvnw generate-sources -f gradle/rxgrpc-pom.xml'
     }
 }
 
