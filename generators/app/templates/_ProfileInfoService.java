@@ -4,7 +4,7 @@ import <%=packageName%>.config.DefaultProfileUtil;
 
 import com.google.protobuf.Empty;
 import io.github.jhipster.config.JHipsterProperties;
-import io.grpc.stub.StreamObserver;
+import io.reactivex.Single;
 import org.lognet.springboot.grpc.GRpcService;
 import org.springframework.core.env.Environment;
 
@@ -13,7 +13,7 @@ import java.util.Arrays;
 import java.util.List;
 
 @GRpcService
-public class ProfileInfoService extends ProfileInfoServiceGrpc.ProfileInfoServiceImplBase {
+public class ProfileInfoService extends RxProfileInfoServiceGrpc.ProfileInfoServiceImplBase {
     private final JHipsterProperties jHipsterProperties;
     private final Environment env;
 
@@ -23,18 +23,19 @@ public class ProfileInfoService extends ProfileInfoServiceGrpc.ProfileInfoServic
     }
 
     @Override
-    public void getActiveProfiles(Empty request, StreamObserver<ProfileInfo> responseObserver) {
-        ProfileInfo.Builder builder = ProfileInfo.newBuilder();
-        String[] activeProfiles = DefaultProfileUtil.getActiveProfiles(env);
-        if (activeProfiles != null) {
-            builder.addAllActiveProfiles(Arrays.asList(activeProfiles));
-        }
-        String ribbonEnv = getRibbonEnv(activeProfiles);
-        if (ribbonEnv != null) {
-            builder.setRibbonEnv(ribbonEnv);
-        }
-        responseObserver.onNext(builder.build());
-        responseObserver.onCompleted();
+    public Single<ProfileInfo> getActiveProfiles(Single<Empty> request) {
+        return request.map(e -> {
+            ProfileInfo.Builder builder = ProfileInfo.newBuilder();
+            String[] activeProfiles = DefaultProfileUtil.getActiveProfiles(env);
+            if (activeProfiles != null) {
+                builder.addAllActiveProfiles(Arrays.asList(activeProfiles));
+            }
+            String ribbonEnv = getRibbonEnv(activeProfiles);
+            if (ribbonEnv != null) {
+                builder.setRibbonEnv(ribbonEnv);
+            }
+            return builder.build();
+        });
     }
 
     private String getRibbonEnv(String[] activeProfiles) {

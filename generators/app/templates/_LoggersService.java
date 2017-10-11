@@ -1,17 +1,15 @@
 package <%=packageName%>.grpc;
 
 import com.google.protobuf.Empty;
-import io.grpc.stub.StreamObserver;
+import io.reactivex.Flowable;
+import io.reactivex.Single;
 import org.lognet.springboot.grpc.GRpcService;
 import org.springframework.boot.logging.LogLevel;
-import org.springframework.boot.logging.LoggerConfiguration;
 import org.springframework.boot.logging.LoggingSystem;
 import org.springframework.util.Assert;
 
-import java.util.Collection;
-
 @GRpcService(interceptors = {AuthenticationInterceptor.class})
-public class LoggersService extends LoggersServiceGrpc.LoggersServiceImplBase {
+public class LoggersService extends RxLoggersServiceGrpc.LoggersServiceImplBase {
 
     private final LoggingSystem loggingSystem;
 
@@ -21,27 +19,26 @@ public class LoggersService extends LoggersServiceGrpc.LoggersServiceImplBase {
     }
 
     @Override
-    public void getLoggers(Empty request, StreamObserver<Logger> responseObserver) {
-        Collection<LoggerConfiguration> configurations = this.loggingSystem.getLoggerConfigurations();
-        if (configurations != null) {
-            configurations.forEach(loggerConfiguration -> responseObserver.onNext(
+    public Flowable<Logger> getLoggers(Single<Empty> request) {
+        return request
+            .map(e ->  loggingSystem.getLoggerConfigurations())
+            .flatMapPublisher(Flowable::fromIterable)
+            .map(loggerConfiguration ->
                 Logger.newBuilder()
                     .setName(loggerConfiguration.getName())
                     .setLevel(loggerConfiguration.getEffectiveLevel() == null ? Level.UNDEFINED : Level.valueOf(loggerConfiguration.getEffectiveLevel().name()))
                     .build()
-            ));
-        }
-        responseObserver.onCompleted();
+            );
     }
 
     @Override
-    public void changeLevel(Logger logger, StreamObserver<Empty> responseObserver) {
-        this.loggingSystem.setLogLevel(
-            logger.getName(),
-            Level.UNDEFINED == logger.getLevel() ? null : LogLevel.valueOf(logger.getLevel().toString())
-        );
-        responseObserver.onNext(Empty.newBuilder().build());
-        responseObserver.onCompleted();
+    public Single<Empty> changeLevel(Single<Logger> request) {
+        return request
+            .doOnSuccess(logger -> this.loggingSystem.setLogLevel(
+                logger.getName(),
+                Level.UNDEFINED == logger.getLevel() ? null : LogLevel.valueOf(logger.getLevel().toString()))
+            )
+            .map(l -> Empty.newBuilder().build());
     }
 
 }

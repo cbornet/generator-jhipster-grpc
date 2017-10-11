@@ -9,14 +9,15 @@ import <%=packageName%>.service.dto.UserDTO;
 import com.google.protobuf.Empty;
 import com.google.protobuf.StringValue;
 import io.grpc.Status;
-import io.grpc.stub.StreamObserver;
+import io.reactivex.Flowable;
+import io.reactivex.Single;
 import org.lognet.springboot.grpc.GRpcService;
 import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 
 @GRpcService(interceptors = {AuthenticationInterceptor.class})
-public class UserGrpcService extends UserServiceGrpc.UserServiceImplBase {
+public class UserGrpcService extends RxUserServiceGrpc.UserServiceImplBase {
 
     private final org.slf4j.Logger log = LoggerFactory.getLogger(UserGrpcService.class);
 
@@ -38,72 +39,73 @@ public class UserGrpcService extends UserServiceGrpc.UserServiceImplBase {
     }
 
     @Override
-    public void createUser(UserProto userProto, StreamObserver<UserProto> responseObserver) {
-        log.debug("gRPC request to save User : {}", userProto);
-
-        if (userProto.getIdOneofCase() == UserProto.IdOneofCase.ID) {
-            responseObserver.onError(Status.INVALID_ARGUMENT.withDescription("A new user cannot already have an ID").asException());
-            // Lowercase the user login before comparing with database
-        } else if (userRepository.findOneByLogin(userProto.getLogin().toLowerCase()).isPresent()) {
-            responseObserver.onError(Status.ALREADY_EXISTS.withDescription("Login already in use").asException());
-        } else if (userRepository.findOneByEmailIgnoreCase(userProto.getEmail()).isPresent()) {
-            responseObserver.onError(Status.ALREADY_EXISTS.withDescription("Email already in use").asException());
-        } else {
-            User newUser = userService.createUser(userProtoMapper.userProtoToUserDTO(userProto));
-            mailService.sendCreationEmail(newUser);
-            responseObserver.onNext(userProtoMapper.userToUserProto(newUser));
-            responseObserver.onCompleted();
-        }
+    public Single<UserProto> createUser(Single<UserProto> request) {
+        return request
+            .doOnSuccess(userProto -> log.debug("gRPC request to save User : {}", userProto))
+            .filter(userProto -> userProto.getIdOneofCase() != UserProto.IdOneofCase.ID)
+            .switchIfEmpty(Single.error(Status.INVALID_ARGUMENT.withDescription("A new user cannot already have an ID").asException()))
+            .filter(userProto -> !userRepository.findOneByLogin(userProto.getLogin().toLowerCase()).isPresent())
+            .switchIfEmpty(Single.error(Status.ALREADY_EXISTS.withDescription("Login already in use").asException()))
+            .filter(userProto -> !userRepository.findOneByEmailIgnoreCase(userProto.getEmail()).isPresent())
+            .switchIfEmpty(Single.error(Status.ALREADY_EXISTS.withDescription("Email already in use").asException()))
+            .map(userProtoMapper::userProtoToUserDTO)
+            .map(userService::createUser)
+            .doOnSuccess(mailService::sendCreationEmail)
+            .map(userProtoMapper::userToUserProto);
     }
 
     @Override
-    public void updateUser(UserProto userProto, StreamObserver<UserProto> responseObserver) {
-        log.debug("gRPC request to update User : {}", userProto);
-        Optional<User> existingUser = userRepository.findOneByEmailIgnoreCase(userProto.getEmail());
-        if (existingUser.isPresent() && (!existingUser.get().getId().equals(userProto.getId()))) {
-            responseObserver.onError(Status.ALREADY_EXISTS.withDescription("Email already in use").asException());
-            return;
-        }
-        existingUser = userRepository.findOneByLogin(userProto.getLogin().toLowerCase());
-        if (existingUser.isPresent() && (!existingUser.get().getId().equals(userProto.getId()))) {
-            responseObserver.onError(Status.ALREADY_EXISTS.withDescription("Login already in use").asException());
-            return;
-        }
-        Optional<UserDTO> updatedUser = userService.updateUser(userProtoMapper.userProtoToUserDTO(userProto));
-        if (updatedUser.isPresent()) {
-            responseObserver.onNext(userProtoMapper.userDTOToUserProto(updatedUser.get()));
-            responseObserver.onCompleted();
-        } else {
-            responseObserver.onError(Status.NOT_FOUND.asException());
-        }
+    public Single<UserProto> updateUser(Single<UserProto> request) {
+        return request
+            .doOnSuccess(userProto -> log.debug("gRPC request to update User : {}", userProto))
+            .filter(userProto -> !userRepository
+                .findOneByEmailIgnoreCase(userProto.getEmail())
+                .map(User::getId)
+                .filter(id -> !id.equals(userProto.getId()))
+                .isPresent()
+            )
+            .switchIfEmpty(Single.error(Status.ALREADY_EXISTS.withDescription("Email already in use").asException()))
+            .filter(userProto -> !userRepository
+                .findOneByLogin(userProto.getLogin().toLowerCase())
+                .map(User::getId)
+                .filter(id -> !id.equals(userProto.getId()))
+                .isPresent()
+            )
+            .switchIfEmpty(Single.error(Status.ALREADY_EXISTS.withDescription("Login already in use").asException()))
+            .map(userProtoMapper::userProtoToUserDTO)
+            .map(user -> userService.updateUser(user).orElseThrow(Status.NOT_FOUND::asException))
+            .map(userProtoMapper::userDTOToUserProto);
     }
 
     @Override
-    public void getAllUsers(<% if (databaseType == 'sql' || databaseType == 'mongodb') { %>PageRequest<% } else { %>Empty<% } %> request, StreamObserver<UserProto> responseObserver) {
+    public Flowable<UserProto> getAllUsers(Single<<% if (databaseType == 'sql' || databaseType == 'mongodb') { %>PageRequest<% } else { %>Empty<% } %>> request) {
         log.debug("gRPC request to get all users");
-        userService.getAllManagedUsers<% if (databaseType == 'sql' || databaseType == 'mongodb') { %>(ProtobufMappers.pageRequestProtoToPageRequest(request))<% } else { %>()<% } %>
-            .forEach(userDTO -> responseObserver.onNext(userProtoMapper.userDTOToUserProto(userDTO)));
-        responseObserver.onCompleted();
+        return request
+            <%_ if (databaseType == 'sql' || databaseType == 'mongodb') { _%>
+            .map(ProtobufMappers::pageRequestProtoToPageRequest)
+            .map(userService::getAllManagedUsers)
+            <%_ } else { _%>
+            .map(e-> userService.getAllManagedUsers())
+            <%_ } _%>
+            .flatMapPublisher(Flowable::fromIterable)
+            .map(userProtoMapper::userDTOToUserProto);
     }
 
     @Override
-    public void getUser(StringValue login, StreamObserver<UserProto> responseObserver) {
-        log.debug("gRPC request to get User : {}", login.getValue());
-        Optional<User> user = userService.getUserWithAuthoritiesByLogin(login.getValue());
-        if(user.isPresent()) {
-            responseObserver.onNext(userProtoMapper.userToUserProto(user.get()));
-            responseObserver.onCompleted();
-        } else {
-            responseObserver.onError(Status.NOT_FOUND.asException());
-        }
+    public Single<UserProto> getUser(Single<StringValue> request) {
+        return request
+            .map(StringValue::getValue)
+            .doOnSuccess(login -> log.debug("gRPC request to get User : {}", login))
+            .map(login -> userService.getUserWithAuthoritiesByLogin(login).orElseThrow(Status.NOT_FOUND::asException))
+            .map(userProtoMapper::userToUserProto);
     }
 
     @Override
-    public void deleteUser(StringValue login, StreamObserver<Empty> responseObserver) {
-        log.debug("gRPC request to delete User: {}", login.getValue());
-        userService.deleteUser(login.getValue());
-        responseObserver.onNext(Empty.newBuilder().build());
-        responseObserver.onCompleted();
+    public Single<Empty> deleteUser(Single<StringValue> request) {
+        return request
+            .map(StringValue::getValue)
+            .doOnSuccess(login -> log.debug("gRPC request to delete User: {}", login))
+            .doOnSuccess(userService::deleteUser)
+            .map(l -> Empty.newBuilder().build());
     }
-
 }

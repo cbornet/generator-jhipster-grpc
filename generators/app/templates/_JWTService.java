@@ -1,10 +1,9 @@
 package <%=packageName%>.grpc;
 
-
 import <%=packageName%>.security.jwt.TokenProvider;
+
 import io.grpc.Status;
-import io.grpc.StatusRuntimeException;
-import io.grpc.stub.StreamObserver;
+import io.reactivex.Single;
 import org.lognet.springboot.grpc.GRpcService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,7 +14,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 @GRpcService
-public class JWTService extends JWTServiceGrpc.JWTServiceImplBase {
+public class JWTService extends RxJWTServiceGrpc.JWTServiceImplBase {
 
     private final Logger log = LoggerFactory.getLogger(JWTService.class);
 
@@ -29,20 +28,21 @@ public class JWTService extends JWTServiceGrpc.JWTServiceImplBase {
     }
 
     @Override
-    public void authenticate(Login login, StreamObserver<JWTToken> responseObserver) {
-        UsernamePasswordAuthenticationToken authenticationToken =
-            new UsernamePasswordAuthenticationToken(login.getUsername(), login.getPassword());
-
-        try {
-            Authentication authentication = this.authenticationManager.authenticate(authenticationToken);
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-            String jwt = tokenProvider.createToken(authentication, login.getRememberMe());
-            responseObserver.onNext(JWTToken.newBuilder().setIdToken(jwt).build());
-            responseObserver.onCompleted();
-        } catch (AuthenticationException ae) {
-            log.trace("Authentication exception", ae);
-            responseObserver.onError(new StatusRuntimeException(Status.UNAUTHENTICATED));
-        }
+    public Single<JWTToken> authenticate(Single<Login> request) {
+        return request
+            .map( login -> {
+                UsernamePasswordAuthenticationToken authenticationToken =
+                    new UsernamePasswordAuthenticationToken(login.getUsername(), login.getPassword());
+                try {
+                    Authentication authentication = this.authenticationManager.authenticate(authenticationToken);
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                    return tokenProvider.createToken(authentication, login.getRememberMe());
+                } catch (AuthenticationException ae) {
+                    log.trace("Authentication exception", ae);
+                    throw Status.UNAUTHENTICATED.asRuntimeException();
+                }
+            })
+            .map(jwt -> JWTToken.newBuilder().setIdToken(jwt).build());
 
     }
 }

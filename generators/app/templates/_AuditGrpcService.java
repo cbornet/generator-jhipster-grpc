@@ -3,20 +3,17 @@ package <%=packageName%>.grpc;
 import <%=packageName%>.service.AuditEventService;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.protobuf.<%=idProtoWrappedType%>;
+import com.google.protobuf.<%= idProtoWrappedType %>;
 import io.grpc.Status;
-import io.grpc.StatusRuntimeException;
-import io.grpc.stub.StreamObserver;
+import io.reactivex.Flowable;
+import io.reactivex.Single;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.Page;
 
 import java.time.Instant;
 import java.time.ZoneId;
-import java.util.Optional;
 
-public class AuditGrpcService extends AuditServiceGrpc.AuditServiceImplBase {
+public class AuditGrpcService extends RxAuditServiceGrpc.AuditServiceImplBase {
 
     private final Logger log = LoggerFactory.getLogger(AuditGrpcService.class);
 
@@ -27,50 +24,51 @@ public class AuditGrpcService extends AuditServiceGrpc.AuditServiceImplBase {
     }
 
     @Override
-    public void getAuditEvents(AuditRequest request, StreamObserver<AuditEvent> responseObserver) {
-        Page<org.springframework.boot.actuate.audit.AuditEvent> auditEvents;
-        if (request.hasFromDate() || request.hasToDate()) {
-            Instant fromDate = request.hasFromDate() ?
-                ProtobufMappers
-                    .dateProtoToLocalDate(request.getFromDate())
-                    .atStartOfDay(ZoneId.systemDefault())
-                    .toInstant()
-                : null;
-            Instant toDate = request.hasToDate() ?
-                ProtobufMappers
-                    .dateProtoToLocalDate(request.getToDate())
-                    .atStartOfDay(ZoneId.systemDefault())
-                    .plusDays(1)
-                    .toInstant()
-                : null;
-            auditEvents= auditEventService.findByDates(fromDate, toDate, ProtobufMappers.pageRequestProtoToPageRequest(request.getPaginationParams()));
-        } else {
-            auditEvents = auditEventService.findAll(ProtobufMappers.pageRequestProtoToPageRequest(request.getPaginationParams()));
-        }
-        try {
-            for(org.springframework.boot.actuate.audit.AuditEvent event : auditEvents) {
-                responseObserver.onNext(ProtobufMappers.auditEventToAuditEventProto(event));
-            }
-            responseObserver.onCompleted();
-        } catch (JsonProcessingException e) {
-            log.error("Couldn't parse audit events", e);
-            throw new StatusRuntimeException(Status.INTERNAL.withCause(e));
-        }
+    public Flowable<AuditEvent> getAuditEvents(Single<AuditRequest> request) {
+        return request
+            .map( auditRequest -> {
+                if (auditRequest.hasFromDate() || auditRequest.hasToDate()) {
+                    Instant fromDate = auditRequest.hasFromDate() ?
+                        ProtobufMappers
+                            .dateProtoToLocalDate(auditRequest.getFromDate())
+                            .atStartOfDay(ZoneId.systemDefault())
+                            .toInstant()
+                        : null;
+                    Instant toDate = auditRequest.hasToDate() ?
+                        ProtobufMappers
+                            .dateProtoToLocalDate(auditRequest.getToDate())
+                            .atStartOfDay(ZoneId.systemDefault())
+                            .plusDays(1)
+                            .toInstant()
+                        : null;
+                    return auditEventService.findByDates(fromDate, toDate, ProtobufMappers.pageRequestProtoToPageRequest(auditRequest.getPaginationParams()));
+                } else {
+                    return auditEventService.findAll(ProtobufMappers.pageRequestProtoToPageRequest(auditRequest.getPaginationParams()));
+                }
+            })
+            .flatMapPublisher(Flowable::fromIterable)
+            .map(auditEvent ->  {
+                try {
+                    return ProtobufMappers.auditEventToAuditEventProto(auditEvent);
+                } catch (JsonProcessingException e) {
+                    log.error("Couldn't parse audit event", e);
+                    throw Status.INTERNAL.withCause(e).asRuntimeException();
+                }
+            });
     }
 
     @Override
-    public void getAuditEvent(<%=idProtoWrappedType%> id, StreamObserver<AuditEvent> responseObserver) {
-        Optional<org.springframework.boot.actuate.audit.AuditEvent> auditEvent = auditEventService.find(id.getValue());
-        if (auditEvent.isPresent()) {
-            try {
-                responseObserver.onNext(ProtobufMappers.auditEventToAuditEventProto(auditEvent.get()));
-                responseObserver.onCompleted();
-            } catch (JsonProcessingException e) {
-                responseObserver.onError(e);
-            }
-        } else {
-            responseObserver.onError(Status.NOT_FOUND.asException());
-        }
+    public Single<AuditEvent> getAuditEvent(Single<<%= idProtoWrappedType %>> request) {
+        return request
+            .map(<%= idProtoWrappedType %>::getValue)
+            .map(id -> auditEventService.find(id).orElseThrow(Status.NOT_FOUND::asException))
+            .map(auditEvent -> {
+                try {
+                    return ProtobufMappers.auditEventToAuditEventProto(auditEvent);
+                } catch (JsonProcessingException e) {
+                    throw Status.INTERNAL.withCause(e).asRuntimeException();
+                }
+            });
     }
 
 }

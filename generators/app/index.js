@@ -148,8 +148,12 @@ module.exports = yeoman.Base.extend({
                 jhipsterFunc.addMavenDependency('org.lognet', 'grpc-spring-boot-starter', grpcSpringVersion);
                 // Resolve conflict with springfox
                 jhipsterFunc.addMavenDependency('com.google.guava', 'guava', guavaVersion);
+                jhipsterFunc.addMavenDependency('io.grpc', 'grpc-core', this.grpcVersion);
+                jhipsterFunc.addMavenDependency('io.grpc', 'grpc-context', this.grpcVersion);
                 jhipsterFunc.addMavenDependency('io.grpc', 'grpc-protobuf', this.grpcVersion);
                 jhipsterFunc.addMavenDependency('io.grpc', 'grpc-stub', this.grpcVersion);
+                jhipsterFunc.addMavenDependency('io.reactivex.rxjava2', 'rxjava', '2.1.5');
+                jhipsterFunc.addMavenDependency('com.salesforce.servicelibs', 'rxgrpc-stub', '0.6.1');
                 if (jhipsterVar.databaseType === 'cassandra' || ['microservice', 'gateway', 'uaa'].includes(jhipsterVar.applicationType)) {
                     // grpc-java needs netty 4.1
                     jhipsterFunc.addMavenDependency('io.netty', 'netty-handler', nettyVersion);
@@ -167,6 +171,17 @@ module.exports = yeoman.Base.extend({
                     '            <goal>compile</goal>' + '\n                ' +
                     '            <goal>compile-custom</goal>' + '\n                ' +
                     '        </goals>' + '\n                ' +
+                    '        <configuration>' + '\n                ' +
+                    '            <protocPlugins>' + '\n                ' +
+                    '                <protocPlugin>' + '\n                ' +
+                    '                    <id>rxgrpc</id>' + '\n                ' +
+                    '                    <groupId>com.salesforce.servicelibs</groupId>' + '\n                ' +
+                    '                    <artifactId>rxgrpc</artifactId>' + '\n                ' +
+                    '                    <version>0.6.1</version>' + '\n                ' +
+                    '                    <mainClass>com.salesforce.rxgrpc.RxGrpcGenerator</mainClass>' + '\n                ' +
+                    '                </protocPlugin>' + '\n                ' +
+                    '            </protocPlugins>' + '\n                ' +
+                    '        </configuration>' + '\n                ' +
                     '    </execution>' + '\n                ' +
                     '</executions>'
                 );
@@ -194,12 +209,21 @@ module.exports = yeoman.Base.extend({
                     '</project>'
                 );
             } else {
+                this.copy('.mvn/mvnw', '.mvn/mvnw');
+                this.copy('.mvn/mvnw.cmd', '.mvn/mvnw.cmd');
+                this.copy('.mvn/wrapper/maven-wrapper.jar', '.mvn/wrapper/maven-wrapper.jar');
+                this.copy('.mvn/wrapper/maven-wrapper.properties', '.mvn/wrapper/maven-wrapper.properties');
+                this.template('_rxgrpc-pom.xml', 'gradle/rxgrpc-pom.xml');
                 this.template('_grpc.gradle', 'gradle/grpc.gradle');
                 jhipsterFunc.addGradleDependency('compile', 'org.lognet', 'grpc-spring-boot-starter', grpcSpringVersion);
                 // Resolve conflict with springfox
                 jhipsterFunc.addGradleDependency('compile', 'com.google.guava', 'guava', guavaVersion);
+                jhipsterFunc.addGradleDependency('compile', 'io.grpc', 'grpc-core', this.grpcVersion);
+                jhipsterFunc.addGradleDependency('compile', 'io.grpc', 'grpc-context', this.grpcVersion);
                 jhipsterFunc.addGradleDependency('compile', 'io.grpc', 'grpc-protobuf', this.grpcVersion);
                 jhipsterFunc.addGradleDependency('compile', 'io.grpc', 'grpc-stub', this.grpcVersion);
+                jhipsterFunc.addGradleDependency('compile', 'io.reactivex.rxjava2', 'rxjava', '2.1.5');
+                jhipsterFunc.addGradleDependency('compile', 'com.salesforce.servicelibs', 'rxgrpc-stub', '0.6.1');
                 if (jhipsterVar.databaseType === 'cassandra' || ['microservice', 'gateway', 'uaa'].includes(jhipsterVar.applicationType)) {
                     // grpc-java needs netty 4.1
                     jhipsterFunc.addGradleDependency('compile', 'io.netty', 'netty-handler', nettyVersion);
