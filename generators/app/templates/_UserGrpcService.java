@@ -108,6 +108,7 @@ public class UserGrpcService extends RxUserServiceGrpc.UserServiceImplBase {
             .map(l -> Empty.newBuilder().build());
     }
 
+    <% if (databaseType == 'sql' || databaseType == 'mongodb') { %>
     @Override
     public Flowable<StringValue> getAllAuthorities(Single<Empty> request) {
         return request
@@ -117,5 +118,6 @@ public class UserGrpcService extends RxUserServiceGrpc.UserServiceImplBase {
             .flatMapPublisher(Flowable::fromIterable)
             .map(authority -> StringValue.newBuilder().setValue(authority).build());
     }
+    <% } %>
 
 }

@@ -34,11 +34,13 @@ service UserService {
     // request : the id of the UserProto to delete
     // response : empty or a NOT_FOUND error
     rpc DeleteUser (google.protobuf.StringValue) returns (google.protobuf.Empty);
+    <%_ if (databaseType == 'sql' || databaseType == 'mongodb') { _%>
 
     // Get all authorities
     // request : empty
     // response : the list of existing roles
     rpc GetAllAuthorities (google.protobuf.Empty) returns (stream google.protobuf.StringValue);
+    <%_ } _%>
 }
 
 message UserProto {

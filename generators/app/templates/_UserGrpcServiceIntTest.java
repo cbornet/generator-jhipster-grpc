@@ -581,6 +581,7 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
         List<User> userList = userRepository.findAll();
         assertThat(userList).hasSize(databaseSizeBeforeDelete - 1);
     }
+    <%_ if (databaseType == 'sql' || databaseType == 'mongodb') { _%>
 
     @Test
     public void getAllAuthorities() throws Exception {
@@ -613,5 +614,6 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
             assertThat(e.getStatus().getCode()).isEqualTo(Status.Code.PERMISSION_DENIED);
         }
     }
+    <%_ } _%>
 
 }
