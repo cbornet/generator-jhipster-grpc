@@ -36,9 +36,10 @@ At the root of your project directory:
 ```bash
 yo jhipster-grpc
 ```
-This will configure [grpc-java](https://github.com/grpc/grpc-java) and [grpc-spring-boot-starter](https://github.com/LogNet/grpc-spring-boot-starter) 
+This will configure [rxgrpc](https://github.com/salesforce/grpc-java-contrib/tree/master/rxgrpc) and [grpc-spring-boot-starter](https://github.com/LogNet/grpc-spring-boot-starter) 
 so that the proto files present in `src/main/proto` are compiled.
 If you want to add CRUD gRPC services for an entity, just (re)generate it and confirm when the question is asked.
+The endpoints use RxJava 2 implementation of reactive streams (Flowable) with back-pressure.
 
 Notes :
 * doesn't work for applications using Gatling (see https://github.com/cbornet/generator-jhipster-grpc/issues/4)
@@ -68,7 +69,7 @@ TODOs:
   - [x] ~~Profile info~~
   - [x] ~~Spring Boot Actuators~~
 - [ ] Support streaming from the DB (Stream<> in repository)
-- [ ] Support streaming back-pressure (reactive streams with rxJava2 or Reactor)
+- [x] Support streaming back-pressure (reactive streams with rxJava2 or Reactor)
 - [ ] Client-side configuration (micro-services)
 - [ ] Client-side load-balancing with service discovery (micro-services)
 - [ ] Generator tests
