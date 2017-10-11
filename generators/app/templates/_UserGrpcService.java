@@ -108,4 +108,15 @@ public class UserGrpcService extends RxUserServiceGrpc.UserServiceImplBase {
             .doOnSuccess(userService::deleteUser)
             .map(l -> Empty.newBuilder().build());
     }
+
+    @Override
+    public Flowable<StringValue> getAllAuthorities(Single<Empty> request) {
+        return request
+            .filter(e -> SecurityUtils.isCurrentUserInRole(AuthoritiesConstants.ADMIN))
+            .switchIfEmpty(Single.error(Status.PERMISSION_DENIED.asException()))
+            .map(e -> userService.getAuthorities())
+            .flatMapPublisher(Flowable::fromIterable)
+            .map(authority -> StringValue.newBuilder().setValue(authority).build());
+    }
+
 }

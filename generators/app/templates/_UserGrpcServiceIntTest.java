@@ -578,4 +578,36 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
         assertThat(userList).hasSize(databaseSizeBeforeDelete - 1);
     }
 
+    @Test
+    public void getAllAuthorities() throws Exception {
+        Authentication authentication = new UsernamePasswordAuthenticationToken(
+            DEFAULT_EMAIL,
+            DEFAULT_PASSWORD,
+            Collections.singletonList(new SimpleGrantedAuthority(AuthoritiesConstants.ADMIN))
+        );
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        List<String> roles = new ArrayList<>();
+        stub.getUserAuthorities(Empty.getDefaultInstance()).forEachRemaining(role -> roles.add(role.getValue()));
+        assertThat(roles).contains(AuthoritiesConstants.ADMIN, AuthoritiesConstants.USER);
+    }
+
+    @Test
+    public void getAllAuthoritiesRejected() throws Exception {
+        Authentication authentication = new UsernamePasswordAuthenticationToken(
+            DEFAULT_EMAIL,
+            DEFAULT_PASSWORD,
+            Collections.singletonList(new SimpleGrantedAuthority(AuthoritiesConstants.USER))
+        );
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        try {
+            List<String> roles = new ArrayList<>();
+            stub.getUserAuthorities(Empty.getDefaultInstance()).forEachRemaining(role -> roles.add(role.getValue()));
+            failBecauseExceptionWasNotThrown(StatusRuntimeException.class);
+        } catch (StatusRuntimeException e){
+            assertThat(e.getStatus().getCode()).isEqualTo(Status.Code.PERMISSION_DENIED);
+        }
+    }
+
 }
