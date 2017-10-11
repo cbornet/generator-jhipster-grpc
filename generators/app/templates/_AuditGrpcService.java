@@ -3,7 +3,7 @@ package <%=packageName%>.grpc;
 import <%=packageName%>.service.AuditEventService;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.google.protobuf.Int64Value;
+import com.google.protobuf.<%= idProtoWrappedType %>;
 import io.grpc.Status;
 import io.reactivex.Flowable;
 import io.reactivex.Single;
