@@ -112,7 +112,7 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
         mockServer.shutdownNow();
     }
 
-        /**
+    /**
      * Create a User.
      *
      * This is a static method, as tests for other entities might also need it,
