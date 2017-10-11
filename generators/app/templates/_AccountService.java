@@ -71,19 +71,23 @@ public class AccountService extends RxAccountServiceGrpc.AccountServiceImplBase 
             .switchIfEmpty(Single.error(Status.ALREADY_EXISTS.withDescription("Login already in use").asException()))
             .filter(userProto -> !userRepository.findOneByEmailIgnoreCase(userProto.getEmail()).isPresent())
             .switchIfEmpty(Single.error(Status.ALREADY_EXISTS.withDescription("Email already in use").asException()))
-            .map(userProto -> {
+            .map(userProto -> new ManagedUserVM(
+                null,
+                userProto.getLogin().isEmpty() ? null : userProto.getLogin(),
+                userProto.getPassword().isEmpty() ? null : userProto.getPassword(),
+                userProto.getFirstName().isEmpty() ? null : userProto.getFirstName(),
+                userProto.getLastName().isEmpty() ? null : userProto.getLastName(),
+                userProto.getEmail().isEmpty() ? null : userProto.getEmail().toLowerCase(),
+                false,
+                <%_ if (databaseType === 'mongodb' || databaseType === 'sql') { _%>
+                userProto.getImageUrl().isEmpty() ? null : userProto.getImageUrl(),
+                <%_ } _%>
+                userProto.getLangKey().isEmpty() ? null : userProto.getLangKey(),
+                null<% if (databaseType === 'mongodb' || databaseType === 'sql') { %>, null, null, null, null<% } %>
+            ))
+            .map(user -> {
                 try {
-                    return userService.createUser(
-                        userProto.getLogin().isEmpty() ? null : userProto.getLogin(),
-                        userProto.getPassword().isEmpty() ? null : userProto.getPassword(),
-                        userProto.getFirstName().isEmpty() ? null : userProto.getFirstName(),
-                        userProto.getLastName().isEmpty() ? null : userProto.getLastName(),
-                        userProto.getEmail().isEmpty() ? null : userProto.getEmail().toLowerCase(),
-                        <%_ if (databaseType === 'mongodb' || databaseType === 'sql') { _%>
-                        userProto.getImageUrl().isEmpty() ? null : userProto.getImageUrl(),
-                        <%_ } _%>
-                        userProto.getLangKey().isEmpty() ? null : userProto.getLangKey()
-                    );
+                    return userService.registerUser(user);
                 <%_ if (databaseType === 'sql') { _%>
                 } catch (TransactionSystemException e) {
                     if (e.getOriginalException().getCause() instanceof ConstraintViolationException) {
