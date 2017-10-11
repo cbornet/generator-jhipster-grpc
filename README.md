@@ -27,8 +27,8 @@ Compatibility :
 - JHipster 4.2.0, 4.3.0 : module version 0.8.0, 0.9.0
 - JHipster 4.4.x  : module version 0.10.0
 - JHipster 4.5.x, 4.6.x, 4.7.x, 4.8.x : module version 0.11.0
-- JHipster 4.9.0 : module version 0.12.0
-- Nightly build of master with JHipster master : [![Build Status][travis-image-nightly]][travis-url]
+- JHipster 4.9.0 : module version 0.12.0, 0.13.0, branch master
+- JHipster master : module branch next-jhipster (nightly build status : [![Build Status][travis-image-nightly]][travis-url])
 
 # Usage
 
@@ -106,7 +106,7 @@ Apache-2.0 © [Christophe Bornet]
 [npm-image]: https://img.shields.io/npm/v/generator-jhipster-grpc.svg
 [npm-url]: https://npmjs.org/package/generator-jhipster-grpc
 [travis-image]: https://travis-ci.org/cbornet/generator-jhipster-grpc.svg?branch=master
-[travis-image-nightly]: https://travis-ci.org/cbornet/generator-jhipster-grpc.svg?branch=test_with_master
+[travis-image-nightly]: https://travis-ci.org/cbornet/generator-jhipster-grpc.svg?branch=next-jhipster
 [travis-url]: https://travis-ci.org/cbornet/generator-jhipster-grpc
 [daviddm-image]: https://david-dm.org/cbornet/generator-jhipster-grpc.svg?theme=shields.io
 [daviddm-url]: https://david-dm.org/cbornet/generator-jhipster-module
