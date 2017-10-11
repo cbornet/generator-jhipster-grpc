@@ -60,7 +60,7 @@ public class AuditGrpcService extends RxAuditServiceGrpc.AuditServiceImplBase {
     @Override
     public Single<AuditEvent> getAuditEvent(Single<<%= idProtoWrappedType %>> request) {
         return request
-            .map(Int64Value::getValue)
+            .map(<%= idProtoWrappedType %>::getValue)
             .map(id -> auditEventService.find(id).orElseThrow(Status.NOT_FOUND::asException))
             .map(auditEvent -> {
                 try {
