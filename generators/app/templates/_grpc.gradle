@@ -15,11 +15,12 @@ task generateProtobuf(type:Exec) {
 }
 
 sourceSets {
-    main {
+    protobuf {
         java {
             srcDir file("${project.buildDir.path}/generated/source/proto/main/java")
         }
     }
 }
 
-compileJava.dependsOn(generateProtobuf)
+compileJava.dependsOn generateProtobuf
+compileJava.source += sourceSets.protobuf.java
