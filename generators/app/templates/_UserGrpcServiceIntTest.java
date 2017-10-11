@@ -10,10 +10,9 @@ import <%=packageName%>.security.AuthoritiesConstants;
 import <%=packageName%>.service.MailService;
 import <%=packageName%>.service.UserService;
 
-<%_ if (databaseType === 'cassandra') { _%>
 import com.google.protobuf.Empty;
-<%_ } _%>
 import com.google.protobuf.StringValue;
+
 import io.grpc.Server;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
@@ -26,6 +25,10 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.junit4.SpringRunner;
 <%_ if (databaseType === 'sql') { _%>
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +37,7 @@ import javax.persistence.EntityManager;
 <%_ } _%>
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 <%_ if (databaseType === 'cassandra') { _%>
 import java.util.UUID;
@@ -588,7 +592,7 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         List<String> roles = new ArrayList<>();
-        stub.getUserAuthorities(Empty.getDefaultInstance()).forEachRemaining(role -> roles.add(role.getValue()));
+        stub.getAllAuthorities(Empty.getDefaultInstance()).forEachRemaining(role -> roles.add(role.getValue()));
         assertThat(roles).contains(AuthoritiesConstants.ADMIN, AuthoritiesConstants.USER);
     }
 
@@ -603,7 +607,7 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
 
         try {
             List<String> roles = new ArrayList<>();
-            stub.getUserAuthorities(Empty.getDefaultInstance()).forEachRemaining(role -> roles.add(role.getValue()));
+            stub.getAllAuthorities(Empty.getDefaultInstance()).forEachRemaining(role -> roles.add(role.getValue()));
             failBecauseExceptionWasNotThrown(StatusRuntimeException.class);
         } catch (StatusRuntimeException e){
             assertThat(e.getStatus().getCode()).isEqualTo(Status.Code.PERMISSION_DENIED);

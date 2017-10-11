@@ -2,9 +2,10 @@ package <%=packageName%>.grpc;
 
 import <%=packageName%>.domain.User;
 import <%=packageName%>.repository.UserRepository;
+import <%=packageName%>.security.AuthoritiesConstants;
+import <%=packageName%>.security.SecurityUtils;
 import <%=packageName%>.service.MailService;
 import <%=packageName%>.service.UserService;
-import <%=packageName%>.service.dto.UserDTO;
 
 import com.google.protobuf.Empty;
 import com.google.protobuf.StringValue;
@@ -13,8 +14,6 @@ import io.reactivex.Flowable;
 import io.reactivex.Single;
 import org.lognet.springboot.grpc.GRpcService;
 import org.slf4j.LoggerFactory;
-
-import java.util.Optional;
 
 @GRpcService(interceptors = {AuthenticationInterceptor.class})
 public class UserGrpcService extends RxUserServiceGrpc.UserServiceImplBase {
