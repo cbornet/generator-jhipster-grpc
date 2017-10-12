@@ -395,14 +395,15 @@ _%>
             .addOrders(Order.newBuilder().setProperty("id").setDirection(Direction.DESC))
             .build();
         <%_ } _%>
-        Optional<<%= entityClass %>Proto> maybe<%= entityClass %> = StreamSupport.stream(
+        Optional<<%= entityClass %>> maybe<%= entityClass %> = StreamSupport.stream(
             Spliterators.spliteratorUnknownSize(stub.getAll<%= entityClassPlural %>(<% if (pagination !== 'no') { %>pageRequest<% } else { %>Empty.getDefaultInstance()<% } %>), Spliterator.ORDERED),
             false)
-            .filter(barProto -> saved<%= entityClass %>.getId().equals(barProto.getId()))
+            .filter(<%= entityInstance %>Proto -> saved<%= entityClass %>.getId().equals(<%= entityInstance %>Proto.getId()))
+            .map(<%= entityInstance %>ProtoMapper::<%= entityInstance %>ProtoTo<%= entityClass %>)
             .findAny();
 
         assertThat(maybe<%= entityClass %>).isPresent();
-        <%= entityClass %>Proto found<%= entityClass %> = maybe<%= entityClass %>.orElse(null);
+        <%= entityClass %> found<%= entityClass %> = maybe<%= entityClass %>.orElse(null);
         <%_ for (idx in fields) { _%>
             <%_ if ((fields[idx].fieldType == 'byte[]' || fields[idx].fieldType === 'ByteBuffer') && fields[idx].fieldTypeBlobContent != 'text') { _%>
         assertThat(found<%= entityClass %>.get<%= fields[idx].fieldInJavaBeanMethod %>ContentType()).isEqualTo(<%='DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase()%>_CONTENT_TYPE);
@@ -566,14 +567,15 @@ _%>
         StringValue query = StringValue.newBuilder().setValue("id:" + saved<%= entityClass %>.getId()).build();
         <%_ } _%>
 
-        Optional<<%= entityClass %>Proto> maybe<%= entityClass %> = StreamSupport.stream(
+        Optional<<%= entityClass %>> maybe<%= entityClass %> = StreamSupport.stream(
             Spliterators.spliteratorUnknownSize(stub.search<%= entityClassPlural %>(query), Spliterator.ORDERED),
             false)
-            .filter(barProto -> saved<%= entityClass %>.getId().equals(barProto.getId()))
+            .filter(<%= entityInstance %>Proto -> saved<%= entityClass %>.getId().equals(<%= entityInstance %>Proto.getId()))
+            .map(<%= entityInstance %>ProtoMapper::<%= entityInstance %>ProtoTo<%= entityClass %>)
             .findAny();
 
         assertThat(maybe<%= entityClass %>).isPresent();
-        <%= entityClass %>Proto found<%= entityClass %> = maybe<%= entityClass %>.orElse(null);
+        <%= entityClass %> found<%= entityClass %> = maybe<%= entityClass %>.orElse(null);
         <%_ for (idx in fields) { _%>
             <%_ if ((fields[idx].fieldType == 'byte[]' || fields[idx].fieldType === 'ByteBuffer') && fields[idx].fieldTypeBlobContent != 'text') { _%>
         assertThat(found<%= entityClass %>.get<%= fields[idx].fieldInJavaBeanMethod %>ContentType()).isEqualTo(<%='DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase()%>_CONTENT_TYPE);
