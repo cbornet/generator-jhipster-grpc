@@ -90,10 +90,10 @@ public class UserGrpcService extends RxUserServiceGrpc.UserServiceImplBase {
     }
 
     @Override
-    public Flowable<UserProto> getAllUsers(Single<<% if (databaseType  === 'sql' || databaseType  === 'mongodb') { %>PageRequest<% } else { %>Empty<% } %>> request) {
+    public Flowable<UserProto> getAllUsers(Single<<% if (databaseType === 'sql' || databaseType === 'mongodb') { %>PageRequest<% } else { %>Empty<% } %>> request) {
         log.debug("gRPC request to get all users");
         return request
-            <%_ if (databaseType  === 'sql' || databaseType  === 'mongodb') { _%>
+            <%_ if (databaseType === 'sql' || databaseType === 'mongodb') { _%>
             .map(ProtobufMappers::pageRequestProtoToPageRequest)
             .map(userService::getAllManagedUsers)
             <%_ } else { _%>
@@ -120,7 +120,7 @@ public class UserGrpcService extends RxUserServiceGrpc.UserServiceImplBase {
             .doOnSuccess(userService::deleteUser)
             .map(l -> Empty.newBuilder().build());
     }
-    <%_ if (databaseType  === 'sql' || databaseType  === 'mongodb') { _%>
+    <%_ if (databaseType === 'sql' || databaseType === 'mongodb') { _%>
 
     @Override
     public Flowable<StringValue> getAllAuthorities(Single<Empty> request) {
