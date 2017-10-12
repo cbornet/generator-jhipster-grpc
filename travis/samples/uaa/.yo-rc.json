@@ -19,7 +19,7 @@
     "enableTranslation": true,
     "applicationType": "uaa",
     "testFrameworks": [
-      "gatling"
+      
     ],
     "jhiPrefix": "jhi",
     "skipClient": true,
