@@ -177,6 +177,17 @@
             ]
         },
         {
+            "fieldName": "instantHugo",
+            "fieldType": "Instant"
+        },
+        {
+            "fieldName": "instanteRequiredHugo",
+            "fieldType": "Instant",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
             "fieldName": "zonedDateTimeHugo",
             "fieldType": "ZonedDateTime"
         },
@@ -194,6 +205,19 @@
         {
             "fieldName": "booleanRequiredHugo",
             "fieldType": "Boolean",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "enumHugo",
+            "fieldType": "EnumFieldClass",
+            "fieldValues": "ENUM_VALUE_1,ENUM_VALUE_2,ENUM_VALUE_3"
+        },
+        {
+            "fieldName": "enumRequiredHugo",
+            "fieldType": "EnumRequiredFieldClass",
+            "fieldValues": "ENUM_VALUE_1,ENUM_VALUE_2,ENUM_VALUE_3",
             "fieldValidateRules": [
                 "required"
             ]

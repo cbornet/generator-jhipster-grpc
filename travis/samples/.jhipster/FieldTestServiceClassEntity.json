@@ -177,6 +177,17 @@
             ]
         },
         {
+            "fieldName": "instantBob",
+            "fieldType": "Instant"
+        },
+        {
+            "fieldName": "instanteRequiredBob",
+            "fieldType": "Instant",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
             "fieldName": "zonedDateTimeBob",
             "fieldType": "ZonedDateTime"
         },
@@ -194,6 +205,19 @@
         {
             "fieldName": "booleanRequiredBob",
             "fieldType": "Boolean",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "enumBob",
+            "fieldType": "EnumFieldClass",
+            "fieldValues": "ENUM_VALUE_1,ENUM_VALUE_2,ENUM_VALUE_3"
+        },
+        {
+            "fieldName": "enumRequiredBob",
+            "fieldType": "EnumRequiredFieldClass",
+            "fieldValues": "ENUM_VALUE_1,ENUM_VALUE_2,ENUM_VALUE_3",
             "fieldValidateRules": [
                 "required"
             ]
@@ -295,5 +319,6 @@
     "changelogDate": "20160208184031",
     "dto": "no",
     "service": "serviceClass",
+    "jpaMetamodelFiltering": true,
     "pagination": "no"
 }

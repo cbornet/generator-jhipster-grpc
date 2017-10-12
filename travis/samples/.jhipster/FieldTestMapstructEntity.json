@@ -177,6 +177,17 @@
             ]
         },
         {
+            "fieldName": "instantEva",
+            "fieldType": "Instant"
+        },
+        {
+            "fieldName": "instanteRequiredEva",
+            "fieldType": "Instant",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
             "fieldName": "zonedDateTimeEva",
             "fieldType": "ZonedDateTime"
         },
@@ -194,6 +205,19 @@
         {
             "fieldName": "booleanRequiredEva",
             "fieldType": "Boolean",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "enumEva",
+            "fieldType": "EnumFieldClass",
+            "fieldValues": "ENUM_VALUE_1,ENUM_VALUE_2,ENUM_VALUE_3"
+        },
+        {
+            "fieldName": "enumRequiredEva",
+            "fieldType": "EnumRequiredFieldClass",
+            "fieldValues": "ENUM_VALUE_1,ENUM_VALUE_2,ENUM_VALUE_3",
             "fieldValidateRules": [
                 "required"
             ]

@@ -10,6 +10,7 @@ if [ -f "mvnw" ]; then
 elif [ -f "gradlew" ]; then
     ./gradlew javadoc
 fi
+
 #-------------------------------------------------------------------------------
 # Launch UAA tests
 #-------------------------------------------------------------------------------
@@ -31,9 +32,9 @@ elif [ -f "gradlew" ]; then
         -Dlogging.level.io.github.jhipster.sample=ERROR \
         -Dlogging.level.io.github.jhipster.travis=ERROR
 fi
-if [ -f "gulpfile.js" ]; then
-    gulp test --no-notification
-fi
-if [ -f "tsconfig.json" ]; then
-    yarn run test
-fi
+#if [ -f "gulpfile.js" ]; then
+#    gulp test --no-notification
+#fi
+#if [ -f "tsconfig.json" ]; then
+#    yarn run test
+#fi

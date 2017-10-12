@@ -19,6 +19,7 @@
     "enableTranslation": true,
     "applicationType": "uaa",
     "testFrameworks": [
+      "gatling"
     ],
     "jhiPrefix": "jhi",
     "skipClient": true,
@@ -27,7 +28,7 @@
       "en"
     ],
     "travis": true,
-    "clientFramework": "angular2",
+    "clientFramework": "angularX",
     "clientPackageManager": "yarn"
   }
 }
