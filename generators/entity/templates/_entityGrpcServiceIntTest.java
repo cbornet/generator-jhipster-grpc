@@ -399,7 +399,10 @@ _%>
             Spliterators.spliteratorUnknownSize(stub.getAll<%= entityClassPlural %>(<% if (pagination !== 'no') { %>pageRequest<% } else { %>Empty.getDefaultInstance()<% } %>), Spliterator.ORDERED),
             false)
             .filter(<%= entityInstance %>Proto -> saved<%= entityClass %>.getId().equals(<%= entityInstance %>Proto.getId()))
-            .map(<%= entityInstance %>ProtoMapper::<%= entityInstance %>ProtoTo<%= entityClass %>)
+            .map(<%= entityInstance %>ProtoMapper::<%= entityInstance %>ProtoTo<%= instanceType %>)
+            <%_ if (dto == 'mapstruct') { _%>
+            .map<%= entityInstance %>Mapper::toEntity);
+            <%_ } _%>
             .findAny();
 
         assertThat(maybe<%= entityClass %>).isPresent();
@@ -475,7 +478,7 @@ _%>
         <%_ if (dto == 'mapstruct') { _%>
         <%= entityClass %>DTO updated<%= entityClass %>DTO = <%= entityInstance %>Mapper.toDto(updated<%= entityClass %>);
         <%_ } _%>
-        <%= entityClass %>Proto <%= entityInstance %>Proto = <%= entityInstance %>ProtoMapper.<%=instanceName%>To<%=entityClass%>Proto(updated<%=instanceType%>);
+        <%= entityClass %>Proto <%= entityInstance %>Proto = <%= entityInstance %>ProtoMapper.<%=instanceName%>To<%=entityClass%>Proto(updated<%= instanceType %>);
 
         stub.update<%= entityClass %>(<%= entityInstance %>Proto);
 
@@ -571,7 +574,10 @@ _%>
             Spliterators.spliteratorUnknownSize(stub.search<%= entityClassPlural %>(query), Spliterator.ORDERED),
             false)
             .filter(<%= entityInstance %>Proto -> saved<%= entityClass %>.getId().equals(<%= entityInstance %>Proto.getId()))
-            .map(<%= entityInstance %>ProtoMapper::<%= entityInstance %>ProtoTo<%= entityClass %>)
+            .map(<%= entityInstance %>ProtoMapper::<%= entityInstance %>ProtoTo<%= instanceType %>)
+            <%_ if (dto == 'mapstruct') { _%>
+            .map<%= entityInstance %>Mapper::toEntity);
+            <%_ } _%>
             .findAny();
 
         assertThat(maybe<%= entityClass %>).isPresent();
