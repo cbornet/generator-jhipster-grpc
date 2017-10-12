@@ -401,7 +401,7 @@ _%>
             .filter(<%= entityInstance %>Proto -> saved<%= entityClass %>.getId().equals(<%= entityInstance %>Proto.getId()))
             .map(<%= entityInstance %>ProtoMapper::<%= entityInstance %>ProtoTo<%= instanceType %>)
             <%_ if (dto == 'mapstruct') { _%>
-            .map<%= entityInstance %>Mapper::toEntity);
+            .map(<%= entityInstance %>Mapper::toEntity)
             <%_ } _%>
             .findAny();
 
@@ -576,7 +576,7 @@ _%>
             .filter(<%= entityInstance %>Proto -> saved<%= entityClass %>.getId().equals(<%= entityInstance %>Proto.getId()))
             .map(<%= entityInstance %>ProtoMapper::<%= entityInstance %>ProtoTo<%= instanceType %>)
             <%_ if (dto == 'mapstruct') { _%>
-            .map<%= entityInstance %>Mapper::toEntity);
+            .map(<%= entityInstance %>Mapper::toEntity)
             <%_ } _%>
             .findAny();
 
