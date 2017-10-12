@@ -210,19 +210,6 @@
             ]
         },
         {
-            "fieldName": "enumEva",
-            "fieldType": "EnumFieldClass",
-            "fieldValues": "ENUM_VALUE_1,ENUM_VALUE_2,ENUM_VALUE_3"
-        },
-        {
-            "fieldName": "enumRequiredEva",
-            "fieldType": "EnumRequiredFieldClass",
-            "fieldValues": "ENUM_VALUE_1,ENUM_VALUE_2,ENUM_VALUE_3",
-            "fieldValidateRules": [
-                "required"
-            ]
-        },
-        {
             "fieldName": "byteImageEva",
             "fieldType": "byte[]",
             "fieldTypeBlobContent": "image"
@@ -318,6 +305,6 @@
     ],
     "changelogDate": "20160208184031",
     "dto": "mapstruct",
-    "service": "no",
+    "service": "yes",
     "pagination": "no"
 }

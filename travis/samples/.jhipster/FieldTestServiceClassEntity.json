@@ -210,19 +210,6 @@
             ]
         },
         {
-            "fieldName": "enumBob",
-            "fieldType": "EnumFieldClass",
-            "fieldValues": "ENUM_VALUE_1,ENUM_VALUE_2,ENUM_VALUE_3"
-        },
-        {
-            "fieldName": "enumRequiredBob",
-            "fieldType": "EnumRequiredFieldClass",
-            "fieldValues": "ENUM_VALUE_1,ENUM_VALUE_2,ENUM_VALUE_3",
-            "fieldValidateRules": [
-                "required"
-            ]
-        },
-        {
             "fieldName": "byteImageBob",
             "fieldType": "byte[]",
             "fieldTypeBlobContent": "image"

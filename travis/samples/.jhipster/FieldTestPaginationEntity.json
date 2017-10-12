@@ -210,19 +210,6 @@
             ]
         },
         {
-            "fieldName": "enumAlice",
-            "fieldType": "EnumFieldClass",
-            "fieldValues": "ENUM_VALUE_1,ENUM_VALUE_2,ENUM_VALUE_3"
-        },
-        {
-            "fieldName": "enumRequiredAlice",
-            "fieldType": "EnumRequiredFieldClass",
-            "fieldValues": "ENUM_VALUE_1,ENUM_VALUE_2,ENUM_VALUE_3",
-            "fieldValidateRules": [
-                "required"
-            ]
-        },
-        {
             "fieldName": "byteImageAlice",
             "fieldType": "byte[]",
             "fieldTypeBlobContent": "image"
@@ -318,6 +305,6 @@
     ],
     "changelogDate": "20160208184031",
     "dto": "no",
-    "service": "no",
+    "service": "serviceClass",
     "pagination": "pagination"
 }

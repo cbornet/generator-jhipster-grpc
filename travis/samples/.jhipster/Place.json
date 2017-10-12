@@ -45,5 +45,5 @@
     "entityTableName": "place",
     "dto": "no",
     "pagination": "no",
-    "service": "no"
+    "service": "serviceClass"
 }

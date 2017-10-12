@@ -30,6 +30,6 @@
     "changelogDate": "20160208210109",
     "entityTableName": "test_multiple_rel",
     "dto": "no",
-    "service": "no",
+    "service": "serviceClass",
     "pagination": "no"
 }

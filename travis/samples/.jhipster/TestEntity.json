@@ -53,7 +53,7 @@
     "fields": [],
     "changelogDate": "20160208210109",
     "dto": "no",
-    "service": "no",
+    "service": "serviceClass",
     "jpaMetamodelFiltering": true,
     "pagination": "no"
 }
