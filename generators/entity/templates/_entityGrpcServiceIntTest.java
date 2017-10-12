@@ -398,7 +398,7 @@ _%>
         Optional<<%= entityClass %>> maybe<%= entityClass %> = StreamSupport.stream(
             Spliterators.spliteratorUnknownSize(stub.getAll<%= entityClassPlural %>(<% if (pagination !== 'no') { %>pageRequest<% } else { %>Empty.getDefaultInstance()<% } %>), Spliterator.ORDERED),
             false)
-            .filter(<%= entityInstance %>Proto -> saved<%= entityClass %>.getId().equals(<%= entityInstance %>Proto.getId()))
+            .filter(<%= entityInstance %>Proto -> saved<%= entityClass %>.getId()<% if (databaseType == 'cassandra') { %>.toString()<% } %>.equals(<%= entityInstance %>Proto.getId()))
             .map(<%= entityInstance %>ProtoMapper::<%= entityInstance %>ProtoTo<%= instanceType %>)
             <%_ if (dto == 'mapstruct') { _%>
             .map(<%= entityInstance %>Mapper::toEntity)
