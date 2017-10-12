@@ -1,29 +1,33 @@
-package <%=packageName%>.grpc.entity.<%=entityUnderscoredName%>;
+package <%= packageName %>.grpc.entity.<%=entityUnderscoredName%>;
 <% if (databaseType == 'cassandra') { %>
-import <%=packageName%>.AbstractCassandraTest;<% } %>
-import <%=packageName%>.<%= mainClass %>;
+import <%= packageName %>.AbstractCassandraTest;<% } %>
+import <%= packageName %>.<%= mainClass %>;
 <% if (authenticationType == 'uaa') { %>
-import <%=packageName%>.config.SecurityBeanOverrideConfiguration;
+import <%= packageName %>.config.SecurityBeanOverrideConfiguration;
 <% } %>
-import <%=packageName%>.domain.<%= entityClass %>;<% if (pagination !== 'no') { %>
-import <%=packageName%>.grpc.PageRequest;<% } else { %>
+import <%= packageName %>.domain.<%= entityClass %>;<% if (pagination !== 'no') { %>
+import <%= packageName %>.grpc.Direction;
+import <%= packageName %>.grpc.Order;
+import <%= packageName %>.grpc.PageRequest;<% } else { %>
 import com.google.protobuf.Empty;<% } %>
 <%_ for (r of relationships) { // import entities in required relationships
         if (r.relationshipValidate != null && r.relationshipValidate === true) { _%>
-import <%=packageName%>.domain.<%= r.otherEntityNameCapitalized %>;
+import <%= packageName %>.domain.<%= r.otherEntityNameCapitalized %>;
 <%_ } } _%>
 <%_ for (r of relationships) { // import entities in required relationships
         if (r.relationshipValidate != null && r.relationshipValidate === true) { _%>
 import <%=r.otherEntityTest%>;
 <%_ } } _%>
-import <%=packageName%>.repository.<%= entityClass %>Repository;<% if (searchEngine == 'elasticsearch') { %>
-import <%=packageName%>.repository.search.<%= entityClass %>SearchRepository;<% } %>
-import <%=packageName%>.service.<%= entityClass %>Service;<% if (dto == 'mapstruct') { %>
-import <%=packageName%>.service.dto.<%= entityClass %>DTO;
-import <%=packageName%>.service.mapper.<%= entityClass %>Mapper;<% } %>
-import <%=packageName%>.web.rest.TestUtil;
+import <%= packageName %>.repository.<%= entityClass %>Repository;<% if (searchEngine == 'elasticsearch') { %>
+import <%= packageName %>.repository.search.<%= entityClass %>SearchRepository;<% } %>
+import <%= packageName %>.service.<%= entityClass %>Service;<% if (dto == 'mapstruct') { %>
+import <%= packageName %>.service.dto.<%= entityClass %>DTO;
+import <%= packageName %>.service.mapper.<%= entityClass %>Mapper;<% } %>
 
 import com.google.protobuf.<%=idProtoWrappedType%>;
+<%_ if (searchEngine == 'elasticsearch' && this.databaseType !== 'sql') { _%>
+import com.google.protobuf.StringValue;
+<%_ } _%>
 import io.grpc.Server;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
@@ -47,13 +51,12 @@ import java.time.ZoneOffset;<% } %><% if (fieldsContainLocalDate == true || fiel
 import java.time.ZoneId;<% } %><% if (fieldsContainBigDecimal == true) { %>
 import java.math.BigDecimal;<% } %><% if (fieldsContainBlob == true && databaseType === 'cassandra') { %>
 import java.nio.ByteBuffer;<% } %>
-import java.util.Iterator;
-import java.util.List;<% if (databaseType == 'cassandra') { %>
-import java.util.UUID;<% } %>
+import java.util.*;
+import java.util.stream.StreamSupport;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 
-<%_ for (idx in fields) { if (fields[idx].fieldIsEnum == true) { _%>import <%=packageName%>.domain.enumeration.<%= fields[idx].fieldType %>;
+<%_ for (idx in fields) { if (fields[idx].fieldIsEnum == true) { _%>import <%= packageName %>.domain.enumeration.<%= fields[idx].fieldType %>;
 <%_ } } _%>
 /**
  * Test class for the <%= entityClass %>GrpcService gRPC service.
@@ -386,20 +389,19 @@ _%>
         <%= entityClass %> saved<%= entityClass %> = <%= entityInstance %>Repository.save<% if (databaseType == 'sql') { %>AndFlush<% } %>(<%= entityInstance %>);
 
         // Get all the <%= entityInstancePlural %>
-        <%= entityClass %> found<%= entityClass %> = null;
-        Iterator<<%= entityClass %>Proto> it = stub.getAll<%= entityClassPlural %>(<% if (pagination !== 'no') { %>PageRequest<% } else { %>Empty<% } %>.getDefaultInstance());
-        while(it.hasNext()) {
-            <%= entityClass %>Proto <%= entityInstance %>Proto = it.next();
-            if (saved<%= entityClass %>.getId()<% if (databaseType == 'cassandra') { %>.toString()<% } %>.equals(<%= entityInstance %>Proto.getId())) {
-                <% if (dto == 'mapstruct') { %><%= entityClass %>DTO <%= entityInstance %>DTO<% } else { %>found<%= entityClass %><% } %> = <%= entityInstance %>ProtoMapper.<%= entityInstance %>ProtoTo<%= instanceType %>(<%= entityInstance %>Proto);
-                <%_ if (dto == 'mapstruct') { _%>
-                found<%= entityClass %> = <%= entityInstance %>Mapper.toEntity(<%= entityInstance %>DTO);
-                <%_ } _%>
-                break;
-            }
-        }
+        <%_ if (pagination !== 'no') { _%>
+        PageRequest pageRequest = PageRequest.newBuilder()
+            .addOrders(Order.newBuilder().setProperty("id").setDirection(Direction.DESC))
+            .build();
+        <%_ } _%>
+        Optional<<%= entityClass %>Proto> maybe<%= entityClass %> = StreamSupport.stream(
+            Spliterators.spliteratorUnknownSize(stub.getAll<%= entityClassPlural %>(<% if (pagination !== 'no') { %>pageRequest<% } else { %>Empty.getDefaultInstance()<% } %>), Spliterator.ORDERED),
+            false)
+            .filter(barProto -> saved<%= entityClass %>.getId().equals(barProto.getId()))
+            .findAny();
 
-        assertThat(found<%= entityClass %>).isNotNull();
+        assertThat(maybe<%= entityClass %>).isPresent();
+        <%= entityClass %>Proto found<%= entityClass %> = maybe<%= entityClass %>.orElse(null);
         <%_ for (idx in fields) { _%>
             <%_ if ((fields[idx].fieldType == 'byte[]' || fields[idx].fieldType === 'ByteBuffer') && fields[idx].fieldTypeBlobContent != 'text') { _%>
         assertThat(found<%= entityClass %>.get<%= fields[idx].fieldInJavaBeanMethod %>ContentType()).isEqualTo(<%='DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase()%>_CONTENT_TYPE);
@@ -538,30 +540,46 @@ _%>
         // Validate the database is empty
         List<<%= entityClass %>> <%= entityInstance %>List = <%= entityInstance %>Repository.findAll();
         assertThat(<%= entityInstance %>List).hasSize(databaseSizeBeforeDelete - 1);
-    }<% if (searchEngine == 'elasticsearch') { %>
+    }
+    <%_ if (searchEngine == 'elasticsearch') { _%>
 
-    /*@Test<% if (databaseType == 'sql') { %>
+    @Test<% if (databaseType == 'sql') { %>
     @Transactional<% } %>
-    public void search<%= entityClass %>() throws Exception {
+    public void search<%= entityClassPlural %>() throws Exception {
         // Initialize the database
-<%_ if (dto != 'mapstruct') { _%>
-        <%= entityInstance %>Service.save(<%= entityInstance %>);
-<%_ } else { _%>
-        <%= entityInstance %>Repository.save<% if (databaseType == 'sql') { %>AndFlush<% } %>(<%= entityInstance %>);
+        <%= entityClass %> saved<%= entityClass %> = <%= entityInstance %>Repository.save<% if (databaseType == 'sql') { %>AndFlush<% } %>(<%= entityInstance %>);
         <%= entityInstance %>SearchRepository.save(<%= entityInstance %>);
-<%_ } _%>
 
-        // Search the <%= entityInstance %>
-        rest<%= entityClass %>MockMvc.perform(get("/api/_search/?query=id:" + <%= entityInstance %>.getId()))
-            .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))<% if (databaseType == 'sql') { %>
-            .andExpect(jsonPath("$.[*].id").value(hasItem(<%= entityInstance %>.getId().intValue())))<% } %><% if (databaseType == 'mongodb') { %>
-            .andExpect(jsonPath("$.[*].id").value(hasItem(<%= entityInstance %>.getId())))<% } %><% if (databaseType == 'cassandra') { %>
-            .andExpect(jsonPath("$.[*].id").value(hasItem(<%= entityInstance %>.getId().toString())))<% } %><% for (idx in fields) {%>
+        // Search the <%= entityInstancePlural %>
+        <%_ if (pagination !== 'no') { _%>
+        <%= entityClass %>SearchPageRequest query = <%= entityClass %>SearchPageRequest.newBuilder()
+            .setPageRequest(PageRequest.newBuilder()
+                .addOrders(Order.newBuilder()
+                    .setProperty("id")
+                    .setDirection(Direction.DESC)
+                )
+            )
+            .setQuery((StringValue.newBuilder().setValue("id:" + saved<%= entityClass %>.getId()).build()))
+            .build();
+        <%_ } else { _%>
+        StringValue query = StringValue.newBuilder().setValue("id:" + saved<%= entityClass %>.getId()).build();
+        <%_ } _%>
+
+        Optional<<%= entityClass %>Proto> maybe<%= entityClass %> = StreamSupport.stream(
+            Spliterators.spliteratorUnknownSize(stub.search<%= entityClassPlural %>(query), Spliterator.ORDERED),
+            false)
+            .filter(barProto -> saved<%= entityClass %>.getId().equals(barProto.getId()))
+            .findAny();
+
+        assertThat(maybe<%= entityClass %>).isPresent();
+        <%= entityClass %>Proto found<%= entityClass %> = maybe<%= entityClass %>.orElse(null);
+        <%_ for (idx in fields) { _%>
             <%_ if ((fields[idx].fieldType == 'byte[]' || fields[idx].fieldType === 'ByteBuffer') && fields[idx].fieldTypeBlobContent != 'text') { _%>
-            .andExpect(jsonPath("$.[*].<%=fields[idx].fieldName%>ContentType").value(hasItem(<%='DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase()%>_CONTENT_TYPE)))
+        assertThat(found<%= entityClass %>.get<%= fields[idx].fieldInJavaBeanMethod %>ContentType()).isEqualTo(<%='DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase()%>_CONTENT_TYPE);
             <%_ } _%>
-            .andExpect(jsonPath("$.[*].<%=fields[idx].fieldName%>").value(hasItem(<% if ((fields[idx].fieldType == 'byte[]' || fields[idx].fieldType === 'ByteBuffer') && fields[idx].fieldTypeBlobContent != 'text') { %>Base64Utils.encodeToString(<% } else if (fields[idx].fieldType == 'ZonedDateTime') { %>sameInstant(<% } %><%='DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase()%><% if ((fields[idx].fieldType == 'byte[]' || fields[idx].fieldType === 'ByteBuffer') && fields[idx].fieldTypeBlobContent != 'text') { %><% if (databaseType === 'cassandra') { %>.array()<% } %>)<% } else if (fields[idx].fieldType == 'Integer') { %><% } else if (fields[idx].fieldType == 'Long') { %>.intValue()<% } else if (fields[idx].fieldType == 'Float' || fields[idx].fieldType == 'Double') { %>.doubleValue()<% } else if (fields[idx].fieldType == 'BigDecimal') { %>.intValue()<% } else if (fields[idx].fieldType == 'Boolean') { %>.booleanValue()<% } else if (fields[idx].fieldType == 'ZonedDateTime') { %>)<% } else { %>.toString()<% } %>)))<% } %>;
-    }*/<% } %>
+        assertThat(found<%= entityClass %>.<% if (fields[idx].fieldType == 'Boolean') { %>is<% } else { %>get<% } %><%= fields[idx].fieldInJavaBeanMethod %>()).isEqualTo(<%='DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase()%>);
+        <%_ } _%>
+    }
+    <%_ } _%>
 
 }

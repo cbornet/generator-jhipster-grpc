@@ -5,7 +5,7 @@ option java_package = "<%=packageName%>.grpc";
 
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
-import "google/protobuf/wrappers.proto";<% if (databaseType == 'sql' || databaseType == 'mongodb') { %>
+import "google/protobuf/wrappers.proto";<% if (databaseType === 'sql' || databaseType === 'mongodb') { %>
 import "util/pagination.proto";<% } %>
 
 package <%=packageName%>;
@@ -23,7 +23,7 @@ service UserService {
 
     // Get all the Users.
     // response : the list of UserProtos
-    rpc GetAllUsers (<% if (databaseType == 'sql' || databaseType == 'mongodb') { %>util.PageRequest<% } else { %>google.protobuf.Empty<% } %>) returns (stream UserProto);
+    rpc GetAllUsers (<% if (databaseType === 'sql' || databaseType === 'mongodb') { %>util.PageRequest<% } else { %>google.protobuf.Empty<% } %>) returns (stream UserProto);
 
     // Get a User from it's id.
     // request : the id of the UserProto to retrieve
@@ -34,13 +34,25 @@ service UserService {
     // request : the id of the UserProto to delete
     // response : empty or a NOT_FOUND error
     rpc DeleteUser (google.protobuf.StringValue) returns (google.protobuf.Empty);
-    <%_ if (databaseType == 'sql' || databaseType == 'mongodb') { _%>
+    <%_ if (databaseType === 'sql' || databaseType === 'mongodb') { _%>
 
     // Get all authorities
     // request : empty
     // response : the list of existing roles
     rpc GetAllAuthorities (google.protobuf.Empty) returns (stream google.protobuf.StringValue);
     <%_ } _%>
+<%_ if (searchEngine === 'elasticsearch') { _%>
+
+    // Search for the user corresponding to the query.
+    // request : the query of the user search
+    // response : the list of userProtos
+    rpc SearchUsers(UserSearchPageRequest) returns (stream UserProto);
+}
+
+message UserSearchPageRequest {
+    google.protobuf.StringValue query = 1;
+    util.PageRequest page_request = 2;
+<%_ } _%>
 }
 
 message UserProto {

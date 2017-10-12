@@ -1,14 +1,17 @@
-package <%=packageName%>.grpc;
+package <%= packageName %>.grpc;
 
 <%_ if (databaseType === 'cassandra') { _%>
-import <%=packageName%>.AbstractCassandraTest;
+import <%= packageName %>.AbstractCassandraTest;
 <%_ } _%>
-import <%=packageName%>.<%=mainClass%>;
-import <%=packageName%>.domain.User;
-import <%=packageName%>.repository.UserRepository;
-import <%=packageName%>.security.AuthoritiesConstants;
-import <%=packageName%>.service.MailService;
-import <%=packageName%>.service.UserService;
+import <%= packageName %>.<%=mainClass%>;
+import <%= packageName %>.domain.User;
+import <%= packageName %>.repository.UserRepository;
+<%_ if (searchEngine === 'elasticsearch') { _%>
+import <%= packageName %>.repository.search.UserSearchRepository;
+<%_ } _%>
+import <%= packageName %>.security.AuthoritiesConstants;
+import <%= packageName %>.service.MailService;
+import <%= packageName %>.service.UserService;
 
 import com.google.protobuf.Empty;
 import com.google.protobuf.StringValue;
@@ -36,12 +39,8 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.persistence.EntityManager;
 <%_ } _%>
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-<%_ if (databaseType === 'cassandra') { _%>
-import java.util.UUID;
-<%_ } _%>
+import java.util.*;
+import java.util.stream.StreamSupport;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
@@ -90,6 +89,11 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
     @Autowired
     private UserProtoMapper userProtoMapper;
 
+    <%_ if (searchEngine === 'elasticsearch') { _%>
+    @Autowired
+    private UserSearchRepository userSearchRepository;
+
+    <%_ } _%>
     private Server mockServer;
 
     private UserServiceGrpc.UserServiceBlockingStub stub;
@@ -98,7 +102,7 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
 
     @Before
     public void setUp() throws IOException {
-        UserGrpcService userGrpcService = new UserGrpcService(userRepository, mailService, userService, userProtoMapper);
+        UserGrpcService userGrpcService = new UserGrpcService(userRepository, mailService, userService, userProtoMapper<% if (searchEngine === 'elasticsearch') { %>, userSearchRepository<% } %>);
         String uniqueServerName = "Mock server for " + UserGrpcService.class;
         mockServer = InProcessServerBuilder
             .forName(uniqueServerName).directExecutor().addService(userGrpcService).build().start();
@@ -306,19 +310,29 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
     <%_ } _%>
     public void getAllUsers() throws Exception {
         // Initialize the database
-        userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(user);
+        User savedUser = userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(user);
 
         // Get all the users
-        List<UserProto> users = new ArrayList<>();
-        stub.getAllUsers(<% if (databaseType == 'sql' || databaseType == 'mongodb') { %>PageRequest<% } else { %>Empty<% } %>.getDefaultInstance()).forEachRemaining(users::add);
-        assertThat(users).extracting("login").contains(DEFAULT_LOGIN);
-        assertThat(users).extracting("firstName").contains(DEFAULT_FIRSTNAME);
-        assertThat(users).extracting("lastName").contains(DEFAULT_LASTNAME);
-        assertThat(users).extracting("email").contains(DEFAULT_EMAIL);
-        <%_ if (databaseType !== 'cassandra') { _%>
-        assertThat(users).extracting("imageUrl").contains(DEFAULT_IMAGEURL);
+        <%_ if (databaseType == 'sql' || databaseType == 'mongodb') { _%>
+        PageRequest pageRequest = PageRequest.newBuilder()
+            .addOrders(Order.newBuilder().setProperty("id").setDirection(Direction.DESC))
+            .build();
         <%_ } _%>
-        assertThat(users).extracting("langKey").contains(DEFAULT_LANGKEY);
+        Optional<UserProto> maybeUser = StreamSupport.stream(
+            Spliterators.spliteratorUnknownSize(stub.getAllUsers(<% if (databaseType == 'sql' || databaseType == 'mongodb') { %>pageRequest<% } else { %>Empty.getDefaultInstance()<% } %>), Spliterator.ORDERED),
+            false)
+            .filter(userProto -> savedUser.getId().equals(userProto.getId()))
+            .findAny();
+
+        assertThat(maybeUser).isPresent();
+        UserProto foundUser = maybeUser.orElse(null);
+        assertThat(foundUser.getFirstName()).isEqualTo(DEFAULT_FIRSTNAME);
+        assertThat(foundUser.getLastName()).isEqualTo(DEFAULT_LASTNAME);
+        assertThat(foundUser.getEmail()).isEqualTo(DEFAULT_EMAIL);
+        <%_ if (databaseType !== 'cassandra') { _%>
+        assertThat(foundUser.getImageUrl()).isEqualTo(DEFAULT_IMAGEURL);
+        <%_ } _%>
+        assertThat(foundUser.getLangKey()).isEqualTo(DEFAULT_LANGKEY);
     }
 
     @Test
@@ -342,7 +356,7 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
     }
 
     @Test
-        <%_ if (databaseType === 'sql') { _%>
+    <%_ if (databaseType === 'sql') { _%>
     @Transactional
     <%_ } _%>
     public void getNonExistingUser() throws Exception {
@@ -613,6 +627,43 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
         } catch (StatusRuntimeException e){
             assertThat(e.getStatus().getCode()).isEqualTo(Status.Code.PERMISSION_DENIED);
         }
+    }
+    <%_ } _%>
+    <%_ if (searchEngine === 'elasticsearch') { _%>
+
+    @Test
+    @Transactional
+    public void searchUsers() throws Exception {
+        // Initialize the database
+        User savedUser = userRepository.saveAndFlush(user);
+        userSearchRepository.save(user);
+
+        // Search the users
+        UserSearchPageRequest query = UserSearchPageRequest.newBuilder()
+            .setPageRequest(PageRequest.newBuilder()
+                .addOrders(Order.newBuilder()
+                    .setProperty("id")
+                    .setDirection(Direction.DESC)
+                )
+            )
+            .setQuery((StringValue.newBuilder().setValue("id:" + savedUser.getId()).build()))
+            .build();
+
+        Optional<UserProto> maybeUser = StreamSupport.stream(
+                Spliterators.spliteratorUnknownSize(stub.searchUsers(query), Spliterator.ORDERED),
+                false)
+            .filter(userProto -> savedUser.getId().equals(userProto.getId()))
+            .findAny();
+
+        assertThat(maybeUser).isPresent();
+        UserProto foundUser = maybeUser.orElse(null);
+        assertThat(foundUser.getFirstName()).isEqualTo(DEFAULT_FIRSTNAME);
+        assertThat(foundUser.getLastName()).isEqualTo(DEFAULT_LASTNAME);
+        assertThat(foundUser.getEmail()).isEqualTo(DEFAULT_EMAIL);
+        <%_ if (databaseType !== 'cassandra') { _%>
+        assertThat(foundUser.getImageUrl()).isEqualTo(DEFAULT_IMAGEURL);
+        <%_ } _%>
+        assertThat(foundUser.getLangKey()).isEqualTo(DEFAULT_LANGKEY);
     }
     <%_ } _%>
 
