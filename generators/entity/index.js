@@ -94,6 +94,7 @@ module.exports = yeoman.Base.extend({
             this.fieldsContainBigDecimal = this.entityConfig.fieldsContainBigDecimal;
             this.fieldsContainBlob = this.entityConfig.fieldsContainBlob;
             this.pagination = this.entityConfig.data.pagination || 'no';
+            this.entitySearchType = (this.pagination === 'no') ? 'StringValue' : this.entityClass + 'SearchPageRequest';
             if(this.entityConfig.data.javadoc === undefined) {
                 this.entityJavadoc = '// Protobuf message for entity ' + this.entityClass;
             } else {

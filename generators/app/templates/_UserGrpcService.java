@@ -1,17 +1,23 @@
-package <%=packageName%>.grpc;
+package <%= packageName %>.grpc;
 
-import <%=packageName%>.domain.User;
-import <%=packageName%>.repository.UserRepository;
-import <%=packageName%>.security.AuthoritiesConstants;
-import <%=packageName%>.security.SecurityUtils;
-import <%=packageName%>.service.MailService;
-import <%=packageName%>.service.UserService;
+import <%= packageName %>.domain.User;
+import <%= packageName %>.repository.UserRepository;
+<%_ if (searchEngine === 'elasticsearch') { _%>
+import <%= packageName %>.repository.search.UserSearchRepository;
+<%_ } _%>
+import <%= packageName %>.security.AuthoritiesConstants;
+import <%= packageName %>.security.SecurityUtils;
+import <%= packageName %>.service.MailService;
+import <%= packageName %>.service.UserService;
 
 import com.google.protobuf.Empty;
 import com.google.protobuf.StringValue;
 import io.grpc.Status;
 import io.reactivex.Flowable;
 import io.reactivex.Single;
+<%_ if (searchEngine === 'elasticsearch') { _%>
+import org.elasticsearch.index.query.QueryBuilders;
+<%_ } _%>
 import org.lognet.springboot.grpc.GRpcService;
 import org.slf4j.LoggerFactory;
 
@@ -28,13 +34,20 @@ public class UserGrpcService extends RxUserServiceGrpc.UserServiceImplBase {
 
     private final UserProtoMapper userProtoMapper;
 
+    <%_ if (searchEngine === 'elasticsearch') { _%>
+    private final UserSearchRepository userSearchRepository;
+    <%_ } _%>
+
     public UserGrpcService(UserRepository userRepository, MailService mailService,
-                           UserService userService, UserProtoMapper userProtoMapper) {
+                           UserService userService, UserProtoMapper userProtoMapper<% if (searchEngine === 'elasticsearch') { %>, UserSearchRepository userSearchRepository<% } %>) {
 
         this.userRepository = userRepository;
         this.mailService = mailService;
         this.userService = userService;
         this.userProtoMapper = userProtoMapper;
+        <%_ if (searchEngine === 'elasticsearch') { _%>
+        this.userSearchRepository = userSearchRepository;
+        <%_ } _%>
     }
 
     @Override
@@ -77,10 +90,10 @@ public class UserGrpcService extends RxUserServiceGrpc.UserServiceImplBase {
     }
 
     @Override
-    public Flowable<UserProto> getAllUsers(Single<<% if (databaseType == 'sql' || databaseType == 'mongodb') { %>PageRequest<% } else { %>Empty<% } %>> request) {
+    public Flowable<UserProto> getAllUsers(Single<<% if (databaseType === 'sql' || databaseType === 'mongodb') { %>PageRequest<% } else { %>Empty<% } %>> request) {
         log.debug("gRPC request to get all users");
         return request
-            <%_ if (databaseType == 'sql' || databaseType == 'mongodb') { _%>
+            <%_ if (databaseType === 'sql' || databaseType === 'mongodb') { _%>
             .map(ProtobufMappers::pageRequestProtoToPageRequest)
             .map(userService::getAllManagedUsers)
             <%_ } else { _%>
@@ -107,17 +120,36 @@ public class UserGrpcService extends RxUserServiceGrpc.UserServiceImplBase {
             .doOnSuccess(userService::deleteUser)
             .map(l -> Empty.newBuilder().build());
     }
+    <%_ if (databaseType === 'sql' || databaseType === 'mongodb') { _%>
 
-    <% if (databaseType == 'sql' || databaseType == 'mongodb') { %>
     @Override
     public Flowable<StringValue> getAllAuthorities(Single<Empty> request) {
         return request
+            .doOnSuccess(e -> log.debug("gRPC request to gat all authorities"))
             .filter(e -> SecurityUtils.isCurrentUserInRole(AuthoritiesConstants.ADMIN))
             .switchIfEmpty(Single.error(Status.PERMISSION_DENIED.asException()))
             .map(e -> userService.getAuthorities())
             .flatMapPublisher(Flowable::fromIterable)
             .map(authority -> StringValue.newBuilder().setValue(authority).build());
     }
-    <% } %>
+    <%_ } _%>
+    <%_ if (searchEngine === 'elasticsearch') { _%>
+
+    @Override
+    public Flowable<UserProto> searchUsers(Single<UserSearchPageRequest> request) {
+        return request
+            .map(UserSearchPageRequest::getQuery)
+            .map(StringValue::getValue)
+            .doOnSuccess(query -> log.debug("gRPC request to search Users for query {}", query))
+            .map(QueryBuilders::queryStringQuery)
+            .flatMapPublisher(query -> request
+                .map(UserSearchPageRequest::getPageRequest)
+                .map(ProtobufMappers::pageRequestProtoToPageRequest)
+                .map(pageRequest -> userSearchRepository.search(query, pageRequest))
+                .flatMapPublisher(Flowable::fromIterable)
+            )
+            .map(userProtoMapper::userToUserProto);
+    }
+    <%_ } _%>
 
 }

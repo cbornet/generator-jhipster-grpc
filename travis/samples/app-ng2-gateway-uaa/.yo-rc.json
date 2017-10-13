@@ -29,6 +29,6 @@
     ],
     "travis": true,
     "clientPackageManager": "yarn",
-    "clientFramework": "angular2"
+    "clientFramework": "angularX"
   }
 }
