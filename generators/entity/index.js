@@ -100,7 +100,7 @@ module.exports = yeoman.Base.extend({
                 this.entityJavadoc = '// ' + this.entityConfig.data.javadoc.replace('\n', '\n// ');
             }
             this.fluentMethods = this.entityConfig.data.fluentMethods;
-            this.fields = this.entityConfig.data.fields;
+            this.fields = this.entityConfig.data.fields || [];
             this.fields.forEach(f => {
                 if (f.fieldTypeBlobContent === 'text') {
                     f.fieldDomainType = 'String';
@@ -110,7 +110,7 @@ module.exports = yeoman.Base.extend({
                 f.fieldProtobufType = getProtobufType(f.fieldDomainType);
                 f.isProtobufCustomType = isProtobufCustomType(f.fieldProtobufType);
             });
-            this.relationships = this.entityConfig.data.relationships;
+            this.relationships = this.entityConfig.data.relationships || [];
             this.relationships.forEach(r => {
                 r.relationshipNameUnderscored = _.snakeCase(r.relationshipName).toLowerCase();
                 r.otherEntityNameUnderscored = _.snakeCase(r.otherEntityName).toLowerCase();
