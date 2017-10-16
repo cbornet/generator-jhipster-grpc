@@ -11,8 +11,9 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;<% } %>
 import org.springframework.security.core.Authentication;<% if (authenticationType === 'session') { %>
 import org.springframework.security.core.AuthenticationException;<% } %>
-import org.springframework.security.core.context.SecurityContextHolder;<% if (authenticationType === 'oauth2' || authenticationType === 'uaa') { %>
-import org.springframework.security.oauth2.provider.token.TokenStore;<% } %>
+import org.springframework.security.core.context.SecurityContextHolder;<% if (authenticationType === 'uaa') { %>
+import org.springframework.security.oauth2.provider.token.TokenStore;<% } %><% if (authenticationType === 'oauth2') { %>
+import org.springframework.security.oauth2.provider.token.ResourceServerTokenServices;<% } %>
 import org.springframework.stereotype.Component;<% if (authenticationType === 'session') { %>
 import org.springframework.util.Base64Utils;<% } %>
 import org.springframework.util.StringUtils;<% if (authenticationType === 'session') { %>
@@ -38,14 +39,21 @@ public class AuthenticationInterceptor implements ServerInterceptor {
         this.tokenProvider = tokenProvider;
     }
 
-    <%_ } else if (authenticationType === 'oauth2' || authenticationType === 'uaa') { _%>
+    <%_ } else if (authenticationType === 'uaa') { _%>
     private final TokenStore tokenStore;
 
     public AuthenticationInterceptor(TokenStore tokenStore) {
         this.tokenStore = tokenStore;
     }
-    <%_ } _%>
 
+    <%_ } else if (authenticationType === 'oauth2') { _%>
+    private final ResourceServerTokenServices tokenServices;
+
+    public AuthenticationInterceptor(ResourceServerTokenServices tokenServices) {
+        this.tokenServices = tokenServices;
+    }
+
+    <%_ } _%>
     @Override
     public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(ServerCall<ReqT, RespT> serverCall, Metadata metadata, ServerCallHandler<ReqT, RespT> serverCallHandler) {
         String authorizationValue = metadata.get(Metadata.Key.of("Authorization", Metadata.ASCII_STRING_MARSHALLER));
@@ -65,8 +73,11 @@ public class AuthenticationInterceptor implements ServerInterceptor {
                 <%_ } else if (authenticationType === 'jwt') { _%>
                 if (this.tokenProvider.validateToken(token)) {
                     Authentication authentication = this.tokenProvider.getAuthentication(token);
-                <%_ } else if (authenticationType === 'oauth2' || authenticationType === 'uaa') { _%>
+                <%_ } else if (authenticationType === 'uaa') { _%>
                 Authentication authentication = this.tokenStore.readAuthentication(token);
+                if (authentication != null) {
+                <%_ } else if (authenticationType === 'oauth2') { _%>
+                Authentication authentication = this.tokenServices.loadAuthentication(token);
                 if (authentication != null) {
                 <%_ } _%>
                     SecurityContextHolder.getContext().setAuthentication(authentication);

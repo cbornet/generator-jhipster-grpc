@@ -14,13 +14,20 @@
         authMethod = 'getAuthentication';
         authMethodArgMatcher = 'anyString';
         authScheme = 'Bearer';
-    } else if (authenticationType === 'oauth2' || authenticationType === 'uaa') {
+    } else if (authenticationType === 'uaa') {
         authClass = 'TokenStore';
         authInstance = 'tokenStore';
         authMethod = 'readAuthentication';
         authMethodArgMatcher = 'anyString';
         authScheme = 'Bearer';
+    } else if (authenticationType === 'oauth2') {
+        authClass = 'ResourceServerTokenServices';
+        authInstance = 'tokenServices';
+        authMethod = 'loadAuthentication';
+        authMethodArgMatcher = 'anyString';
+        authScheme = 'Bearer';
     }
+
 _%>
 
 package <%=packageName%>.grpc;
@@ -45,14 +52,15 @@ import org.springframework.security.authentication.BadCredentialsException;<% } 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;<% if (authenticationType === 'session') { %>
 import org.springframework.security.core.Authentication;<% } %>
 import org.springframework.security.core.authority.SimpleGrantedAuthority;<% if (authenticationType === 'oauth2' || authenticationType === 'uaa') { %>
-import org.springframework.security.oauth2.provider.OAuth2Authentication;
-import org.springframework.security.oauth2.provider.token.TokenStore;<% } %>
+import org.springframework.security.oauth2.provider.OAuth2Authentication;<% } %><% if (authenticationType === 'uaa') { %>
+import org.springframework.security.oauth2.provider.token.TokenStore;<% } %><% if (authenticationType === 'oauth2') { %>
+import org.springframework.security.oauth2.provider.token.ResourceServerTokenServices;<% } %>
 
 import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
-import static org.mockito.Matchers.anyObject;
+import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;<% if (authenticationType === 'session') { %>
+import static org.mockito.Matchers.anyObject;<% } %>
 import static org.mockito.Mockito.*;
 
 /**
@@ -66,6 +74,7 @@ public class AuthenticationInterceptorTest {
     private <%=authClass%> <%=authInstance%>;
 
     private Server fakeServer;
+
     private ManagedChannel inProcessChannel;
 
     @Before
@@ -190,7 +199,7 @@ public class AuthenticationInterceptorTest {
         <%_ if (authenticationType === 'jwt') { _%>
         doReturn(false).when(tokenProvider).validateToken(anyString());
         <%_ } else { _%>
-        doReturn(null).when(tokenStore).readAuthentication(anyString());
+        doReturn(null).when(<%=authInstance%>).<%=authMethod%>(anyString());
         <%_ } _%>
 
         Metadata metadata = new Metadata();
