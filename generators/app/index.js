@@ -80,6 +80,7 @@ module.exports = yeoman.Base.extend({
             this.applicationType = jhipsterVar.applicationType;
             this.authenticationType = jhipsterVar.authenticationType;
             this.databaseType = jhipsterVar.databaseType;
+            this.searchEngine = jhipsterVar.searchEngine;
             this.skipUserManagement = jhipsterVar.jhipsterConfig.skipUserManagement;
             if (this.applicationType === 'gateway' && this.authenticationType === 'uaa') {
                 this.skipUserManagement = true;

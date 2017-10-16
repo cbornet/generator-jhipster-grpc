@@ -60,7 +60,7 @@ TODOs:
 - [x] ~~Basic auth security~~ (used for session auth option)
 - [x] ~~Entity javadoc~~
 - [x] ~~Field javadoc~~
-- [ ] Add ElasticSearch endpoints
+- [x] ~~Add ElasticSearch endpoints~~
 - [x] ~~Management endpoints~~
   - [x] ~~Account~~
   - [x] ~~Loggers~~

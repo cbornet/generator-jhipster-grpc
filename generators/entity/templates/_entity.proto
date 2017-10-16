@@ -1,10 +1,10 @@
 syntax = "proto3";
 
 option java_multiple_files = true;
-option java_package = "<%=packageName%>.grpc.entity.<%=entityUnderscoredName%>";
+option java_package = "<%= packageName %>.grpc.entity.<%=entityUnderscoredName%>";
 //option java_outer_classname = "";
 
-package <%=packageName%>.entity;
+package <%= packageName %>.entity;
 
 import "google/protobuf/empty.proto";<% if (fieldsContainZonedDateTime || fieldsContainInstant) { %>
 import "google/protobuf/timestamp.proto";<% } %>
@@ -16,32 +16,46 @@ import "util/pagination.proto";<% } %>
 import "<%= r.otherEntityProtobufFile %>";
 <%_ } _%>
 
-// gRPC service providing CRUD methods for entity <%=entityClass%>
-service <%=entityClass%>Service {
-    // Create a new <%=entityInstance%>.
-    // request : the <%=entityInstance%>Proto to create
-    // response : the created <%=entityInstance%>Proto or a ALREADY_EXISTS error
-    rpc Create<%=entityClass%> (<%=entityClass%>Proto) returns (<%=entityClass%>Proto);
+// gRPC service providing CRUD methods for entity <%= entityClass %>
+service <%= entityClass %>Service {
+    // Create a new <%= entityInstance %>.
+    // request : the <%= entityInstance %>Proto to create
+    // response : the created <%= entityInstance %>Proto or a ALREADY_EXISTS error
+    rpc Create<%= entityClass %> (<%= entityClass %>Proto) returns (<%= entityClass %>Proto);
 
-    // Update or create a <%=entityInstance%>.
-    // request : the <%=entityInstance%>Proto to update or create
-    // response : the updated <%=entityInstance%>Proto
-    rpc Update<%=entityClass%> (<%=entityClass%>Proto) returns (<%=entityClass%>Proto);
+    // Update or create a <%= entityInstance %>.
+    // request : the <%= entityInstance %>Proto to update or create
+    // response : the updated <%= entityInstance %>Proto
+    rpc Update<%= entityClass %> (<%= entityClass %>Proto) returns (<%= entityClass %>Proto);
 
     // Get all the <%=entityInstancePlural%>.
-    // response : the list of <%=entityInstance%>Protos
-    rpc GetAll<%=entityClassPlural%> (<% if (pagination !== 'no') { %>util.PageRequest<% } else { %>google.protobuf.Empty<% } %>) returns (stream <%=entityClass%>Proto);
+    // response : the list of <%= entityInstance %>Protos
+    rpc GetAll<%= entityClassPlural %> (<% if (pagination !== 'no') { %>util.PageRequest<% } else { %>google.protobuf.Empty<% } %>) returns (stream <%= entityClass %>Proto);
 
-    // Get a <%=entityInstance%> from it's id.
-    // request : the id of the <%=entityInstance%>Proto to retrieve
-    // response : the <%=entityInstance%>Proto or a NOT_FOUND error
-    rpc Get<%=entityClass%> (google.protobuf.<%=idProtoWrappedType%>) returns (<%=entityClass%>Proto);
+    // Get a <%= entityInstance %> from it's id.
+    // request : the id of the <%= entityInstance %>Proto to retrieve
+    // response : the <%= entityInstance %>Proto or a NOT_FOUND error
+    rpc Get<%= entityClass %> (google.protobuf.<%= idProtoWrappedType %>) returns (<%= entityClass %>Proto);
 
-    // Delete a <%=entityInstance%> from it's id.
-    // request : the id of the <%=entityInstance%>Proto to delete
+    // Delete a <%= entityInstance %> from it's id.
+    // request : the id of the <%= entityInstance %>Proto to delete
     // response : empty or a NOT_FOUND error
-    rpc Delete<%=entityClass%> (google.protobuf.<%=idProtoWrappedType%>) returns (google.protobuf.Empty);
+    rpc Delete<%= entityClass %> (google.protobuf.<%= idProtoWrappedType %>) returns (google.protobuf.Empty);
+    <%_ if (searchEngine == 'elasticsearch') { _%>
+
+    // Search for the <%= entityInstance %> corresponding to the query.
+    // request : the query of the <%= entityInstance %> search
+    // response : the list of <%= entityInstance %>Protos
+    rpc Search<%= entityClassPlural %>(<% if (pagination === 'no') { %>google.protobuf.<% } %><%= entitySearchType %>) returns (stream <%= entityClass %>Proto);
+    <%_ } _%>
 }
+<%_ if (searchEngine == 'elasticsearch' && pagination !== 'no') { _%>
+
+message <%= entityClass %>SearchPageRequest {
+    google.protobuf.StringValue query = 1;
+    util.PageRequest page_request = 2;
+}
+<%_ } _%>
 
 <%_ for (field of fields) {
     if (field.fieldIsEnum) {
@@ -55,7 +69,7 @@ enum <%=field.fieldType %>Proto {
 <%_ } _%>
 
 <%= entityJavadoc %>
-message <%=entityClass%>Proto {
+message <%= entityClass %>Proto {
     oneof id_oneof {
         <%=idProtoType%> id = 1;
     }
@@ -82,26 +96,26 @@ for (field of fields) {
     if(field.javadoc !== undefined) {
         javadoc = '// ' + fields.javadoc.replace('\n', '\n    '+ indentOneOf + '// ') + '\n    '+ indentOneOf;
     }_%>
-    <% if (isOneOf) { %>oneof <%=fieldNameUnderscored%>_oneof {
-        <% } %><%= javadoc %><%=fieldProtobufType%> <%=fieldNameUnderscored%> = <%=protobufFieldNumber++%>;<% if (isOneOf) { %>
+    <% if (isOneOf) { %>oneof <%= fieldNameUnderscored %>_oneof {
+        <% } %><%= javadoc %><%= fieldProtobufType %> <%= fieldNameUnderscored %> = <%= protobufFieldNumber++ %>;<% if (isOneOf) { %>
     }<% } %>
     <%_ if ((fieldType === 'byte[]' || fieldType === 'ByteBuffer') && fieldTypeBlobContent != 'text') { _%>
 
-    <% if (isOneOf) { %>oneof <%=fieldNameUnderscored%>_content_type_oneof {
-        <% } %>string <%=fieldNameUnderscored%>_content_type = <%=protobufFieldNumber++%>;<% if (isOneOf) { %>
+    <% if (isOneOf) { %>oneof <%= fieldNameUnderscored %>_content_type_oneof {
+        <% } %>string <%= fieldNameUnderscored %>_content_type = <%= protobufFieldNumber++ %>;<% if (isOneOf) { %>
     }<% } %>
     <%_ } _%>
 <%_ }
 for (r of relationships) { _%>
     <%_ if (r.relationshipType == 'many-to-many' && r.ownerSide == true) { _%>
-    repeated <%= r.otherEntityProtobufType %> <%= r.relationshipFieldNamePlural %> = <%=protobufFieldNumber++%>;
+    repeated <%= r.otherEntityProtobufType %> <%= r.relationshipFieldNamePlural %> = <%= protobufFieldNumber++ %>;
     <%_ } else if (r.relationshipType == 'many-to-one' || (r.relationshipType == 'one-to-one' && r.ownerSide == true)) { _%>
     <% if (r.relationshipValidate !== true) { %>oneof <%= r.relationshipNameUnderscored %>_id_oneof {
-        <% } %>int64 <%= r.relationshipNameUnderscored %>_id = <%=protobufFieldNumber++%>;<% if (r.relationshipValidate !== true) { %>
+        <% } %>int64 <%= r.relationshipNameUnderscored %>_id = <%= protobufFieldNumber++ %>;<% if (r.relationshipValidate !== true) { %>
     }<% } %>
     <%_ if (r.otherEntityFieldCapitalized !='Id' && r.otherEntityFieldCapitalized != '') { _%>
     <% if (r.relationshipValidate !== true) { %>oneof <%= r.relationshipNameUnderscored %>_<%= r.otherEntityFieldUnderscored %>_oneof {
-        <% } %>string <%= r.relationshipNameUnderscored %>_<%= r.otherEntityFieldUnderscored %> = <%=protobufFieldNumber++%>;<% if (r.relationshipValidate !== true) { %>
+        <% } %>string <%= r.relationshipNameUnderscored %>_<%= r.otherEntityFieldUnderscored %> = <%= protobufFieldNumber++ %>;<% if (r.relationshipValidate !== true) { %>
     }<% } %>
     <%_ }}} _%>
 
