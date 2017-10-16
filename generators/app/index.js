@@ -235,9 +235,11 @@ module.exports = yeoman.Base.extend({
 
             if (this.skipUserManagement) return;
 
-            this.template('_account.proto', protoPackageDir + 'account.proto');
-            this.template('_AccountService.java', javaDir + 'grpc/AccountService.java');
-            this.template('_AccountServiceIntTest.java', testDir + 'grpc/AccountServiceIntTest.java');
+            if (this.authenticationType !== 'oauth2') {
+                this.template('_account.proto', protoPackageDir + 'account.proto');
+                this.template('_AccountService.java', javaDir + 'grpc/AccountService.java');
+                this.template('_AccountServiceIntTest.java', testDir + 'grpc/AccountServiceIntTest.java');
+            }
             //Temporary fix
             this.template('_UserServiceIntTest.java', testDir + 'service/UserServiceIntTest.java');
 

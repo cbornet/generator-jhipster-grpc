@@ -62,7 +62,9 @@ public interface UserProtoMapper {
         return userToUserProtoBuilder(user).build();
     }
 
+    <%_ if (authenticationType !== 'oauth2') { _%>
     @Mapping(target = "password", ignore = true)
+    <%_ } _%>
     @Mapping(target = "resetKey", ignore = true)
     UserProto.Builder userToUserProtoBuilder (User user);
 

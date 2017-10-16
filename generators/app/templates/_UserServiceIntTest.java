@@ -8,11 +8,16 @@ import <%=packageName%>.repository.PersistentTokenRepository;<% } %>
 import <%=packageName%>.config.Constants;
 import <%=packageName%>.repository.UserRepository;
 import <%=packageName%>.service.dto.UserDTO;
-import <%=packageName%>.web.rest.UserResourceIntTest;
+<%_ if (authenticationType !== 'oauth2') { _%>
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;<% if (databaseType == 'sql' || databaseType == 'mongodb') { %>
-import <%=packageName%>.service.util.RandomUtil;<% } %><% if ((databaseType == 'sql' || databaseType == 'mongodb') && authenticationType == 'session') { %>
-import java.time.LocalDate;<% } %>
+import java.time.temporal.ChronoUnit;
+<%_ } _%>
+<%_ if (authenticationType !== 'oauth2' && (databaseType === 'sql' || databaseType === 'mongodb')) { _%>
+import <%=packageName%>.service.util.RandomUtil;
+<%_ } _%>
+<%_ if ((databaseType == 'sql' || databaseType == 'mongodb') && authenticationType == 'session') { _%>
+import java.time.LocalDate;
+<%_ } _%>
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -20,11 +25,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;<% if (databaseType == 'sql') { %>
 import org.springframework.transaction.annotation.Transactional;<% } %>
 import org.springframework.test.context.junit4.SpringRunner;
-<% if (databaseType == 'sql' || databaseType == 'mongodb') { %>
+<%_ if (databaseType === 'sql' || databaseType === 'mongodb') { _%>
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import java.util.Optional;<%}%>
+<%_ } _%>
+
+<%_ if (authenticationType !== 'oauth2' && (databaseType === 'sql' || databaseType === 'mongodb')) { _%>
+import java.util.Optional;
+<%_ } _%>
+<%_ if (authenticationType !== 'oauth2') { _%>
 import java.util.List;
+<%_ } _%>
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -49,13 +60,39 @@ public class UserServiceIntTest <% if (databaseType == 'cassandra') { %>extends 
 
     private User user;
 
+    /**
+     * Create a User.
+     *
+     * This is a static method, as tests for other entities might also need it,
+     * if they test an entity which has a required relationship to the User entity.
+     */
+    public static User createEntity() {
+        User user = new User();
+        <%_ if (databaseType === 'cassandra') { _%>
+        user.setId(UUID.randomUUID().toString());
+        <%_ } _%>
+        user.setLogin("johndoe");
+        <%_ if (authenticationType !== 'oauth2') { _%>
+        user.setPassword(RandomStringUtils.random(60));
+        <%_ } _%>
+        user.setActivated(true);
+        user.setEmail("johndoe@localhost");
+        user.setFirstName("john");
+        user.setLastName("doe");
+        <%_ if (databaseType !== 'cassandra') { _%>
+        user.setImageUrl("http://placehold.it/50x50");
+        <%_ } _%>
+        user.setLangKey("en");
+        return user;
+    }
+
     @Before
     public void init() {<% if ((databaseType == 'sql' || databaseType == 'mongodb') && authenticationType == 'session') { %>
         persistentTokenRepository.deleteAll();<% } %>
         <%_ if (databaseType !== 'sql') { _%>
         userRepository.deleteAll();
         <%_ } _%>
-        user = UserResourceIntTest.createEntity(<% if (databaseType === 'sql') { %>null<% } %>);
+        user = createEntity();
     }<% if ((databaseType == 'sql' || databaseType == 'mongodb') && authenticationType == 'session') { %>
 
     @Test
@@ -71,7 +108,7 @@ public class UserServiceIntTest <% if (databaseType == 'cassandra') { %>extends 
         assertThat(persistentTokenRepository.findByUser(user)).hasSize(existingCount + 2);
         userService.removeOldPersistentTokens();
         assertThat(persistentTokenRepository.findByUser(user)).hasSize(existingCount + 1);
-    }<% } %><% if (databaseType == 'sql' || databaseType == 'mongodb') { %>
+    }<% } %><% if (authenticationType !== 'oauth2' && (databaseType === 'sql' || databaseType === 'mongodb')) { %>
 
     @Test
     <%_ if (databaseType === 'sql') { _%>

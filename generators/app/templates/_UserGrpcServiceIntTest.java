@@ -10,7 +10,9 @@ import <%= packageName %>.repository.UserRepository;
 import <%= packageName %>.repository.search.UserSearchRepository;
 <%_ } _%>
 import <%= packageName %>.security.AuthoritiesConstants;
+<%_ if (authenticationType !== 'oauth2') { _%>
 import <%= packageName %>.service.MailService;
+<%_ } _%>
 import <%= packageName %>.service.UserService;
 
 import com.google.protobuf.Empty;
@@ -21,7 +23,9 @@ import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
+<%_ if (authenticationType !== 'oauth2') { _%>
 import org.apache.commons.lang3.RandomStringUtils;
+<%_ } _%>
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -80,9 +84,11 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
     @Autowired
     private UserRepository userRepository;
 
+    <%_ if (authenticationType !== 'oauth2') { _%>
     @Autowired
     private MailService mailService;
 
+    <%_ } _%>
     @Autowired
     private UserService userService;
 
@@ -102,7 +108,7 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
 
     @Before
     public void setUp() throws IOException {
-        UserGrpcService userGrpcService = new UserGrpcService(userRepository, mailService, userService, userProtoMapper<% if (searchEngine === 'elasticsearch') { %>, userSearchRepository<% } %>);
+        UserGrpcService userGrpcService = new UserGrpcService(<% if (authenticationType !== 'oauth2') { %>userRepository, mailService, <% } %>userService, userProtoMapper<% if (searchEngine === 'elasticsearch') { %>, userSearchRepository<% } %>);
         String uniqueServerName = "Mock server for " + UserGrpcService.class;
         mockServer = InProcessServerBuilder
             .forName(uniqueServerName).directExecutor().addService(userGrpcService).build().start();
@@ -128,7 +134,9 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
         user.setId(UUID.randomUUID().toString());
         <%_ } _%>
         user.setLogin(DEFAULT_LOGIN);
+        <%_ if (authenticationType !== 'oauth2') { _%>
         user.setPassword(RandomStringUtils.random(60));
+        <%_ } _%>
         user.setActivated(true);
         user.setEmail(DEFAULT_EMAIL);
         user.setFirstName(DEFAULT_FIRSTNAME);
@@ -147,6 +155,7 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
         <%_ } _%>
         user = createEntity(<% if (databaseType === 'sql') { %>null<% } %>);
     }
+    <%_ if (authenticationType !== 'oauth2') { _%>
 
     @Test
     <%_ if (databaseType === 'sql') { _%>
@@ -303,6 +312,7 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
         List<User> userList = userRepository.findAll();
         assertThat(userList).hasSize(databaseSizeBeforeCreate);
     }
+    <%_ } _%>
 
     @Test
     <%_ if (databaseType === 'sql') { _%>
@@ -367,6 +377,7 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
             assertThat(e.getStatus().getCode()).isEqualTo(Status.Code.NOT_FOUND);
         }
     }
+    <%_ if (authenticationType !== 'oauth2') { _%>
 
     @Test
     <%_ if (databaseType === 'sql') { _%>
@@ -595,6 +606,7 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
         List<User> userList = userRepository.findAll();
         assertThat(userList).hasSize(databaseSizeBeforeDelete - 1);
     }
+    <%_ } _%>
     <%_ if (databaseType == 'sql' || databaseType == 'mongodb') { _%>
 
     @Test

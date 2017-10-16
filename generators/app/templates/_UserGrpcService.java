@@ -1,13 +1,17 @@
 package <%= packageName %>.grpc;
 
+<%_ if (authenticationType !== 'oauth2') { _%>
 import <%= packageName %>.domain.User;
 import <%= packageName %>.repository.UserRepository;
+<%_ } _%>
 <%_ if (searchEngine === 'elasticsearch') { _%>
 import <%= packageName %>.repository.search.UserSearchRepository;
 <%_ } _%>
 import <%= packageName %>.security.AuthoritiesConstants;
 import <%= packageName %>.security.SecurityUtils;
+<%_ if (authenticationType !== 'oauth2') { _%>
 import <%= packageName %>.service.MailService;
+<%_ } _%>
 import <%= packageName %>.service.UserService;
 
 import com.google.protobuf.Empty;
@@ -26,29 +30,33 @@ public class UserGrpcService extends RxUserServiceGrpc.UserServiceImplBase {
 
     private final org.slf4j.Logger log = LoggerFactory.getLogger(UserGrpcService.class);
 
+    <%_ if (authenticationType !== 'oauth2') { _%>
     private final UserRepository userRepository;
 
     private final MailService mailService;
 
+    <%_ } _%>
     private final UserService userService;
 
     private final UserProtoMapper userProtoMapper;
 
     <%_ if (searchEngine === 'elasticsearch') { _%>
     private final UserSearchRepository userSearchRepository;
+
     <%_ } _%>
-
-    public UserGrpcService(UserRepository userRepository, MailService mailService,
-                           UserService userService, UserProtoMapper userProtoMapper<% if (searchEngine === 'elasticsearch') { %>, UserSearchRepository userSearchRepository<% } %>) {
-
+    public UserGrpcService(<% if (authenticationType !== 'oauth2') { %>UserRepository userRepository, MailService mailService, <% } %>UserService userService,
+                        UserProtoMapper userProtoMapper<% if (searchEngine === 'elasticsearch') { %>, UserSearchRepository userSearchRepository<% } %>) {
+        <%_ if (authenticationType !== 'oauth2') { _%>
         this.userRepository = userRepository;
         this.mailService = mailService;
+        <%_ } _%>
         this.userService = userService;
         this.userProtoMapper = userProtoMapper;
         <%_ if (searchEngine === 'elasticsearch') { _%>
         this.userSearchRepository = userSearchRepository;
         <%_ } _%>
     }
+    <%_ if (authenticationType !== 'oauth2') { _%>
 
     @Override
     public Single<UserProto> createUser(Single<UserProto> request) {
@@ -88,6 +96,7 @@ public class UserGrpcService extends RxUserServiceGrpc.UserServiceImplBase {
             .map(user -> userService.updateUser(user).orElseThrow(Status.NOT_FOUND::asException))
             .map(userProtoMapper::userDTOToUserProto);
     }
+    <%_ } _%>
 
     @Override
     public Flowable<UserProto> getAllUsers(Single<<% if (databaseType === 'sql' || databaseType === 'mongodb') { %>PageRequest<% } else { %>Empty<% } %>> request) {
@@ -111,6 +120,7 @@ public class UserGrpcService extends RxUserServiceGrpc.UserServiceImplBase {
             .map(login -> userService.getUserWithAuthoritiesByLogin(login).orElseThrow(Status.NOT_FOUND::asException))
             .map(userProtoMapper::userToUserProto);
     }
+    <%_ if (authenticationType !== 'oauth2') { _%>
 
     @Override
     public Single<Empty> deleteUser(Single<StringValue> request) {
@@ -120,6 +130,7 @@ public class UserGrpcService extends RxUserServiceGrpc.UserServiceImplBase {
             .doOnSuccess(userService::deleteUser)
             .map(l -> Empty.newBuilder().build());
     }
+    <%_ } _%>
     <%_ if (databaseType === 'sql' || databaseType === 'mongodb') { _%>
 
     @Override

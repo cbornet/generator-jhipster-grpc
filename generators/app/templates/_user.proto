@@ -11,6 +11,7 @@ import "util/pagination.proto";<% } %>
 package <%=packageName%>;
 
 service UserService {
+    <%_ if (authenticationType !== 'oauth2') { _%>
     // Create a new User.
     // request : the UserProto to create
     // response : the created UserProto or a ALREADY_EXISTS error
@@ -21,6 +22,7 @@ service UserService {
     // response : the updated UserProto
     rpc UpdateUser (UserProto) returns (UserProto);
 
+    <%_ } _%>
     // Get all the Users.
     // response : the list of UserProtos
     rpc GetAllUsers (<% if (databaseType === 'sql' || databaseType === 'mongodb') { %>util.PageRequest<% } else { %>google.protobuf.Empty<% } %>) returns (stream UserProto);
@@ -29,11 +31,13 @@ service UserService {
     // request : the id of the UserProto to retrieve
     // response : the UserProto or a NOT_FOUND error
     rpc GetUser (google.protobuf.StringValue) returns (UserProto);
+    <%_ if (authenticationType !== 'oauth2') { _%>
 
     // Delete a User from it's id.
     // request : the id of the UserProto to delete
     // response : empty or a NOT_FOUND error
     rpc DeleteUser (google.protobuf.StringValue) returns (google.protobuf.Empty);
+    <%_ } _%>
     <%_ if (databaseType === 'sql' || databaseType === 'mongodb') { _%>
 
     // Get all authorities
@@ -60,7 +64,9 @@ message UserProto {
         <%=idProtoType%> id = 1;
     }
     string login = 2;
+    <%_ if (authenticationType !== 'oauth2') { _%>
     string password = 3;
+    <%_ } _%>
     string first_name = 4;
     string last_name = 5;
     string email = 6;
