@@ -283,7 +283,9 @@ module.exports = yeoman.Base.extend({
                     options: {
                         regenerate: true,
                         'skip-install': true,
-                        force: this.options['force']
+                        force: this.options['force'],
+                        'skip-server':true,
+                        'skip-client':true
                     },
                     args: [entity]
                 });
