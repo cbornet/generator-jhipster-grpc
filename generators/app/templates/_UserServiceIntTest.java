@@ -18,6 +18,9 @@ import <%=packageName%>.service.util.RandomUtil;
 <%_ if ((databaseType == 'sql' || databaseType == 'mongodb') && authenticationType == 'session') { _%>
 import java.time.LocalDate;
 <%_ } _%>
+<%_ if (authenticationType !== 'oauth2') { _%>
+import org.apache.commons.lang3.RandomStringUtils;
+<%_ } _%>
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -30,11 +33,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 <%_ } _%>
 
-<%_ if (authenticationType !== 'oauth2' && (databaseType === 'sql' || databaseType === 'mongodb')) { _%>
-import java.util.Optional;
-<%_ } _%>
 <%_ if (authenticationType !== 'oauth2') { _%>
 import java.util.List;
+<%_ } _%>
+<%_ if (authenticationType !== 'oauth2' && (databaseType === 'sql' || databaseType === 'mongodb')) { _%>
+import java.util.Optional;
+<%_ } _%><%_ if (databaseType === 'cassandra') { _%>
+import java.util.UUID;
 <%_ } _%>
 
 import static org.assertj.core.api.Assertions.*;
