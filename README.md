@@ -70,7 +70,7 @@ TODOs:
   - [x] ~~Profile info~~
   - [x] ~~Spring Boot Actuators~~
 - [ ] Support streaming from the DB (Stream<> in repository)
-- [x] Support streaming back-pressure (reactive streams with rxJava2 or Reactor)
+- [x] ~~Support streaming back-pressure (reactive streams with rxJava2 or Reactor)~~
 - [ ] Client-side configuration (micro-services)
 - [ ] Client-side load-balancing with service discovery (micro-services)
 - [ ] Generator tests
