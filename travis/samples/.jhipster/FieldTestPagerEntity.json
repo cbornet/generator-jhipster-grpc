@@ -210,6 +210,19 @@
             ]
         },
         {
+            "fieldName": "enumJade",
+            "fieldType": "EnumFieldClass",
+            "fieldValues": "ENUM_VALUE_1,ENUM_VALUE_2,ENUM_VALUE_3"
+        },
+        {
+            "fieldName": "enumRequiredJade",
+            "fieldType": "EnumRequiredFieldClass",
+            "fieldValues": "ENUM_VALUE_1,ENUM_VALUE_2,ENUM_VALUE_3",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
             "fieldName": "byteImageJade",
             "fieldType": "byte[]",
             "fieldTypeBlobContent": "image"
