@@ -108,6 +108,7 @@ module.exports = yeoman.Base.extend({
                 } else {
                     f.fieldDomainType = f.fieldType;
                 }
+                f.fieldTypeUpperUnderscored = _.snakeCase(f.fieldType).toUpperCase();
                 f.fieldProtobufType = getProtobufType(f.fieldDomainType);
                 f.isProtobufCustomType = isProtobufCustomType(f.fieldProtobufType);
             });

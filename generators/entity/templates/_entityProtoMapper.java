@@ -1,13 +1,13 @@
 package <%=packageName%>.grpc.entity.<%=entityUnderscoredName%>;
 
 <% if (dto !== 'mapstruct') { %>
-import <%=packageName%>.domain.<%=instanceType%>;<% } %>
+import <%=packageName%>.domain.<%= instanceType %>;<% } %>
 <%_ for (idx in fields) {
     if(fields[idx].fieldIsEnum) { _%>
 import <%=packageName%>.domain.enumeration.<%=fields[idx].fieldType%>;
 <%_ }}_%>
 import <%=packageName%>.grpc.ProtobufMappers;<% if (dto === 'mapstruct') { %>
-import <%=packageName%>.service.dto.<%=instanceType%>;<% } %>
+import <%=packageName%>.service.dto.<%= instanceType %>;<% } %>
 <%
   if (dto !== 'mapstruct') {
     var existingMapperImport = [];
@@ -32,7 +32,7 @@ import java.util.UUID;<% } %>
         if (existingMappings.indexOf(r.otherEntityNameCapitalized) == -1 && r.otherEntityNameCapitalized !== entityClass) {
           existingMappings.push(r.otherEntityNameCapitalized);
       %>, <%= r.otherEntityNameCapitalized %>ProtoMapper.class<% } } } } %>})
-public interface <%=entityClass%>ProtoMapper {
+public interface <%= entityClass %>ProtoMapper {
 
 <%_
 // Proto -> entity mapping
@@ -47,17 +47,17 @@ if (dto  !== 'mapstruct') {
     @Mapping(target = "<%= relationshipNamePlural %>", ignore = true)<% } else if (relationshipType == 'one-to-many') { %>
     @Mapping(target = "<%= relationshipNamePlural %>", ignore = true)<% } else if (relationshipType == 'one-to-one' && ownerSide == false) { %>
     @Mapping(target = "<%= relationshipName %>", ignore = true)<% } } } %>
-    <%=instanceType%> <%=entityInstance%>ProtoTo<%=instanceType%>(<%=entityClass%>Proto <%=entityInstance%>Proto);
+    <%= instanceType %> <%=entityInstance%>ProtoTo<%= instanceType %>(<%= entityClass %>Proto <%=entityInstance%>Proto);
 
     @AfterMapping
     // Set back null fields : necessary until https://github.com/google/protobuf/issues/2984 is fixed
-    default void <%=entityInstance%>ProtoTo<%=instanceType%>(<%=entityClass%>Proto <%=entityInstance%>Proto, @MappingTarget <%=instanceType%> <%=instanceName%>) {
+    default void <%=entityInstance%>ProtoTo<%= instanceType %>(<%= entityClass %>Proto <%=entityInstance%>Proto, @MappingTarget <%= instanceType %> <%= instanceName %>) {
         if ( <%=entityInstance%>Proto == null ) {
             return;
         }
 
-        if(<%=entityInstance%>Proto.getIdOneofCase() != <%=entityClass%>Proto.IdOneofCase.ID) {
-            <%=instanceName%>.setId(null);
+        if(<%=entityInstance%>Proto.getIdOneofCase() != <%= entityClass %>Proto.IdOneofCase.ID) {
+            <%= instanceName %>.setId(null);
         }
 <%_ for (f of fields) {
     let nullable = false;
@@ -66,11 +66,11 @@ if (dto  !== 'mapstruct') {
     }_%>
     <%_ if (nullable) { _%>
         if(<%= entityInstance %>Proto.get<%= f.fieldInJavaBeanMethod %>OneofCase() != <%= entityClass %>Proto.<%= f.fieldInJavaBeanMethod %>OneofCase.<%= f.fieldNameUnderscored.toUpperCase() %>) {
-            <%=instanceName%>.set<%= f.fieldInJavaBeanMethod %>(null);
+            <%= instanceName %>.set<%= f.fieldInJavaBeanMethod %>(null);
         }
         <%_ if ((f.fieldDomainType === 'byte[]' || f.fieldDomainType === 'ByteBuffer') && f.fieldTypeBlobContent != 'text') { _%>
         if(<%= entityInstance %>Proto.get<%= f.fieldInJavaBeanMethod %>ContentTypeOneofCase() != <%= entityClass %>Proto.<%= f.fieldInJavaBeanMethod %>ContentTypeOneofCase.<%= f.fieldNameUnderscored.toUpperCase() %>_CONTENT_TYPE) {
-            <%=instanceName%>.set<%= f.fieldInJavaBeanMethod %>ContentType(null);
+            <%= instanceName %>.set<%= f.fieldInJavaBeanMethod %>ContentType(null);
         }
         <%_ } _%>
     <%_ } _%>
@@ -78,14 +78,14 @@ if (dto  !== 'mapstruct') {
 <%_for (r of relationships) { _%>
     <%_ if ((r.relationshipType == 'many-to-one' || (r.relationshipType == 'one-to-one' && r.ownerSide == true)) && r.relationshipValidate !== true) { _%>
         if(<%= entityInstance %>Proto.get<%= r.relationshipNameCapitalized %>IdOneofCase() != <%= entityClass %>Proto.<%= r.relationshipNameCapitalized %>IdOneofCase.<%= r.relationshipNameUnderscored.toUpperCase() %>_ID) {
-            <%=instanceName%>.set<%= r.relationshipNameCapitalized %><% if (dto === 'mapstruct') { %>Id<% } %>(null);
+            <%= instanceName %>.set<%= r.relationshipNameCapitalized %><% if (dto === 'mapstruct') { %>Id<% } %>(null);
         }
     <%_ } _%>
 <%_ } _%>
     }
 
-    default <%=entityClass%>Proto.Builder create<%=entityClass%>Proto () {
-        return <%=entityClass%>Proto.newBuilder();
+    default <%= entityClass %>Proto.Builder create<%= entityClass %>Proto () {
+        return <%= entityClass %>Proto.newBuilder();
     }
 
 <%_
@@ -99,23 +99,29 @@ if (dto  !== 'mapstruct') {
         _%>
     @Mapping(source = "<%= relationshipName %>.id", target = "<%= relationships[idx].relationshipFieldName %>Id")<% if (relationships[idx].otherEntityFieldCapitalized !='Id' && relationships[idx].otherEntityFieldCapitalized != '') { %>
     @Mapping(source = "<%= relationshipName %>.<%= relationships[idx].otherEntityField %>", target = "<%= relationships[idx].relationshipFieldName %><%= relationships[idx].otherEntityFieldCapitalized %>")<% } } } } %>
-    <%=entityClass%>Proto.Builder <%=instanceName%>To<%=entityClass%>ProtoBuilder(<%=instanceType%> <%=instanceName%>);
+    <%= entityClass %>Proto.Builder <%= instanceName %>To<%= entityClass %>ProtoBuilder(<%= instanceType %> <%= instanceName %>);
 
-    default <%=entityClass%>Proto <%=instanceName%>To<%=entityClass%>Proto(<%=instanceType%> <%=instanceName%>) {
-        if (<%=instanceName%> == null) {
+    default <%= entityClass %>Proto <%= instanceName %>To<%= entityClass %>Proto(<%= instanceType %> <%= instanceName %>) {
+        if (<%= instanceName %> == null) {
             return null;
         }
-        return <%=instanceName%>To<%=entityClass%>ProtoBuilder(<%=instanceName%>).build();
+        return <%= instanceName %>To<%= entityClass %>ProtoBuilder(<%= instanceName %>).build();
     }
 
-<%_ for (idx in fields) {
-    if(fields[idx].fieldIsEnum) {
-        var fieldType = fields[idx].fieldType;
-        var fieldName = fieldType _%>
-    <%=fieldType%>Proto convert<%=fieldType%>To<%=fieldType%>Proto(<%=fieldType%> enumValue);
+<%_ for (field of fields) {
+    if(field.fieldIsEnum) {
+        var fieldType = field.fieldType;
+        let enumValues = field.fieldValues.split(','); _%>
+    <%_ for (let idx in enumValues) { _%>
+    @ValueMapping(source = "<%= enumValues[idx].trim() %>", target = "<%= field.fieldTypeUpperUnderscored %>_<%= enumValues[idx].trim() %>")
+    <%_ } _%>
+    <%= entityClass %>Proto.<%= fieldType %>Proto convert<%= fieldType %>To<%= fieldType %>Proto(<%= fieldType %> enumValue);
 
     @ValueMapping(source = "UNRECOGNIZED", target = MappingConstants.NULL)
-    <%=fieldType%> convert<%=fieldType%>ProtoTo<%=fieldType%>(<%=fieldType%>Proto enumValue);
+    <%_ for (let idx in enumValues) { _%>
+    @ValueMapping(source = "<%= field.fieldTypeUpperUnderscored %>_<%= enumValues[idx].trim() %>", target = "<%= enumValues[idx].trim() %>")
+    <%_ } _%>
+    <%= fieldType %> convert<%= fieldType %>ProtoTo<%= fieldType %>(<%= entityClass %>Proto.<%= fieldType %>Proto enumValue);
 
 <%_ }} _%>
 

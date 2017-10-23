@@ -57,23 +57,22 @@ message <%= entityClass %>SearchPageRequest {
 }
 <%_ } _%>
 
-<%_ for (field of fields) {
-    if (field.fieldIsEnum) {
-        let enumValues = field.fieldValues.split(',');_%>
-enum <%=field.fieldType %>Proto {
-        <%_ for (let idx in enumValues) { _%>
-    <%= enumValues[idx].trim() %> = <%= idx %>;
-        <%_ } _%>
-}
-     <%_ } _%>
-<%_ } _%>
-
 <%= entityJavadoc %>
 message <%= entityClass %>Proto {
     oneof id_oneof {
         <%=idProtoType%> id = 1;
     }
 
+    <%_ for (field of fields) {
+         if (field.fieldIsEnum) {
+        let enumValues = field.fieldValues.split(',');_%>
+    enum <%=field.fieldType %>Proto {
+            <%_ for (let idx in enumValues) { _%>
+        <%= field.fieldTypeUpperUnderscored %>_<%= enumValues[idx].trim() %> = <%= idx %>;
+            <%_ } _%>
+    }
+
+    <%_ }} _%>
 <%_ var protobufFieldNumber = 2;
 
 for (field of fields) {
