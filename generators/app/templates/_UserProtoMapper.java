@@ -3,38 +3,30 @@ package <%=packageName%>.grpc;
 import <%=packageName%>.domain.User;
 import <%=packageName%>.service.dto.UserDTO;
 
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.NullValueCheckStrategy;
+import org.mapstruct.*;
 
 import java.util.HashSet;
 
 @Mapper(componentModel = "spring", nullValueCheckStrategy = NullValueCheckStrategy.ALWAYS, uses = {ProtobufMappers.class})
 public interface UserProtoMapper {
 
-    default UserDTO userProtoToUserDTO(UserProto userProto) {
-        if ( userProto == null ) {
-            return null;
-        }
-        return new UserDTO(
-            userProto.getIdOneofCase() == UserProto.IdOneofCase.ID ? userProto.getId() : null,
-            userProto.getLogin().isEmpty() ? null : userProto.getLogin(),
-            userProto.getFirstName().isEmpty() ? null : userProto.getFirstName(),
-            userProto.getLastName().isEmpty() ? null : userProto.getLastName(),
-            userProto.getEmail().isEmpty() ? null : userProto.getEmail(),
-            userProto.getActivated(),
-            <%_ if (databaseType == 'mongodb' || databaseType == 'sql') { _%>
-            userProto.getImageUrl().isEmpty() ? null : userProto.getImageUrl(),
-            <%_ } _%>
-            userProto.getLangKey().isEmpty() ? null : userProto.getLangKey(),
-            <%_ if (databaseType == 'mongodb' || databaseType == 'sql') { _%>
-            userProto.getCreatedBy().isEmpty() ? null : userProto.getCreatedBy(),
-            ProtobufMappers.timestampToInstant(userProto.getCreatedDate()),
-            userProto.getLastModifiedBy().isEmpty() ? null: userProto.getLastModifiedBy(),
-            ProtobufMappers.timestampToInstant(userProto.getLastModifiedDate()),
-            <%_ } _%>
-            new HashSet<>(userProto.getAuthoritiesList())
-        );
+    @Mapping(target = "firstName", ignore = true)
+    @Mapping(target = "lastName", ignore = true)
+    <%_ if (databaseType == 'mongodb' || databaseType == 'sql') { _%>
+    @Mapping(target = "imageUrl", ignore = true)
+    <%_ } _%>
+    @Mapping(target = "langKey", ignore = true)
+    UserDTO userProtoToUserDTO(UserProto userProto);
+
+    @AfterMapping
+    default void userProtoToUserDTO(UserProto userProto, @MappingTarget UserDTO userDTO) {
+        userDTO.setFirstName(userProto.getFirstName().isEmpty() ? null : userProto.getFirstName());
+        userDTO.setLastName(userProto.getLastName().isEmpty() ? null : userProto.getLastName());
+        <%_ if (databaseType == 'mongodb' || databaseType == 'sql') { _%>
+        userDTO.setImageUrl(userProto.getImageUrl().isEmpty() ? null : userProto.getImageUrl());
+        <%_ } _%>
+        userDTO.setLangKey(userProto.getLangKey().isEmpty() ? null : userProto.getLangKey());
+        userDTO.setAuthorities(new HashSet<>(userProto.getAuthoritiesList()));
     }
 
     default UserProto userDTOToUserProto(UserDTO userDTO) {

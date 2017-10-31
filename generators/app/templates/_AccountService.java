@@ -22,6 +22,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.lognet.springboot.grpc.GRpcService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.util.Pair;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 <%_ if (databaseType === 'sql') { _%>
@@ -71,23 +72,10 @@ public class AccountService extends RxAccountServiceGrpc.AccountServiceImplBase 
             .switchIfEmpty(Single.error(Status.ALREADY_EXISTS.withDescription("Login already in use").asException()))
             .filter(userProto -> !userRepository.findOneByEmailIgnoreCase(userProto.getEmail()).isPresent())
             .switchIfEmpty(Single.error(Status.ALREADY_EXISTS.withDescription("Email already in use").asException()))
-            .map(userProto -> new ManagedUserVM(
-                null,
-                userProto.getLogin().isEmpty() ? null : userProto.getLogin(),
-                userProto.getPassword().isEmpty() ? null : userProto.getPassword(),
-                userProto.getFirstName().isEmpty() ? null : userProto.getFirstName(),
-                userProto.getLastName().isEmpty() ? null : userProto.getLastName(),
-                userProto.getEmail().isEmpty() ? null : userProto.getEmail().toLowerCase(),
-                false,
-                <%_ if (databaseType === 'mongodb' || databaseType === 'sql') { _%>
-                userProto.getImageUrl().isEmpty() ? null : userProto.getImageUrl(),
-                <%_ } _%>
-                userProto.getLangKey().isEmpty() ? null : userProto.getLangKey(),
-                null<% if (databaseType === 'mongodb' || databaseType === 'sql') { %>, null, null, null, null<% } %>
-            ))
-            .map(user -> {
+            .map(userProto -> Pair.of(userProtoMapper.userProtoToUserDTO(userProto), userProto.getPassword()))
+            .map(pair -> {
                 try {
-                    return userService.registerUser(user);
+                    return userService.registerUser(pair.getFirst(), pair.getSecond());
                 <%_ if (databaseType === 'sql') { _%>
                 } catch (TransactionSystemException e) {
                     if (e.getOriginalException().getCause() instanceof ConstraintViolationException) {
