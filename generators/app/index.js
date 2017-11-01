@@ -233,12 +233,6 @@ module.exports = yeoman.Base.extend({
                 jhipsterFunc.applyFromGradleScript('gradle/grpc');
             }
 
-            if (jhipsterVar.authenticationType === 'jwt') {
-                this.template('_jwt.proto', protoPackageDir + 'jwt.proto');
-                this.template('_JWTService.java', javaDir + 'grpc/JWTService.java');
-                this.template('_JWTServiceIntTest.java', testDir + 'grpc/JWTServiceIntTest.java');
-            }
-
             if (!this.skipUserManagement || (this.authenticationType === 'oauth2' && this.applicationType === 'monolith')) {
                 this.template('_user.proto', protoPackageDir + 'user.proto');
                 this.template('_UserGrpcService.java', javaDir + 'grpc/UserGrpcService.java');
@@ -248,6 +242,11 @@ module.exports = yeoman.Base.extend({
                     this.template('_audit.proto', protoPackageDir + 'audit.proto');
                     this.template('_AuditGrpcService.java', javaDir + 'grpc/AuditGrpcService.java');
                     this.template('_AuditGrpcServiceIntTest.java', testDir + 'grpc/AuditGrpcServiceIntTest.java');
+                }
+                if (this.authenticationType === 'jwt') {
+                    this.template('_jwt.proto', protoPackageDir + 'jwt.proto');
+                    this.template('_JWTService.java', javaDir + 'grpc/JWTService.java');
+                    this.template('_JWTServiceIntTest.java', testDir + 'grpc/JWTServiceIntTest.java');
                 }
             }
 
