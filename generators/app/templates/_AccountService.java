@@ -47,8 +47,8 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 <%_ if (authenticationType === 'oauth2') { _%>
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
-
     <%_ if (applicationType !== 'monolith') { _%>
+
 import java.util.Map;
 import java.util.stream.Collectors;
     <%_ } _%>
@@ -61,7 +61,6 @@ import javax.validation.ConstraintViolationException;
     <%_ if (authenticationType === 'session') { _%>
 import java.util.ArrayList;
     <%_ } _%>
-import java.util.Optional;
 <%_ } _%>
 
 @GRpcService
@@ -73,7 +72,7 @@ public class AccountService extends RxAccountServiceGrpc.AccountServiceImplBase 
     private final UserRepository userRepository;
 
     private final MailService mailService;
-    
+
     <%_ } _%>
     <%_ if (authenticationType !== 'oauth2' || applicationType === 'monolith') { _%>
     private final UserService userService;
@@ -157,7 +156,7 @@ public class AccountService extends RxAccountServiceGrpc.AccountServiceImplBase 
     }
     <%_ } _%>
 <%_ } else { _%>
-            .map(e -> Optional.ofNullable(userService.getUserWithAuthorities()).orElseThrow(Status.INTERNAL::asException))
+            .map(e -> userService.getUserWithAuthorities().orElseThrow(Status.INTERNAL::asException))
             .map(UserDTO::new)
             .map(userProtoMapper::userDTOToUserProto);
     }
@@ -204,14 +203,15 @@ public class AccountService extends RxAccountServiceGrpc.AccountServiceImplBase 
 
     @Override
     public Single<Empty> saveAccount(Single<UserProto> request) {
+        String currentLogin = SecurityUtils.getCurrentUserLogin().orElseThrow(Status.INTERNAL::asRuntimeException);
         return request
             .filter(user -> !userRepository.findOneByEmailIgnoreCase(user.getEmail())
                 .map(User::getLogin)
-                .map(login -> !login.equalsIgnoreCase(SecurityUtils.getCurrentUserLogin()))
+                .map(login -> !login.equalsIgnoreCase(currentLogin))
                 .isPresent()
             )
             .switchIfEmpty(Single.error(Status.ALREADY_EXISTS.withDescription("Email already in use").asException()))
-            .filter(user -> userRepository.findOneByLogin(SecurityUtils.getCurrentUserLogin()).isPresent())
+            .filter(user -> userRepository.findOneByLogin(currentLogin).isPresent())
             .switchIfEmpty(Single.error(Status.INTERNAL.asException()))
             .doOnSuccess(user -> {
                 try {
