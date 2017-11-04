@@ -239,7 +239,7 @@ module.exports = yeoman.Base.extend({
                 this.template('_AccountServiceIntTest.java', testDir + 'grpc/AccountServiceIntTest.java');
                 this.template('_user.proto', protoPackageDir + 'user.proto');
                 this.template('_UserProtoMapper.java', javaDir + 'grpc/UserProtoMapper.java');
-                if (this.applicationType === 'monolith') {
+                if (this.applicationType === 'monolith' || this.authenticationType !== 'oauth2') {
                     this.template('_UserGrpcService.java', javaDir + 'grpc/UserGrpcService.java');
                     this.template('_UserGrpcServiceIntTest.java', testDir + 'grpc/UserGrpcServiceIntTest.java');
                     if (this.databaseType === 'sql' || this.databaseType === 'mongodb') {

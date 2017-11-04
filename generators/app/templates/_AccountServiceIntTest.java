@@ -70,16 +70,22 @@ import java.time.LocalDate;
     <%_ } _%>
 import java.time.temporal.ChronoUnit;
 <%_ } _%>
-<%_ if (authenticationType === 'oauth2' && applicationType === 'monolith') { _%>
-import java.util.*;
-<%_ } _%>
 <%_ if (authenticationType === 'oauth2') { _%>
+    <%_ if (applicationType === 'monolith') { _%>
+import java.util.*;
+    <%_ } else { _%>
 import java.util.Collections;
+    <%_ } _%>
 <%_ } _%>
 <%_ if (authenticationType !== 'oauth2') { _%>
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
+<%_ } _%>
+<%_ if (databaseType === 'cassandra') { _%>
+import java.util.UUID;
+<%_ } _%>
+<%_ if (authenticationType !== 'oauth2') { _%>
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 <%_ } _%>
