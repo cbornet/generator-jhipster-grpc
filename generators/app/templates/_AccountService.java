@@ -211,8 +211,7 @@ public class AccountService extends RxAccountServiceGrpc.AccountServiceImplBase 
                 .isPresent()
             )
             .switchIfEmpty(Single.error(Status.ALREADY_EXISTS.withDescription("Email already in use").asException()))
-            .filter(user -> userRepository.findOneByLogin(currentLogin).isPresent())
-            .switchIfEmpty(Single.error(Status.INTERNAL.asException()))
+            .map(user -> userRepository.findOneByLogin(currentLogin).orElseThrow(Status.INTERNAL::asException))
             .doOnSuccess(user -> {
                 try {
                     userService.updateUser(
@@ -253,7 +252,10 @@ public class AccountService extends RxAccountServiceGrpc.AccountServiceImplBase 
     @Override
     public Flowable<PersistentToken> getCurrentSessions(Single<Empty> request) {
         return request
-            .map(e -> userRepository.findOneByLogin(SecurityUtils.getCurrentUserLogin()).orElseThrow(Status.INTERNAL::asException))
+            .map(e-> SecurityUtils.getCurrentUserLogin()
+                .flatMap(userRepository::findOneByLogin)
+                .orElseThrow(Status.INTERNAL::asException)
+            )
             .map(persistentTokenRepository::findByUser)
             .flatMapPublisher(Flowable::fromIterable)
             .map(ProtobufMappers::persistentTokenToPersistentTokenProto);
@@ -263,8 +265,8 @@ public class AccountService extends RxAccountServiceGrpc.AccountServiceImplBase 
     public Single<Empty> invalidateSession(Single<StringValue> request) {
         return request
             .map(StringValue::getValue)
-            .doOnSuccess(series -> userRepository
-                .findOneByLogin(SecurityUtils.getCurrentUserLogin())
+            .doOnSuccess(series -> SecurityUtils.getCurrentUserLogin()
+                .flatMap(userRepository::findOneByLogin)
                 .map(persistentTokenRepository::findByUser)
                 .orElse(new ArrayList<>())
                 .stream()
