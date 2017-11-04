@@ -459,7 +459,7 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
     @Transactional<% } %>
     public void testActivateAccount() throws Exception {
         final String activationKey = "some activationKey";
-        User user = createEntity(<% if (databaseType === 'sql') { %>null<% } %>);
+        User user = createUser(<% if (databaseType === 'sql') { %>null<% } %>);
         user.setLogin("grpc-activate-account");
         user.setEmail("grpc-activate-account@example.com");
         user.setActivated(false);
@@ -489,7 +489,7 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
     @Test<% if (databaseType === 'sql') { %>
     @Transactional<% } %>
     public void testSaveAccount() throws Exception {
-        User user = createEntity(<% if (databaseType === 'sql') { %>null<% } %>);
+        User user = createUser(<% if (databaseType === 'sql') { %>null<% } %>);
         user.setLogin("grpc-save-account");
         user.setEmail("grpc-save-account@example.com");
         user.setAuthorities(new HashSet<>());
@@ -526,7 +526,7 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
 
     @Test
     public void testSaveInvalidEmail() throws Exception {
-        User user = createEntity(<% if (databaseType === 'sql') { %>null<% } %>);
+        User user = createUser(<% if (databaseType === 'sql') { %>null<% } %>);
         user.setLogin("grpc-save-invalid-email");
         user.setEmail("grpc-save-invalid-email@example.com");
         user.setAuthorities(new HashSet<>());
@@ -561,7 +561,7 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
     @Test<% if (databaseType === 'sql') { %>
     @Transactional<% } %>
     public void testSaveAccountExistingEmail() throws Exception {
-        User user = createEntity(<% if (databaseType === 'sql') { %>null<% } %>);
+        User user = createUser(<% if (databaseType === 'sql') { %>null<% } %>);
         user.setLogin("grpc-save-account-existing-email");
         user.setEmail("grpc-save-account-existing-email@example.com");
         userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(user);
@@ -570,7 +570,7 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
             new TestingAuthenticationToken(user.getLogin(), "password");
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        User anotherUser = createEntity(<% if (databaseType === 'sql') { %>null<% } %>);
+        User anotherUser = createUser(<% if (databaseType === 'sql') { %>null<% } %>);
         anotherUser.setLogin("grpc-save-account-existing-email2");
         anotherUser.setEmail("grpc-save-account-existing-email2@localhost.com");
         userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(anotherUser);
@@ -599,7 +599,7 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
     @Test<% if (databaseType === 'sql') { %>
     @Transactional<% } %>
     public void testChangePassword() {
-        User user = createEntity(<% if (databaseType === 'sql') { %>null<% } %>);
+        User user = createUser(<% if (databaseType === 'sql') { %>null<% } %>);
         user.setLogin("grpc-change-password");
         user.setEmail("grpc-change-password@example.com");
         userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(user);
@@ -618,7 +618,7 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
     @Test<% if (databaseType === 'sql') { %>
     @Transactional<% } %>
     public void testChangePasswordTooSmall() {
-        User user = createEntity(<% if (databaseType === 'sql') { %>null<% } %>);
+        User user = createUser(<% if (databaseType === 'sql') { %>null<% } %>);
         user.setLogin("grpc-change-password-too-small");
         user.setEmail("grpc-change-password-too-small@example.com");
         userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(user);
@@ -638,7 +638,7 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
     @Test<% if (databaseType === 'sql') { %>
     @Transactional<% } %>
     public void testChangePasswordTooLong() {
-        User user = createEntity(<% if (databaseType === 'sql') { %>null<% } %>);
+        User user = createUser(<% if (databaseType === 'sql') { %>null<% } %>);
         user.setLogin("grpc-change-password-too-long");
         user.setEmail("grpc-change-password-too-long@example.com");
         userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(user);
@@ -664,7 +664,7 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
     @Test<% if (databaseType === 'sql') { %>
     @Transactional<% } %>
     public void testGetCurrentSessions() {
-        User user = createEntity(<% if (databaseType === 'sql') { %>null<% } %>);
+        User user = createUser(<% if (databaseType === 'sql') { %>null<% } %>);
         user.setLogin("grpc-current-sessions");
         user.setEmail("grpc-current-sessions@example.com");
         userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(user);
@@ -699,7 +699,7 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
     @Test<% if (databaseType === 'sql') { %>
     @Transactional<% } %>
     public void testInvalidateSession() {
-        User user = createEntity(<% if (databaseType === 'sql') { %>null<% } %>);
+        User user = createUser(<% if (databaseType === 'sql') { %>null<% } %>);
         user.setLogin("grpc-invalidate-session");
         user.setEmail("grpc-invalidate-session@example.com");
         userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(user);
@@ -729,7 +729,7 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
     @Test<% if (databaseType === 'sql') { %>
     @Transactional<% } %>
     public void testRequestPasswordReset() {
-        User user = createEntity(<% if (databaseType === 'sql') { %>null<% } %>);
+        User user = createUser(<% if (databaseType === 'sql') { %>null<% } %>);
         user.setLogin("grpc-password-reset");
         user.setEmail("grpc-password-reset@example.com");
         userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(user);
@@ -749,7 +749,7 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
     @Test<% if (databaseType === 'sql') { %>
     @Transactional<% } %>
     public void testFinishPasswordReset() {
-        User user =  createEntity(<% if (databaseType === 'sql') { %>null<% } %>);
+        User user =  createUser(<% if (databaseType === 'sql') { %>null<% } %>);
         user.setLogin("grpc-finish-password-reset");
         user.setEmail("grpc-finish-password-reset@example.com");
         user.setResetDate(Instant.now().plus(1, ChronoUnit.DAYS));
@@ -781,7 +781,7 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
     @Test<% if (databaseType === 'sql') { %>
     @Transactional<% } %>
     public void testFinishPasswordResetWrongKey() {
-        User user =  createEntity(<% if (databaseType === 'sql') { %>null<% } %>);
+        User user =  createUser(<% if (databaseType === 'sql') { %>null<% } %>);
         user.setLogin("grpc-finish-password-reset-wrong-key");
         user.setEmail("grpc-finish-password-reset-wrong-key@example.com");
         userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(user);
