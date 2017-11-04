@@ -31,6 +31,7 @@ import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -43,7 +44,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
-<%_ if (authenticationType === 'oauth2') { _%>
+<%_ if (authenticationType === 'oauth2' && applicationType !== 'monolith') { _%>
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 <%_ } _%>
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -63,14 +64,17 @@ import javax.persistence.EntityManager;
 <%_ } _%>
 import java.io.IOException;
 <%_ if (authenticationType !== 'oauth2') { _%>
-import java.time.temporal.ChronoUnit;
-    <%_ if (databaseType === 'sql' || databaseType === 'mongodb') { _%>
+import java.time.Instant;
+    <%_ if (authenticationType === 'session' && (databaseType === 'sql' || databaseType === 'mongodb')) { _%>
 import java.time.LocalDate;
     <%_ } _%>
-import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 <%_ } _%>
 <%_ if (authenticationType === 'oauth2' && applicationType === 'monolith') { _%>
 import java.util.*;
+<%_ } _%>
+<%_ if (authenticationType === 'oauth2') { _%>
+import java.util.Collections;
 <%_ } _%>
 <%_ if (authenticationType !== 'oauth2') { _%>
 import java.util.HashSet;
@@ -139,8 +143,6 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
     @Mock
     private MailService mockMailService;
 
-    private Server mockUserServer;
-
     <%_ } _%>
     private Server mockServer;
 
@@ -159,8 +161,15 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
         <%_ } _%>
 
         User user = new User();
+        <%_ if (databaseType === 'cassandra') { _%>
+        user.setId(UUID.randomUUID().toString());
+        <%_ } _%>
+        <%_ if (authenticationType !== 'oauth2') { _%>
+        user.setPassword(RandomStringUtils.random(60));
+        <%_ } _%>
         user.setFirstName(DEFAULT_FIRSTNAME);
         user.setLastName(DEFAULT_LASTNAME);
+        user.setActivated(true);
         <%_ if (databaseType === 'mongodb' || databaseType === 'sql') { _%>
         user.setImageUrl(DEFAULT_IMAGEURL);
         <%_ } _%>
@@ -177,7 +186,7 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
 
         <%_ } _%>
         AccountService service =
-            new AccountService(<% if (authenticationType !== 'oauth2') { %>userRepository, mailService, <% } if (authenticationType !== 'oauth2' || applicationType === 'monolith') { %>userService, <% } if (authenticationType === 'session') { %>persistentTokenRepository, <% } %>userProtoMapper);
+            new AccountService(<% if (authenticationType !== 'oauth2') { %>userRepository, mockMailService, <% } if (authenticationType !== 'oauth2' || applicationType === 'monolith') { %>userService, <% } if (authenticationType === 'session') { %>persistentTokenRepository, <% } %>userProtoMapper);
 
         String uniqueServerName = "Mock server for " + AccountService.class;
         mockServer = InProcessServerBuilder
@@ -227,19 +236,26 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
         userRepository.save(user);
 
         <%_ } _%>
-        <%_ if (authenticationType === 'oauth2') { _%>
-        TestingAuthenticationToken authentication = new TestingAuthenticationToken("login", "password",
-                Collections.singletonList(new SimpleGrantedAuthority(AuthoritiesConstants.ADMIN)));
+        TestingAuthenticationToken authentication = new TestingAuthenticationToken(
+            user.getLogin(),
+            "password"<% if (authenticationType === 'oauth2' && applicationType !== 'monolith') { %>,
+            Collections.singletonList(new SimpleGrantedAuthority(AuthoritiesConstants.ADMIN))<% } %>
+        );
 
+        <%_ if (authenticationType === 'oauth2') { _%>
         Map<String, Object> details = new HashMap<>();
+            <%_ if (applicationType === 'monolith') { _%>
         details.put("preferred_username", user.getLogin());
+            <%_ } _%>
         details.put("given_name", DEFAULT_FIRSTNAME);
         details.put("family_name", DEFAULT_LASTNAME);
         details.put("email_verified", true);
         details.put("email", "grpc-existing-account@example.com");
         details.put("langKey", DEFAULT_LANGKEY);
         details.put("imageUrl", DEFAULT_IMAGEURL);
+            <%_ if (applicationType === 'monolith') { _%>
         details.put("roles", Collections.singletonList(AuthoritiesConstants.ADMIN));
+            <%_ } _%>
 
         authentication.setDetails(details);
         OAuth2Authentication oAuth2Authentication = new OAuth2Authentication(null, authentication);
@@ -459,7 +475,7 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
     @Transactional<% } %>
     public void testActivateAccount() throws Exception {
         final String activationKey = "some activationKey";
-        User user = createUser(<% if (databaseType === 'sql') { %>null<% } %>);
+        User user = createUser();
         user.setLogin("grpc-activate-account");
         user.setEmail("grpc-activate-account@example.com");
         user.setActivated(false);
@@ -489,7 +505,7 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
     @Test<% if (databaseType === 'sql') { %>
     @Transactional<% } %>
     public void testSaveAccount() throws Exception {
-        User user = createUser(<% if (databaseType === 'sql') { %>null<% } %>);
+        User user = createUser();
         user.setLogin("grpc-save-account");
         user.setEmail("grpc-save-account@example.com");
         user.setAuthorities(new HashSet<>());
@@ -526,7 +542,7 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
 
     @Test
     public void testSaveInvalidEmail() throws Exception {
-        User user = createUser(<% if (databaseType === 'sql') { %>null<% } %>);
+        User user = createUser();
         user.setLogin("grpc-save-invalid-email");
         user.setEmail("grpc-save-invalid-email@example.com");
         user.setAuthorities(new HashSet<>());
@@ -561,7 +577,7 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
     @Test<% if (databaseType === 'sql') { %>
     @Transactional<% } %>
     public void testSaveAccountExistingEmail() throws Exception {
-        User user = createUser(<% if (databaseType === 'sql') { %>null<% } %>);
+        User user = createUser();
         user.setLogin("grpc-save-account-existing-email");
         user.setEmail("grpc-save-account-existing-email@example.com");
         userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(user);
@@ -570,7 +586,7 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
             new TestingAuthenticationToken(user.getLogin(), "password");
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        User anotherUser = createUser(<% if (databaseType === 'sql') { %>null<% } %>);
+        User anotherUser = createUser();
         anotherUser.setLogin("grpc-save-account-existing-email2");
         anotherUser.setEmail("grpc-save-account-existing-email2@localhost.com");
         userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(anotherUser);
@@ -599,7 +615,7 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
     @Test<% if (databaseType === 'sql') { %>
     @Transactional<% } %>
     public void testChangePassword() {
-        User user = createUser(<% if (databaseType === 'sql') { %>null<% } %>);
+        User user = createUser();
         user.setLogin("grpc-change-password");
         user.setEmail("grpc-change-password@example.com");
         userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(user);
@@ -618,7 +634,7 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
     @Test<% if (databaseType === 'sql') { %>
     @Transactional<% } %>
     public void testChangePasswordTooSmall() {
-        User user = createUser(<% if (databaseType === 'sql') { %>null<% } %>);
+        User user = createUser();
         user.setLogin("grpc-change-password-too-small");
         user.setEmail("grpc-change-password-too-small@example.com");
         userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(user);
@@ -638,7 +654,7 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
     @Test<% if (databaseType === 'sql') { %>
     @Transactional<% } %>
     public void testChangePasswordTooLong() {
-        User user = createUser(<% if (databaseType === 'sql') { %>null<% } %>);
+        User user = createUser();
         user.setLogin("grpc-change-password-too-long");
         user.setEmail("grpc-change-password-too-long@example.com");
         userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(user);
@@ -664,7 +680,7 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
     @Test<% if (databaseType === 'sql') { %>
     @Transactional<% } %>
     public void testGetCurrentSessions() {
-        User user = createUser(<% if (databaseType === 'sql') { %>null<% } %>);
+        User user = createUser();
         user.setLogin("grpc-current-sessions");
         user.setEmail("grpc-current-sessions@example.com");
         userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(user);
@@ -699,7 +715,7 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
     @Test<% if (databaseType === 'sql') { %>
     @Transactional<% } %>
     public void testInvalidateSession() {
-        User user = createUser(<% if (databaseType === 'sql') { %>null<% } %>);
+        User user = createUser();
         user.setLogin("grpc-invalidate-session");
         user.setEmail("grpc-invalidate-session@example.com");
         userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(user);
@@ -729,7 +745,7 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
     @Test<% if (databaseType === 'sql') { %>
     @Transactional<% } %>
     public void testRequestPasswordReset() {
-        User user = createUser(<% if (databaseType === 'sql') { %>null<% } %>);
+        User user = createUser();
         user.setLogin("grpc-password-reset");
         user.setEmail("grpc-password-reset@example.com");
         userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(user);
@@ -749,7 +765,7 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
     @Test<% if (databaseType === 'sql') { %>
     @Transactional<% } %>
     public void testFinishPasswordReset() {
-        User user =  createUser(<% if (databaseType === 'sql') { %>null<% } %>);
+        User user = createUser();
         user.setLogin("grpc-finish-password-reset");
         user.setEmail("grpc-finish-password-reset@example.com");
         user.setResetDate(Instant.now().plus(1, ChronoUnit.DAYS));
@@ -781,7 +797,7 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
     @Test<% if (databaseType === 'sql') { %>
     @Transactional<% } %>
     public void testFinishPasswordResetWrongKey() {
-        User user =  createUser(<% if (databaseType === 'sql') { %>null<% } %>);
+        User user = createUser();
         user.setLogin("grpc-finish-password-reset-wrong-key");
         user.setEmail("grpc-finish-password-reset-wrong-key@example.com");
         userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(user);
