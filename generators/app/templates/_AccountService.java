@@ -211,7 +211,8 @@ public class AccountService extends RxAccountServiceGrpc.AccountServiceImplBase 
                 .isPresent()
             )
             .switchIfEmpty(Single.error(Status.ALREADY_EXISTS.withDescription("Email already in use").asException()))
-            .map(user -> userRepository.findOneByLogin(currentLogin).orElseThrow(Status.INTERNAL::asException))
+            .filter(user -> userRepository.findOneByLogin(currentLogin).isPresent())
+            .switchIfEmpty(Single.error(Status.INTERNAL.asException()))
             .doOnSuccess(user -> {
                 try {
                     userService.updateUser(
