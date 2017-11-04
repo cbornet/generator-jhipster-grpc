@@ -1,6 +1,6 @@
-package <%=packageName%>.grpc;
+package <%= packageName %>.grpc;
 
-import <%=packageName%>.security.jwt.TokenProvider;
+import <%= packageName %>.security.jwt.TokenProvider;
 
 import io.grpc.Status;
 import io.reactivex.Single;

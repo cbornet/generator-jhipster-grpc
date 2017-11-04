@@ -1,6 +1,6 @@
-package <%=packageName%>.grpc;
+package <%= packageName %>.grpc;
 
-import <%=packageName%>.service.AuditEventService;
+import <%= packageName %>.service.AuditEventService;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.protobuf.<%= idProtoWrappedType %>;

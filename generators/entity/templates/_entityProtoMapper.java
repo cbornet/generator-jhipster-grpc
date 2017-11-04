@@ -1,13 +1,13 @@
-package <%=packageName%>.grpc.entity.<%=entityUnderscoredName%>;
+package <%= packageName %>.grpc.entity.<%=entityUnderscoredName%>;
 
 <% if (dto !== 'mapstruct') { %>
-import <%=packageName%>.domain.<%= instanceType %>;<% } %>
+import <%= packageName %>.domain.<%= instanceType %>;<% } %>
 <%_ for (idx in fields) {
     if(fields[idx].fieldIsEnum) { _%>
-import <%=packageName%>.domain.enumeration.<%=fields[idx].fieldType%>;
+import <%= packageName %>.domain.enumeration.<%=fields[idx].fieldType%>;
 <%_ }}_%>
-import <%=packageName%>.grpc.ProtobufMappers;<% if (dto === 'mapstruct') { %>
-import <%=packageName%>.service.dto.<%= instanceType %>;<% } %>
+import <%= packageName %>.grpc.ProtobufMappers;<% if (dto === 'mapstruct') { %>
+import <%= packageName %>.service.dto.<%= instanceType %>;<% } %>
 <%
   if (dto !== 'mapstruct') {
     var existingMapperImport = [];

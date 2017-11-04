@@ -1,7 +1,7 @@
-package <%=packageName%>.grpc;
+package <%= packageName %>.grpc;
 
-import <%=packageName%>.domain.User;
-import <%=packageName%>.service.dto.UserDTO;
+import <%= packageName %>.domain.User;
+import <%= packageName %>.service.dto.UserDTO;
 
 import org.mapstruct.*;
 

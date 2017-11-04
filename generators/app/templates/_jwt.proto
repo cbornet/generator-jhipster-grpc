@@ -1,9 +1,9 @@
 syntax = "proto3";
 
 option java_multiple_files = true;
-option java_package = "<%=packageName%>.grpc";
+option java_package = "<%= packageName %>.grpc";
 
-package <%=packageName%>;
+package <%= packageName %>;
 
 service JWTService {
     rpc Authenticate(Login) returns (JWTToken);

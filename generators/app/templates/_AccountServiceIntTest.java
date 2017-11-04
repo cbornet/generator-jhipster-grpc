@@ -1,23 +1,28 @@
-package <%=packageName%>.grpc;
+package <%= packageName %>.grpc;
 
 <%_ if (databaseType === 'cassandra') { _%>
-import <%=packageName%>.AbstractCassandraTest;
+import <%= packageName %>.AbstractCassandraTest;
 <%_ } _%>
-import <%=packageName%>.<%= mainClass %>;<% if (databaseType == 'sql' || databaseType == 'mongodb') { %>
-import <%=packageName%>.domain.Authority;<% } %>
+import <%= packageName %>.<%= mainClass %>;
+<%_ if (databaseType === 'sql' || databaseType === 'mongodb') { _%>
+import <%= packageName %>.domain.Authority;
+<%_ } _%>
 <%_ if (authenticationType == 'session') { _%>
-import <%=packageName%>.domain.PersistentToken;
+import <%= packageName %>.domain.PersistentToken;
 <%_ } _%>
-import <%=packageName%>.domain.User;<% if (databaseType == 'sql' || databaseType == 'mongodb') { %>
-import <%=packageName%>.repository.AuthorityRepository;<% } %>
+import <%= packageName %>.domain.User;
+<%_ if (authenticationType !== 'oauth2' && (databaseType === 'sql' || databaseType === 'mongodb')) { _%>
+import <%= packageName %>.repository.AuthorityRepository;
+<%_ } _%>
 <%_ if (authenticationType == 'session') { _%>
-import <%=packageName%>.repository.PersistentTokenRepository;
+import <%= packageName %>.repository.PersistentTokenRepository;
 <%_ } _%>
-import <%=packageName%>.repository.UserRepository;
-import <%=packageName%>.security.AuthoritiesConstants;
-import <%=packageName%>.service.MailService;
-import <%=packageName%>.service.UserService;
-import <%=packageName%>.web.rest.UserResourceIntTest;
+import <%= packageName %>.repository.UserRepository;
+import <%= packageName %>.security.AuthoritiesConstants;
+<%_ if (authenticationType !== 'oauth2') { _%>
+import <%= packageName %>.service.MailService;
+<%_ } _%>
+import <%= packageName %>.service.UserService;
 
 import com.google.protobuf.Empty;
 import com.google.protobuf.StringValue;
@@ -30,35 +35,57 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+<%_ if (authenticationType !== 'oauth2') { _%>
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+<%_ } _%>
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
+<%_ if (authenticationType === 'oauth2') { _%>
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+<%_ } _%>
 import org.springframework.security.core.context.SecurityContextHolder;
+<%_ if (authenticationType === 'oauth2') { _%>
+import org.springframework.security.oauth2.provider.OAuth2Authentication;
+<%_ } _%>
+<%_ if (authenticationType !== 'oauth2') { _%>
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.context.junit4.SpringRunner;<% if (databaseType == 'sql') { %>
-import org.springframework.transaction.annotation.Transactional;<% } %>
+<%_ } _%>
+import org.springframework.test.context.junit4.SpringRunner;
+<%_ if ((authenticationType !== 'oauth2' || applicationType === 'monolith') && databaseType === 'sql') { _%>
+import org.springframework.transaction.annotation.Transactional;
+<%_ } _%>
 
-<%_ if (databaseType == 'sql') { _%>
+<%_ if (authenticationType !== 'oauth2' && databaseType === 'sql') { _%>
 import javax.persistence.EntityManager;
 <%_ } _%>
 import java.io.IOException;
-import java.time.temporal.ChronoUnit;<% if (databaseType == 'sql' || databaseType == 'mongodb') { %>
-import java.time.LocalDate;<% } %>
+<%_ if (authenticationType !== 'oauth2') { _%>
+import java.time.temporal.ChronoUnit;
+    <%_ if (databaseType === 'sql' || databaseType === 'mongodb') { _%>
+import java.time.LocalDate;
+    <%_ } _%>
 import java.time.Instant;
+<%_ } _%>
+<%_ if (authenticationType === 'oauth2' && applicationType === 'monolith') { _%>
+import java.util.*;
+<%_ } _%>
+<%_ if (authenticationType !== 'oauth2') { _%>
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+<%_ } _%>
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
+<%_ if (authenticationType !== 'oauth2') { _%>
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.when;
+<%_ } _%>
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = <%= mainClass %>.class)
@@ -73,7 +100,7 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
     private static final String DEFAULT_LASTNAME = "doe";
     private static final String UPDATED_LASTNAME = "jhipsterLastName";
 
-    <%_ if (databaseType == 'mongodb' || databaseType == 'sql') { _%>
+    <%_ if (databaseType === 'mongodb' || databaseType === 'sql') { _%>
     private static final String DEFAULT_IMAGEURL = "http://placehold.it/50x50";
     private static final String UPDATED_IMAGEURL = "http://placehold.it/40x40";
 
@@ -84,11 +111,6 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
     @Autowired
     private UserRepository userRepository;
 
-    <%_ if (databaseType == 'sql' || databaseType == 'mongodb') { _%>
-    @Autowired
-    private AuthorityRepository authorityRepository;
-
-    <%_ } _%>
     @Autowired
     private UserService userService;
 
@@ -100,38 +122,62 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
     @Autowired
     private UserProtoMapper userProtoMapper;
 
-    <%_ if (databaseType == 'sql') { _%>
+    <%_ if (authenticationType !== 'oauth2') { _%>
+        <%_ if (databaseType === 'sql' || databaseType === 'mongodb') { _%>
+    @Autowired
+    private AuthorityRepository authorityRepository;
+
+        <%_ } _%>
+        <%_ if (databaseType === 'sql') { _%>
     @Autowired
     private EntityManager em;
 
-    <%_ } _%>
+        <%_ } _%>
     @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Mock
-    private UserService mockUserService;
-
-    @Mock
     private MailService mockMailService;
-
-    private Server mockServer;
 
     private Server mockUserServer;
 
+    <%_ } _%>
+    private Server mockServer;
+
     private AccountServiceGrpc.AccountServiceBlockingStub stub;
 
-    private AccountServiceGrpc.AccountServiceBlockingStub userStub;
+    private static User createUser() {
+        <%_ if (databaseType === 'sql' || databaseType === 'mongodb') { _%>
+        Set<Authority> authorities = new HashSet<>();
+        Authority authority = new Authority();
+        authority.setName(AuthoritiesConstants.ADMIN);
+        authorities.add(authority);
+        <%_ } _%>
+        <%_ if (databaseType === 'cassandra') { _%>
+        Set<String> authorities = new HashSet<>();
+        authorities.add(AuthoritiesConstants.ADMIN);
+        <%_ } _%>
+
+        User user = new User();
+        user.setFirstName(DEFAULT_FIRSTNAME);
+        user.setLastName(DEFAULT_LASTNAME);
+        <%_ if (databaseType === 'mongodb' || databaseType === 'sql') { _%>
+        user.setImageUrl(DEFAULT_IMAGEURL);
+        <%_ } _%>
+        user.setLangKey(DEFAULT_LANGKEY);
+        user.setAuthorities(authorities);
+        return user;
+    }
 
     @Before
     public void setUp() throws IOException {
+        <%_ if (authenticationType !== 'oauth2') { _%>
         MockitoAnnotations.initMocks(this);
         doNothing().when(mockMailService).sendActivationEmail(anyObject());
 
+        <%_ } _%>
         AccountService service =
-            new AccountService(userRepository, userService, mockMailService,<% if (authenticationType == 'session') { %> persistentTokenRepository,<% } %> userProtoMapper);
-
-        AccountService userService =
-            new AccountService(userRepository, mockUserService, mockMailService,<% if (authenticationType == 'session') { %> persistentTokenRepository, <% } %>userProtoMapper);
+            new AccountService(<% if (authenticationType !== 'oauth2') { %>userRepository, mailService, <% } if (authenticationType !== 'oauth2' || applicationType === 'monolith') { %>userService, <% } if (authenticationType === 'session') { %>persistentTokenRepository, <% } %>userProtoMapper);
 
         String uniqueServerName = "Mock server for " + AccountService.class;
         mockServer = InProcessServerBuilder
@@ -139,16 +185,9 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
         InProcessChannelBuilder channelBuilder =
             InProcessChannelBuilder.forName(uniqueServerName).directExecutor();
         stub = AccountServiceGrpc.newBlockingStub(channelBuilder.build());
-
-        String uniqueUserServerName = "Mock user server for " + AccountService.class;
-        mockUserServer = InProcessServerBuilder
-            .forName(uniqueUserServerName).directExecutor().addService(userService).build().start();
-        InProcessChannelBuilder userChannelBuilder =
-            InProcessChannelBuilder.forName(uniqueUserServerName).directExecutor();
-        userStub = AccountServiceGrpc.newBlockingStub(userChannelBuilder.build());
         <%_ // For some reason, Travis tests fail on cassandra when the SecurityContextHolder is used.
             // For now those tests are removed
-            if (databaseType == 'sql' || databaseType == 'mongodb') { _%>
+            if (databaseType === 'sql' || databaseType === 'mongodb') { _%>
 
         SecurityContextHolder.setStrategyName(SecurityContextHolder.MODE_INHERITABLETHREADLOCAL);
         <%_ } _%>
@@ -157,69 +196,82 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
     @After
     public void tearDown() {
         mockServer.shutdownNow();
-        mockUserServer.shutdown();
     }
 
     <%_ // For some reason, Travis tests fail on cassandra when the SecurityContextHolder is used.
         // For now those tests are removed
-        if (databaseType == 'sql' || databaseType == 'mongodb') { _%>
+        if (databaseType === 'sql' || databaseType === 'mongodb') { _%>
     @Test
     public void testNonAuthenticatedUser() throws Exception {
-        StringValue login = userStub.isAuthenticated(Empty.newBuilder().build());
+        StringValue login = stub.isAuthenticated(Empty.newBuilder().build());
         assertThat(login.getValue()).isEmpty();
     }
 
     @Test
     public void testAuthenticatedUser() throws Exception {
         Authentication authentication =
-            new UsernamePasswordAuthenticationToken("grpc-authenticated-user", "password");
+            new TestingAuthenticationToken("grpc-authenticated-user", "password");
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        StringValue login = userStub.isAuthenticated(Empty.newBuilder().build());
+        StringValue login = stub.isAuthenticated(Empty.newBuilder().build());
         assertThat(login.getValue()).isEqualTo("grpc-authenticated-user");
     }
 
     <%_ } _%>
-    @Test
-    public void testGetExistingAccount() throws Exception {<% if (databaseType == 'sql' || databaseType == 'mongodb') { %>
-        Set<Authority> authorities = new HashSet<>();
-        Authority authority = new Authority();
-        authority.setName(AuthoritiesConstants.ADMIN);
-        authorities.add(authority);<% } %><% if (databaseType == 'cassandra') { %>
-        Set<String> authorities = new HashSet<>();
-        authorities.add(AuthoritiesConstants.ADMIN);<% } %>
-
-        User user = new User();
+    @Test<% if (databaseType === 'sql') { %>
+    @Transactional<% } %>
+    public void testGetExistingAccount() throws Exception {
+        <%_ if (authenticationType !== 'oauth2' || applicationType === 'monolith') { _%>
+        User user = createUser();
         user.setLogin("grpc-existing-account");
-        user.setFirstName(DEFAULT_FIRSTNAME);
-        user.setLastName(DEFAULT_LASTNAME);
-        user.setEmail("grpc-existing-account@example.com");<% if (databaseType == 'mongodb' || databaseType == 'sql') { %>
-        user.setImageUrl(DEFAULT_IMAGEURL);<% } %>
-        user.setLangKey(DEFAULT_LANGKEY);
-        user.setAuthorities(authorities);
-        when(mockUserService.getUserWithAuthorities()).thenReturn(user);
+        user.setEmail("grpc-existing-account@example.com");
+        userRepository.save(user);
 
-        UserProto userProto = userStub.getAccount(Empty.newBuilder().build());
+        <%_ } _%>
+        <%_ if (authenticationType === 'oauth2') { _%>
+        TestingAuthenticationToken authentication = new TestingAuthenticationToken("login", "password",
+                Collections.singletonList(new SimpleGrantedAuthority(AuthoritiesConstants.ADMIN)));
+
+        Map<String, Object> details = new HashMap<>();
+        details.put("preferred_username", user.getLogin());
+        details.put("given_name", DEFAULT_FIRSTNAME);
+        details.put("family_name", DEFAULT_LASTNAME);
+        details.put("email_verified", true);
+        details.put("email", "grpc-existing-account@example.com");
+        details.put("langKey", DEFAULT_LANGKEY);
+        details.put("imageUrl", DEFAULT_IMAGEURL);
+        details.put("roles", Collections.singletonList(AuthoritiesConstants.ADMIN));
+
+        authentication.setDetails(details);
+        OAuth2Authentication oAuth2Authentication = new OAuth2Authentication(null, authentication);
+        SecurityContextHolder.getContext().setAuthentication(oAuth2Authentication);
+        <%_ } else { _%>
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        <%_ } _%>
+
+        UserProto userProto = stub.getAccount(Empty.newBuilder().build());
         assertThat(userProto.getLogin()).isEqualTo("grpc-existing-account");
         assertThat(userProto.getFirstName()).isEqualTo(DEFAULT_FIRSTNAME);
         assertThat(userProto.getLastName()).isEqualTo(DEFAULT_LASTNAME);
-        assertThat(userProto.getEmail()).isEqualTo("grpc-existing-account@example.com");<% if (databaseType == 'mongodb' || databaseType == 'sql') { %>
-        assertThat(userProto.getImageUrl()).isEqualTo(DEFAULT_IMAGEURL);<% } %>
+        assertThat(userProto.getEmail()).isEqualTo("grpc-existing-account@example.com");
+        <%_ if (databaseType === 'mongodb' || databaseType === 'sql') { _%>
+        // assertThat(userProto.getImageUrl()).isEqualTo(DEFAULT_IMAGEURL);
+        <%_ } _%>
         assertThat(userProto.getLangKey()).isEqualTo(DEFAULT_LANGKEY);
         assertThat(userProto.getAuthoritiesList()).containsExactly(AuthoritiesConstants.ADMIN);
     }
 
     @Test
     public void testGetUnknownAccount() throws Exception {
-        when(mockUserService.getUserWithAuthorities()).thenReturn(null);
         try {
-            userStub.getAccount(Empty.newBuilder().build());
+            stub.getAccount(Empty.newBuilder().build());
             failBecauseExceptionWasNotThrown(StatusRuntimeException.class);
         } catch (StatusRuntimeException e) {
             assertThat(e.getStatus().getCode()).isEqualTo(Status.Code.INTERNAL);
         }
     }
 
-    @Test<% if (databaseType == 'sql') { %>
+<%_ if (authenticationType !== 'oauth2') { _%>
+    @Test<% if (databaseType === 'sql') { %>
     @Transactional<% } %>
     public void testRegisterValid() throws Exception {
         UserProto validUser = UserProto.newBuilder()
@@ -228,7 +280,7 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
             .setFirstName(DEFAULT_FIRSTNAME)
             .setLastName(DEFAULT_LASTNAME)
             .setEmail("grpc-register-valid@example.com")
-            .setActivated(true)<% if (databaseType == 'mongodb' || databaseType == 'sql') { %>
+            .setActivated(true)<% if (databaseType === 'mongodb' || databaseType === 'sql') { %>
             .setImageUrl(DEFAULT_IMAGEURL)<% } %>
             .setLangKey(DEFAULT_LANGKEY)
             .addAuthorities(AuthoritiesConstants.USER)
@@ -247,7 +299,7 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
             .setFirstName(DEFAULT_FIRSTNAME)
             .setLastName(DEFAULT_LASTNAME)
             .setEmail("grpc-register-invalid@example.com")
-            .setActivated(true)<% if (databaseType == 'mongodb' || databaseType == 'sql') { %>
+            .setActivated(true)<% if (databaseType === 'mongodb' || databaseType === 'sql') { %>
             .setImageUrl(DEFAULT_IMAGEURL)<% } %>
             .setLangKey(DEFAULT_LANGKEY)
             .addAuthorities(AuthoritiesConstants.USER)
@@ -262,7 +314,7 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
         assertThat(userRepository.findOneByEmailIgnoreCase("grpc-register-invalid@example.com")).isNotPresent();
     }
 
-    @Test<% if (databaseType == 'sql') { %>
+    @Test<% if (databaseType === 'sql') { %>
     @Transactional<% } %>
     public void testRegisterNullPassword() throws Exception {
         // Good
@@ -271,7 +323,7 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
             .setFirstName(DEFAULT_FIRSTNAME)
             .setLastName(DEFAULT_LASTNAME)
             .setEmail("grpc-register-null-password@example.com")
-            .setActivated(true)<% if (databaseType == 'mongodb' || databaseType == 'sql') { %>
+            .setActivated(true)<% if (databaseType === 'mongodb' || databaseType === 'sql') { %>
             .setImageUrl(DEFAULT_IMAGEURL)<% } %>
             .setLangKey(DEFAULT_LANGKEY)
             .addAuthorities(AuthoritiesConstants.USER)
@@ -281,13 +333,13 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
             stub.registerAccount(invalidUser);
             failBecauseExceptionWasNotThrown(StatusRuntimeException.class);
         } catch (StatusRuntimeException e) {
-            assertThat(e.getStatus().getCode()).isEqualTo(Status.Code.INVALID_ARGUMENT);<% if (databaseType == 'sql') { %>
+            assertThat(e.getStatus().getCode()).isEqualTo(Status.Code.INVALID_ARGUMENT);<% if (databaseType === 'sql') { %>
             em.clear();<% } %>
         }
         assertThat(userRepository.findOneByEmailIgnoreCase("grpc-register-null-password@example.com")).isNotPresent();
     }
 
-    @Test<% if (databaseType == 'sql') { %>
+    @Test<% if (databaseType === 'sql') { %>
     @Transactional<% } %>
     public void testRegisterDuplicateLogin() throws Exception {
         // Good
@@ -297,7 +349,7 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
             .setFirstName(DEFAULT_FIRSTNAME)
             .setLastName(DEFAULT_LASTNAME)
             .setEmail("grpc-register-duplicate-login@example.com")
-            .setActivated(true)<% if (databaseType == 'mongodb' || databaseType == 'sql') { %>
+            .setActivated(true)<% if (databaseType === 'mongodb' || databaseType === 'sql') { %>
             .setImageUrl(DEFAULT_IMAGEURL)<% } %>
             .setLangKey(DEFAULT_LANGKEY)
             .addAuthorities(AuthoritiesConstants.USER)
@@ -311,9 +363,9 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
             .setFirstName(validUser.getFirstName())
             .setLastName(validUser.getLastName())
             .setEmail("grpc-register-duplicate-login2@example.com")
-            .setActivated(validUser.getActivated())<% if (databaseType == 'mongodb' || databaseType == 'sql') { %>
+            .setActivated(validUser.getActivated())<% if (databaseType === 'mongodb' || databaseType === 'sql') { %>
             .setImageUrl(validUser.getImageUrl())<% } %>
-            .setLangKey(validUser.getLangKey())<% if (databaseType == 'mongodb' || databaseType == 'sql') { %>
+            .setLangKey(validUser.getLangKey())<% if (databaseType === 'mongodb' || databaseType === 'sql') { %>
             .setCreatedBy(validUser.getCreatedBy())
             .setCreatedDate(validUser.getCreatedDate())
             .setLastModifiedBy(validUser.getLastModifiedBy())
@@ -327,13 +379,13 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
             stub.registerAccount(duplicatedUser);
             failBecauseExceptionWasNotThrown(StatusRuntimeException.class);
         } catch (StatusRuntimeException e) {
-            assertThat(e.getStatus().getCode()).isEqualTo(Status.Code.ALREADY_EXISTS);<% if (databaseType == 'sql') { %>
+            assertThat(e.getStatus().getCode()).isEqualTo(Status.Code.ALREADY_EXISTS);<% if (databaseType === 'sql') { %>
             em.clear();<% } %>
         }
         assertThat(userRepository.findOneByEmailIgnoreCase("grpc-register-duplicate-login2@example.com")).isNotPresent();
     }
 
-    @Test<% if (databaseType == 'sql') { %>
+    @Test<% if (databaseType === 'sql') { %>
     @Transactional<% } %>
     public void testRegisterDuplicateEmail() throws Exception {
         // Good
@@ -343,7 +395,7 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
             .setFirstName(DEFAULT_FIRSTNAME)
             .setLastName(DEFAULT_LASTNAME)
             .setEmail("grpc-register-duplicate-email@example.com")
-            .setActivated(true)<% if (databaseType == 'mongodb' || databaseType == 'sql') { %>
+            .setActivated(true)<% if (databaseType === 'mongodb' || databaseType === 'sql') { %>
             .setImageUrl(DEFAULT_IMAGEURL)<% } %>
             .setLangKey(DEFAULT_LANGKEY)
             .addAuthorities(AuthoritiesConstants.USER)
@@ -357,9 +409,9 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
             .setFirstName(validUser.getFirstName())
             .setLastName(validUser.getLastName())
             .setEmail(validUser.getEmail())
-            .setActivated(validUser.getActivated())<% if (databaseType == 'mongodb' || databaseType == 'sql') { %>
+            .setActivated(validUser.getActivated())<% if (databaseType === 'mongodb' || databaseType === 'sql') { %>
             .setImageUrl(validUser.getImageUrl())<% } %>
-            .setLangKey(validUser.getLangKey())<% if (databaseType == 'mongodb' || databaseType == 'sql') { %>
+            .setLangKey(validUser.getLangKey())<% if (databaseType === 'mongodb' || databaseType === 'sql') { %>
             .setCreatedBy(validUser.getCreatedBy())
             .setCreatedDate(validUser.getCreatedDate())
             .setLastModifiedBy(validUser.getLastModifiedBy())
@@ -373,13 +425,13 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
             stub.registerAccount(duplicatedUser);
             failBecauseExceptionWasNotThrown(StatusRuntimeException.class);
         } catch (StatusRuntimeException e) {
-            assertThat(e.getStatus().getCode()).isEqualTo(Status.Code.ALREADY_EXISTS);<% if (databaseType == 'sql') { %>
+            assertThat(e.getStatus().getCode()).isEqualTo(Status.Code.ALREADY_EXISTS);<% if (databaseType === 'sql') { %>
             em.clear();<% } %>
         }
         assertThat(userRepository.findOneByLogin("grpc-register-duplicate-email2")).isNotPresent();
     }
 
-    @Test<% if (databaseType == 'sql') { %>
+    @Test<% if (databaseType === 'sql') { %>
     @Transactional<% } %>
     public void testRegisterAdminIsIgnored() throws Exception {
         UserProto user = UserProto.newBuilder()
@@ -388,7 +440,7 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
             .setFirstName(DEFAULT_FIRSTNAME)
             .setLastName(DEFAULT_LASTNAME)
             .setEmail("grpc-register-admin-is-ignored@example.com")
-            .setActivated(true)<% if (databaseType == 'mongodb' || databaseType == 'sql') { %>
+            .setActivated(true)<% if (databaseType === 'mongodb' || databaseType === 'sql') { %>
             .setImageUrl(DEFAULT_IMAGEURL)<% } %>
             .setLangKey(DEFAULT_LANGKEY)
             .addAuthorities(AuthoritiesConstants.ADMIN)
@@ -400,27 +452,27 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
         assertThat(userDup).isPresent();
         assertThat(userDup.orElse(null).getAuthorities())
             .hasSize(1)
-            .containsExactly(<% if (databaseType == 'sql' || databaseType == 'mongodb') { %>authorityRepository.findOne(AuthoritiesConstants.USER)<% } %><% if (databaseType == 'cassandra') { %>AuthoritiesConstants.USER<% } %>);
+            .containsExactly(<% if (databaseType === 'sql' || databaseType === 'mongodb') { %>authorityRepository.findOne(AuthoritiesConstants.USER)<% } %><% if (databaseType === 'cassandra') { %>AuthoritiesConstants.USER<% } %>);
     }
 
-    @Test<% if (databaseType == 'sql') { %>
+    @Test<% if (databaseType === 'sql') { %>
     @Transactional<% } %>
     public void testActivateAccount() throws Exception {
         final String activationKey = "some activationKey";
-        User user = UserResourceIntTest.createEntity(<% if (databaseType == 'sql') { %>null<% } %>);
+        User user = createEntity(<% if (databaseType === 'sql') { %>null<% } %>);
         user.setLogin("grpc-activate-account");
         user.setEmail("grpc-activate-account@example.com");
         user.setActivated(false);
         user.setActivationKey(activationKey);
 
-        userRepository.save<% if (databaseType == 'sql') { %>AndFlush<% } %>(user);
+        userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(user);
 
         UserProto userProto = stub.activateAccount(StringValue.newBuilder().setValue(activationKey).build());
         assertThat(userProto.getLogin()).isEqualTo("grpc-activate-account");
         assertThat(userProto.getActivated()).isTrue();
     }
 
-    @Test<% if (databaseType == 'sql') { %>
+    @Test<% if (databaseType === 'sql') { %>
     @Transactional<% } %>
     public void testActivateAccountWithWrongKey() throws Exception {
         try {
@@ -433,18 +485,18 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
 
     <%_ // For some reason, Travis tests fail on cassandra when the SecurityContextHolder is used.
         // For now those tests are removed
-        if (databaseType == 'sql' || databaseType == 'mongodb') { _%>
-    @Test<% if (databaseType == 'sql') { %>
+        if (databaseType === 'sql' || databaseType === 'mongodb') { _%>
+    @Test<% if (databaseType === 'sql') { %>
     @Transactional<% } %>
     public void testSaveAccount() throws Exception {
-        User user = UserResourceIntTest.createEntity(<% if (databaseType == 'sql') { %>null<% } %>);
+        User user = createEntity(<% if (databaseType === 'sql') { %>null<% } %>);
         user.setLogin("grpc-save-account");
         user.setEmail("grpc-save-account@example.com");
         user.setAuthorities(new HashSet<>());
-        userRepository.save<% if (databaseType == 'sql') { %>AndFlush<% } %>(user);
+        userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(user);
 
         Authentication authentication =
-            new UsernamePasswordAuthenticationToken(user.getLogin(), "password");
+            new TestingAuthenticationToken(user.getLogin(), "password");
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         UserProto userProto = UserProto.newBuilder()
@@ -453,7 +505,7 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
             .setFirstName(UPDATED_FIRSTNAME)
             .setLastName(UPDATED_LASTNAME)
             .setEmail("grpc-save-account-updated@example.com")
-            .setActivated(false)<% if (databaseType == 'mongodb' || databaseType == 'sql') { %>
+            .setActivated(false)<% if (databaseType === 'mongodb' || databaseType === 'sql') { %>
             .setImageUrl(UPDATED_IMAGEURL)<% } %>
             .setLangKey(UPDATED_LANGKEY)
             .addAuthorities(AuthoritiesConstants.ADMIN)
@@ -466,7 +518,7 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
         assertThat(updatedUser.getLastName()).isEqualTo(UPDATED_LASTNAME);
         assertThat(updatedUser.getEmail()).isEqualTo(userProto.getEmail());
         assertThat(updatedUser.getLangKey()).isEqualTo(UPDATED_LANGKEY);
-        assertThat(updatedUser.getPassword()).isEqualTo(user.getPassword());<% if (databaseType == 'mongodb' || databaseType == 'sql') { %>
+        assertThat(updatedUser.getPassword()).isEqualTo(user.getPassword());<% if (databaseType === 'mongodb' || databaseType === 'sql') { %>
         assertThat(updatedUser.getImageUrl()).isEqualTo(UPDATED_IMAGEURL);<% } %>
         assertThat(updatedUser.getActivated()).isEqualTo(true);
         assertThat(updatedUser.getAuthorities()).isEmpty();
@@ -474,14 +526,14 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
 
     @Test
     public void testSaveInvalidEmail() throws Exception {
-        User user = UserResourceIntTest.createEntity(<% if (databaseType == 'sql') { %>null<% } %>);
+        User user = createEntity(<% if (databaseType === 'sql') { %>null<% } %>);
         user.setLogin("grpc-save-invalid-email");
         user.setEmail("grpc-save-invalid-email@example.com");
         user.setAuthorities(new HashSet<>());
-        userRepository.save<% if (databaseType == 'sql') { %>AndFlush<% } %>(user);
+        userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(user);
 
         Authentication authentication =
-            new UsernamePasswordAuthenticationToken(user.getLogin(), "password");
+            new TestingAuthenticationToken(user.getLogin(), "password");
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         UserProto invalidUser = UserProto.newBuilder()
@@ -489,7 +541,7 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
             .setFirstName(UPDATED_FIRSTNAME)
             .setLastName(UPDATED_LASTNAME)
             .setEmail("Invalid email")
-            .setActivated(false)<% if (databaseType == 'mongodb' || databaseType == 'sql') { %>
+            .setActivated(false)<% if (databaseType === 'mongodb' || databaseType === 'sql') { %>
             .setImageUrl(UPDATED_IMAGEURL)<% } %>
             .setLangKey(UPDATED_LANGKEY)
             .addAuthorities(AuthoritiesConstants.ADMIN)
@@ -506,29 +558,29 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
         }
     }
 
-    @Test<% if (databaseType == 'sql') { %>
+    @Test<% if (databaseType === 'sql') { %>
     @Transactional<% } %>
     public void testSaveAccountExistingEmail() throws Exception {
-        User user = UserResourceIntTest.createEntity(<% if (databaseType == 'sql') { %>null<% } %>);
+        User user = createEntity(<% if (databaseType === 'sql') { %>null<% } %>);
         user.setLogin("grpc-save-account-existing-email");
         user.setEmail("grpc-save-account-existing-email@example.com");
-        userRepository.save<% if (databaseType == 'sql') { %>AndFlush<% } %>(user);
+        userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(user);
 
         Authentication authentication =
-            new UsernamePasswordAuthenticationToken(user.getLogin(), "password");
+            new TestingAuthenticationToken(user.getLogin(), "password");
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        User anotherUser = UserResourceIntTest.createEntity(<% if (databaseType == 'sql') { %>null<% } %>);
+        User anotherUser = createEntity(<% if (databaseType === 'sql') { %>null<% } %>);
         anotherUser.setLogin("grpc-save-account-existing-email2");
         anotherUser.setEmail("grpc-save-account-existing-email2@localhost.com");
-        userRepository.save<% if (databaseType == 'sql') { %>AndFlush<% } %>(anotherUser);
+        userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(anotherUser);
 
         UserProto userProto = UserProto.newBuilder()
             .setPassword(UPDATED_PASSWORD)
             .setFirstName(UPDATED_FIRSTNAME)
             .setLastName(UPDATED_LASTNAME)
             .setEmail("grpc-save-account-existing-email2@localhost.com")
-            .setActivated(false)<% if (databaseType == 'mongodb' || databaseType == 'sql') { %>
+            .setActivated(false)<% if (databaseType === 'mongodb' || databaseType === 'sql') { %>
             .setImageUrl(UPDATED_IMAGEURL)<% } %>
             .setLangKey(UPDATED_LANGKEY)
             .addAuthorities(AuthoritiesConstants.ADMIN)
@@ -544,16 +596,16 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
         assertThat(updatedUser.getEmail()).isEqualTo(user.getEmail());
     }
 
-    @Test<% if (databaseType == 'sql') { %>
+    @Test<% if (databaseType === 'sql') { %>
     @Transactional<% } %>
     public void testChangePassword() {
-        User user = UserResourceIntTest.createEntity(<% if (databaseType == 'sql') { %>null<% } %>);
+        User user = createEntity(<% if (databaseType === 'sql') { %>null<% } %>);
         user.setLogin("grpc-change-password");
         user.setEmail("grpc-change-password@example.com");
-        userRepository.save<% if (databaseType == 'sql') { %>AndFlush<% } %>(user);
+        userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(user);
 
         Authentication authentication =
-            new UsernamePasswordAuthenticationToken(user.getLogin(), "password");
+            new TestingAuthenticationToken(user.getLogin(), "password");
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         stub.changePassword(StringValue.newBuilder().setValue("new password").build());
@@ -563,16 +615,16 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
     }
 
     <%_ } _%>
-    @Test<% if (databaseType == 'sql') { %>
+    @Test<% if (databaseType === 'sql') { %>
     @Transactional<% } %>
     public void testChangePasswordTooSmall() {
-        User user = UserResourceIntTest.createEntity(<% if (databaseType == 'sql') { %>null<% } %>);
+        User user = createEntity(<% if (databaseType === 'sql') { %>null<% } %>);
         user.setLogin("grpc-change-password-too-small");
         user.setEmail("grpc-change-password-too-small@example.com");
-        userRepository.save<% if (databaseType == 'sql') { %>AndFlush<% } %>(user);
+        userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(user);
 
         Authentication authentication =
-            new UsernamePasswordAuthenticationToken(user.getLogin(), "password");
+            new TestingAuthenticationToken(user.getLogin(), "password");
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         try {
@@ -583,16 +635,16 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
         }
     }
 
-    @Test<% if (databaseType == 'sql') { %>
+    @Test<% if (databaseType === 'sql') { %>
     @Transactional<% } %>
     public void testChangePasswordTooLong() {
-        User user = UserResourceIntTest.createEntity(<% if (databaseType == 'sql') { %>null<% } %>);
+        User user = createEntity(<% if (databaseType === 'sql') { %>null<% } %>);
         user.setLogin("grpc-change-password-too-long");
         user.setEmail("grpc-change-password-too-long@example.com");
-        userRepository.save<% if (databaseType == 'sql') { %>AndFlush<% } %>(user);
+        userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(user);
 
         Authentication authentication =
-            new UsernamePasswordAuthenticationToken(user.getLogin(), "password");
+            new TestingAuthenticationToken(user.getLogin(), "password");
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         try {
@@ -607,36 +659,36 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
 
     <%_ // For some reason, Travis tests fail on cassandra when the SecurityContextHolder is used.
         // For now those tests are removed
-        if (databaseType == 'sql' || databaseType == 'mongodb') { _%>
+        if (databaseType === 'sql' || databaseType === 'mongodb') { _%>
         <%_ if (authenticationType == 'session') { _%>
-    @Test<% if (databaseType == 'sql') { %>
+    @Test<% if (databaseType === 'sql') { %>
     @Transactional<% } %>
     public void testGetCurrentSessions() {
-        User user = UserResourceIntTest.createEntity(<% if (databaseType == 'sql') { %>null<% } %>);
+        User user = createEntity(<% if (databaseType === 'sql') { %>null<% } %>);
         user.setLogin("grpc-current-sessions");
         user.setEmail("grpc-current-sessions@example.com");
-        userRepository.save<% if (databaseType == 'sql') { %>AndFlush<% } %>(user);
+        userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(user);
 
         Authentication authentication =
-            new UsernamePasswordAuthenticationToken(user.getLogin(), "password");
+            new TestingAuthenticationToken(user.getLogin(), "password");
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         PersistentToken token = new PersistentToken();
-        token.setSeries("grpc-1111-1111");<% if (databaseType == 'sql' || databaseType == 'mongodb') { %>
+        token.setSeries("grpc-1111-1111");<% if (databaseType === 'sql' || databaseType === 'mongodb') { %>
         token.setUser(user);<% } else { %>
         token.setUserId(user.getId());
         token.setLogin(user.getLogin());<% } %>
-        token.setTokenValue("1111-1111-data");<% if (databaseType == 'sql' || databaseType == 'mongodb') { %>
+        token.setTokenValue("1111-1111-data");<% if (databaseType === 'sql' || databaseType === 'mongodb') { %>
         token.setTokenDate(LocalDate.of(2017, 3, 23));<% } else { %>
         token.setTokenDate(new java.util.Date(1490714757123L));<% } %>
         token.setIpAddress("127.0.0.1");
         token.setUserAgent("Test agent");
-        persistentTokenRepository.save<% if (databaseType == 'sql') { %>AndFlush<% } %>(token);
+        persistentTokenRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(token);
 
-        <%=packageName%>.grpc.PersistentToken tokenProto = stub.getCurrentSessions(Empty.newBuilder().build()).next();
+        <%= packageName %>.grpc.PersistentToken tokenProto = stub.getCurrentSessions(Empty.newBuilder().build()).next();
         assertThat(tokenProto.getSeries()).isEqualTo("grpc-1111-1111");
         assertThat(tokenProto.getIpAddress()).isEqualTo("127.0.0.1");
-        assertThat(tokenProto.getUserAgent()).isEqualTo("Test agent");<% if (databaseType == 'sql' || databaseType == 'mongodb') { %>
+        assertThat(tokenProto.getUserAgent()).isEqualTo("Test agent");<% if (databaseType === 'sql' || databaseType === 'mongodb') { %>
         assertThat(tokenProto.getTokenDate().getYear()).isEqualTo(2017);
         assertThat(tokenProto.getTokenDate().getMonth()).isEqualTo(3);
         assertThat(tokenProto.getTokenDate().getDay()).isEqualTo(23);<% } else { %>
@@ -644,29 +696,29 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
         assertThat(tokenProto.getTokenDate().getNanos() / 1000000).isEqualTo(123);<% } %>
     }
 
-    @Test<% if (databaseType == 'sql') { %>
+    @Test<% if (databaseType === 'sql') { %>
     @Transactional<% } %>
     public void testInvalidateSession() {
-        User user = UserResourceIntTest.createEntity(<% if (databaseType == 'sql') { %>null<% } %>);
+        User user = createEntity(<% if (databaseType === 'sql') { %>null<% } %>);
         user.setLogin("grpc-invalidate-session");
         user.setEmail("grpc-invalidate-session@example.com");
-        userRepository.save<% if (databaseType == 'sql') { %>AndFlush<% } %>(user);
+        userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(user);
 
         Authentication authentication =
-            new UsernamePasswordAuthenticationToken(user.getLogin(), "password");
+            new TestingAuthenticationToken(user.getLogin(), "password");
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         PersistentToken token = new PersistentToken();
-        token.setSeries("grpc-2222-2222");<% if (databaseType == 'sql' || databaseType == 'mongodb') { %>
+        token.setSeries("grpc-2222-2222");<% if (databaseType === 'sql' || databaseType === 'mongodb') { %>
         token.setUser(user);<% } else { %>
         token.setUserId(user.getId());
         token.setLogin(user.getLogin());<% } %>
-        token.setTokenValue("2222-2222-data");<% if (databaseType == 'sql' || databaseType == 'mongodb') { %>
+        token.setTokenValue("2222-2222-data");<% if (databaseType === 'sql' || databaseType === 'mongodb') { %>
         token.setTokenDate(LocalDate.now());<% } else { %>
         token.setTokenDate(new java.util.Date());<% } %>
         token.setIpAddress("127.0.0.1");
         token.setUserAgent("Test agent");
-        persistentTokenRepository.save<% if (databaseType == 'sql') { %>AndFlush<% } %>(token);
+        persistentTokenRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(token);
         assertThat(persistentTokenRepository.findByUser(user)).hasSize(1);
         stub.invalidateSession(StringValue.newBuilder().setValue("grpc-2222-2222").build());
         assertThat(persistentTokenRepository.findByUser(user)).isEmpty();
@@ -674,13 +726,13 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
 
         <%_ } _%>
     <%_ } _%>
-    @Test<% if (databaseType == 'sql') { %>
+    @Test<% if (databaseType === 'sql') { %>
     @Transactional<% } %>
     public void testRequestPasswordReset() {
-        User user = UserResourceIntTest.createEntity(<% if (databaseType == 'sql') { %>null<% } %>);
+        User user = createEntity(<% if (databaseType === 'sql') { %>null<% } %>);
         user.setLogin("grpc-password-reset");
         user.setEmail("grpc-password-reset@example.com");
-        userRepository.save<% if (databaseType == 'sql') { %>AndFlush<% } %>(user);
+        userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(user);
         stub.requestPasswordReset(StringValue.newBuilder().setValue("grpc-password-reset@example.com").build());
     }
 
@@ -694,15 +746,15 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
         }
     }
 
-    @Test<% if (databaseType == 'sql') { %>
+    @Test<% if (databaseType === 'sql') { %>
     @Transactional<% } %>
     public void testFinishPasswordReset() {
-        User user = UserResourceIntTest.createEntity(<% if (databaseType == 'sql') { %>null<% } %>);
+        User user =  createEntity(<% if (databaseType === 'sql') { %>null<% } %>);
         user.setLogin("grpc-finish-password-reset");
         user.setEmail("grpc-finish-password-reset@example.com");
         user.setResetDate(Instant.now().plus(1, ChronoUnit.DAYS));
         user.setResetKey("reset key");
-        userRepository.save<% if (databaseType == 'sql') { %>AndFlush<% } %>(user);
+        userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(user);
 
         stub.finishPasswordReset(KeyAndPassword.newBuilder()
             .setNewPassword("new password")
@@ -726,13 +778,13 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
         }
     }
 
-    @Test<% if (databaseType == 'sql') { %>
+    @Test<% if (databaseType === 'sql') { %>
     @Transactional<% } %>
     public void testFinishPasswordResetWrongKey() {
-        User user = UserResourceIntTest.createEntity(<% if (databaseType == 'sql') { %>null<% } %>);
+        User user =  createEntity(<% if (databaseType === 'sql') { %>null<% } %>);
         user.setLogin("grpc-finish-password-reset-wrong-key");
         user.setEmail("grpc-finish-password-reset-wrong-key@example.com");
-        userRepository.save<% if (databaseType == 'sql') { %>AndFlush<% } %>(user);
+        userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(user);
         try {
             stub.finishPasswordReset(KeyAndPassword.newBuilder()
                 .setNewPassword("new password")
@@ -743,5 +795,6 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
             assertThat(e.getStatus().getCode()).isEqualTo(Status.Code.INTERNAL);
         }
     }
+<%_ } _%>
 
 }

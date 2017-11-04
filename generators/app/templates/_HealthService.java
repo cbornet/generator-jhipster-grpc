@@ -1,4 +1,4 @@
-package <%=packageName%>.grpc;
+package <%= packageName %>.grpc;
 
 import com.google.protobuf.Empty;
 import io.reactivex.Single;

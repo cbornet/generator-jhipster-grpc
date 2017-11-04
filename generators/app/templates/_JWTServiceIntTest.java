@@ -1,10 +1,10 @@
-package <%=packageName%>.grpc;
+package <%= packageName %>.grpc;
 
 <%_ if (databaseType === 'cassandra') { _%>
-import <%=packageName%>.AbstractCassandraTest;
+import <%= packageName %>.AbstractCassandraTest;
 <%_ } _%>
-import <%=packageName%>.<%=mainClass%>;
-import <%=packageName%>.security.jwt.TokenProvider;
+import <%= packageName %>.<%=mainClass%>;
+import <%= packageName %>.security.jwt.TokenProvider;
 
 import io.grpc.Server;
 import io.grpc.Status;

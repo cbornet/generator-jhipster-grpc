@@ -1,6 +1,6 @@
-package <%=packageName%>.grpc;
+package <%= packageName %>.grpc;
 
-import <%=packageName%>.config.DefaultProfileUtil;
+import <%= packageName %>.config.DefaultProfileUtil;
 
 import com.google.protobuf.Empty;
 import io.github.jhipster.config.JHipsterProperties;

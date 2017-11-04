@@ -1,15 +1,25 @@
-package <%=packageName%>.grpc;
+package <%= packageName %>.grpc;
 
-import <%=packageName%>.domain.User;
-<%_ if (authenticationType === 'session') { _%>
-import <%=packageName%>.repository.PersistentTokenRepository;
+<%_ if (authenticationType !== 'oauth2' || applicationType !== 'monolith') { _%>
+import <%= packageName %>.domain.User;
 <%_ } _%>
-import <%=packageName%>.repository.UserRepository;
-import <%=packageName%>.security.SecurityUtils;
-import <%=packageName%>.service.MailService;
-import <%=packageName%>.service.UserService;
-import <%=packageName%>.service.dto.UserDTO;
-import <%=packageName%>.web.rest.vm.ManagedUserVM;
+<%_ if (authenticationType === 'session') { _%>
+import <%= packageName %>.repository.PersistentTokenRepository;
+<%_ } _%>
+<%_ if (authenticationType !== 'oauth2') { _%>
+import <%= packageName %>.repository.UserRepository;
+import <%= packageName %>.security.SecurityUtils;
+<%_ } _%>
+<%_ if (authenticationType !== 'oauth2') { _%>
+import <%= packageName %>.service.MailService;
+<%_ } _%>
+<%_ if (authenticationType !== 'oauth2' || applicationType === 'monolith') { _%>
+import <%= packageName %>.service.UserService;
+<%_ } _%>
+<%_ if (authenticationType !== 'oauth2') { _%>
+import <%= packageName %>.service.dto.UserDTO;
+import <%= packageName %>.web.rest.vm.ManagedUserVM;
+<%_ } _%>
 
 import com.google.protobuf.Empty;
 import com.google.protobuf.StringValue;
@@ -18,48 +28,138 @@ import io.grpc.Status;
 import io.reactivex.Flowable;
 <%_ } _%>
 import io.reactivex.Single;
+<%_ if (authenticationType !== 'oauth2') { _%>
 import org.apache.commons.lang3.StringUtils;
+<%_ } _%>
 import org.lognet.springboot.grpc.GRpcService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+<%_ if (authenticationType !== 'oauth2') { _%>
 import org.springframework.data.util.Pair;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-<%_ if (databaseType === 'sql') { _%>
-import org.springframework.transaction.TransactionSystemException;
 <%_ } _%>
+import org.springframework.security.core.Authentication;
+<%_ if (authenticationType === 'oauth2' && applicationType !== 'monolith') { _%>
+import org.springframework.security.core.GrantedAuthority;
+<%_ } _%>
+<%_ if (authenticationType === 'oauth2') { _%>
+import org.springframework.security.core.context.SecurityContext;
+<%_ } _%>
+import org.springframework.security.core.context.SecurityContextHolder;
+<%_ if (authenticationType === 'oauth2') { _%>
+import org.springframework.security.oauth2.provider.OAuth2Authentication;
+
+    <%_ if (applicationType !== 'monolith') { _%>
+import java.util.Map;
+import java.util.stream.Collectors;
+    <%_ } _%>
+<%_ } else { _%>
+    <%_ if (databaseType === 'sql') { _%>
+import org.springframework.transaction.TransactionSystemException;
+    <%_ } _%>
 
 import javax.validation.ConstraintViolationException;
-<%_ if (authenticationType === 'session') { _%>
+    <%_ if (authenticationType === 'session') { _%>
 import java.util.ArrayList;
-<%_ } _%>
+    <%_ } _%>
 import java.util.Optional;
+<%_ } _%>
 
 @GRpcService
 public class AccountService extends RxAccountServiceGrpc.AccountServiceImplBase {
 
     private final Logger log = LoggerFactory.getLogger(AccountService.class);
 
+    <%_ if (authenticationType !== 'oauth2') { _%>
     private final UserRepository userRepository;
 
+    private final MailService mailService;
+    
+    <%_ } _%>
+    <%_ if (authenticationType !== 'oauth2' || applicationType === 'monolith') { _%>
     private final UserService userService;
 
-    private final MailService mailService;
-
+    <%_ } _%>
     <%_ if (authenticationType === 'session') { _%>
     private final PersistentTokenRepository persistentTokenRepository;
 
     <%_ } _%>
     private final UserProtoMapper userProtoMapper;
 
-    public AccountService(UserRepository userRepository, UserService userService, MailService mailService, <% if (authenticationType === 'session') { %>PersistentTokenRepository persistentTokenRepository, <% } %>UserProtoMapper userProtoMapper) {
+    public AccountService(<% if (authenticationType !== 'oauth2') { %>UserRepository userRepository, MailService mailService, <% } if (authenticationType !== 'oauth2' || applicationType === 'monolith') { %>UserService userService, <% } if (authenticationType === 'session') { %>PersistentTokenRepository persistentTokenRepository, <% } %>UserProtoMapper userProtoMapper) {
+        <%_ if (authenticationType !== 'oauth2') { _%>
         this.userRepository = userRepository;
-        this.userService = userService;
         this.mailService = mailService;
+        <%_ } _%>
+        <%_ if (authenticationType !== 'oauth2' || applicationType === 'monolith') { _%>
+        this.userService = userService;
+        <%_ } _%>
         <%_ if (authenticationType === 'session') { _%>
         this.persistentTokenRepository = persistentTokenRepository;
         <%_ } _%>
         this.userProtoMapper = userProtoMapper;
+    }
+
+    @Override
+    public Single<StringValue> isAuthenticated(Single<Empty> request) {
+        return request.map(e -> {
+            log.debug("gRPC request to check if the current user is authenticated");
+            Authentication principal = SecurityContextHolder.getContext().getAuthentication();
+            StringValue.Builder builder = StringValue.newBuilder();
+            if (principal != null) {
+                builder.setValue(principal.getName());
+            }
+            return builder.build();
+        });
+    }
+
+    @Override
+    public Single<UserProto> getAccount(Single<Empty> request) {
+        return request
+<%_ if (authenticationType === 'oauth2') { _%>
+            .map(e -> SecurityContextHolder.getContext())
+            .filter(context -> context.getAuthentication() != null)
+            .switchIfEmpty(Single.error(Status.INTERNAL.withDescription("Authentication could not be found").asException()))
+            .map(SecurityContext::getAuthentication)
+    <%_ if (applicationType === 'monolith') { _%>
+            .map(authentication -> {
+                // For some reason this doesn't work with filter...
+                if (authentication instanceof OAuth2Authentication) {
+                    return authentication;
+                }
+                throw Status.INTERNAL.withDescription("User must be authenticated with OAuth2").asException();
+            })
+            .map(it -> userService.getUserFromAuthentication((OAuth2Authentication) it))
+            .map(userProtoMapper::userDTOToUserProto);
+    }
+    <%_ } else { _%>
+            .filter(it -> it instanceof OAuth2Authentication)
+            .map(it -> ((OAuth2Authentication) it).getUserAuthentication())
+            .map(authentication -> {
+                Map<String, Object> details = (Map<String, Object>) authentication.getDetails();
+                Boolean activated = false;
+                if (details.get("email_verified") != null) {
+                    activated = (Boolean) details.get("email_verified");
+                }
+                return new User(
+                    authentication.getName(),
+                    (String) details.get("given_name"),
+                    (String) details.get("family_name"),
+                    (String) details.get("email"),
+                    (String) details.get("langKey"),
+                    (String) details.get("imageUrl"),
+                    activated,
+                    authentication.getAuthorities().stream()
+                        .map(GrantedAuthority::getAuthority)
+                        .collect(Collectors.toSet())
+                );
+            })
+            .map(userProtoMapper::userToUserProto);
+    }
+    <%_ } _%>
+<%_ } else { _%>
+            .map(e -> Optional.ofNullable(userService.getUserWithAuthorities()).orElseThrow(Status.INTERNAL::asException))
+            .map(UserDTO::new)
+            .map(userProtoMapper::userDTOToUserProto);
     }
 
     @Override
@@ -100,27 +200,6 @@ public class AccountService extends RxAccountServiceGrpc.AccountServiceImplBase 
             .map(StringValue::getValue)
             .map(key -> userService.activateRegistration(key).orElseThrow(Status.INTERNAL::asException))
             .map(userProtoMapper::userToUserProto);
-    }
-
-    @Override
-    public Single<StringValue> isAuthenticated(Single<Empty> request) {
-        return request.map(e -> {
-            log.debug("gRPC request to check if the current user is authenticated");
-            Authentication principal = SecurityContextHolder.getContext().getAuthentication();
-            StringValue.Builder builder = StringValue.newBuilder();
-            if (principal != null) {
-                builder.setValue(principal.getName());
-            }
-            return builder.build();
-        });
-    }
-
-    @Override
-    public Single<UserProto> getAccount(Single<Empty> request) {
-        return request
-            .map(e -> Optional.ofNullable(userService.getUserWithAuthorities()).orElseThrow(Status.INTERNAL::asException))
-            .map(UserDTO::new)
-            .map(userProtoMapper::userDTOToUserProto);
     }
 
     @Override
@@ -225,4 +304,6 @@ public class AccountService extends RxAccountServiceGrpc.AccountServiceImplBase 
             password.length() >= ManagedUserVM.PASSWORD_MIN_LENGTH &&
             password.length() <= ManagedUserVM.PASSWORD_MAX_LENGTH;
     }
+<%_ } _%>
+
 }

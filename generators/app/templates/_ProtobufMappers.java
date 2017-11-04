@@ -1,4 +1,4 @@
-package <%=packageName%>.grpc;
+package <%= packageName %>.grpc;
 
 <%_ if ((databaseType === 'sql' || databaseType === 'mongodb') && !skipUserManagement) { _%>
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -121,7 +121,7 @@ public abstract class ProtobufMappers {
     }
     <%_ if (authenticationType == 'session') { _%>
 
-    public static PersistentToken persistentTokenToPersistentTokenProto(<%=packageName%>.domain.PersistentToken token) {
+    public static PersistentToken persistentTokenToPersistentTokenProto(<%= packageName %>.domain.PersistentToken token) {
         if (token == null) {
             return null;
         }

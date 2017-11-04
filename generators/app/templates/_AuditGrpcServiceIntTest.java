@@ -1,13 +1,13 @@
-package <%=packageName%>.grpc;
+package <%= packageName %>.grpc;
 
 <%_ if (databaseType === 'cassandra') { _%>
-import <%=packageName%>.AbstractCassandraTest;
+import <%= packageName %>.AbstractCassandraTest;
 <%_ } _%>
-import <%=packageName%>.<%=mainClass%>;
-import <%=packageName%>.config.audit.AuditEventConverter;
-import <%=packageName%>.domain.PersistentAuditEvent;
-import <%=packageName%>.repository.PersistenceAuditEventRepository;
-import <%=packageName%>.service.AuditEventService;
+import <%= packageName %>.<%=mainClass%>;
+import <%= packageName %>.config.audit.AuditEventConverter;
+import <%= packageName %>.domain.PersistentAuditEvent;
+import <%= packageName %>.repository.PersistenceAuditEventRepository;
+import <%= packageName %>.service.AuditEventService;
 
 import com.google.protobuf.<%=idProtoWrappedType%>;
 import io.grpc.Server;

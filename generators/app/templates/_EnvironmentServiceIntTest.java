@@ -1,11 +1,11 @@
-package <%=packageName%>.grpc;
+package <%= packageName %>.grpc;
 
 <%_ if (databaseType === 'cassandra') { _%>
-import <%=packageName%>.AbstractCassandraTest;
+import <%= packageName %>.AbstractCassandraTest;
 <%_ } _%>
-import <%=packageName%>.<%=mainClass%>;
+import <%= packageName %>.<%=mainClass%>;
 <%_ if (authenticationType === 'uaa' && applicationType !== 'uaa') { _%>
-import <%=packageName%>.config.SecurityBeanOverrideConfiguration;
+import <%= packageName %>.config.SecurityBeanOverrideConfiguration;
 <%_ } _%>
 
 import com.fasterxml.jackson.core.type.TypeReference;

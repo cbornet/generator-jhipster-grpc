@@ -1,7 +1,7 @@
-package <%=packageName%>.grpc;
+package <%= packageName %>.grpc;
 
-import <%=packageName%>.security.AuthoritiesConstants;<% if (authenticationType === 'jwt') { %>
-import <%=packageName%>.security.jwt.TokenProvider;<% } %>
+import <%= packageName %>.security.AuthoritiesConstants;<% if (authenticationType === 'jwt') { %>
+import <%= packageName %>.security.jwt.TokenProvider;<% } %>
 import io.grpc.*;
 import io.grpc.Status;
 import org.slf4j.Logger;

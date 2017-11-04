@@ -233,27 +233,26 @@ module.exports = yeoman.Base.extend({
                 jhipsterFunc.applyFromGradleScript('gradle/grpc');
             }
 
-            if (!this.skipUserManagement || (this.authenticationType === 'oauth2' && this.applicationType === 'monolith')) {
-                this.template('_user.proto', protoPackageDir + 'user.proto');
-                this.template('_UserGrpcService.java', javaDir + 'grpc/UserGrpcService.java');
-                this.template('_UserProtoMapper.java', javaDir + 'grpc/UserProtoMapper.java');
-                this.template('_UserGrpcServiceIntTest.java', testDir + 'grpc/UserGrpcServiceIntTest.java');
-                if (this.databaseType === 'sql' || this.databaseType === 'mongodb') {
-                    this.template('_audit.proto', protoPackageDir + 'audit.proto');
-                    this.template('_AuditGrpcService.java', javaDir + 'grpc/AuditGrpcService.java');
-                    this.template('_AuditGrpcServiceIntTest.java', testDir + 'grpc/AuditGrpcServiceIntTest.java');
-                }
-                if (this.authenticationType === 'jwt') {
-                    this.template('_jwt.proto', protoPackageDir + 'jwt.proto');
-                    this.template('_JWTService.java', javaDir + 'grpc/JWTService.java');
-                    this.template('_JWTServiceIntTest.java', testDir + 'grpc/JWTServiceIntTest.java');
-                }
-            }
-
-            if (!this.skipUserManagement && this.authenticationType !== 'oauth2') {
+            if (!this.skipUserManagement || this.authenticationType === 'oauth2') {
                 this.template('_account.proto', protoPackageDir + 'account.proto');
                 this.template('_AccountService.java', javaDir + 'grpc/AccountService.java');
                 this.template('_AccountServiceIntTest.java', testDir + 'grpc/AccountServiceIntTest.java');
+                this.template('_user.proto', protoPackageDir + 'user.proto');
+                this.template('_UserProtoMapper.java', javaDir + 'grpc/UserProtoMapper.java');
+                if (this.applicationType === 'monolith') {
+                    this.template('_UserGrpcService.java', javaDir + 'grpc/UserGrpcService.java');
+                    this.template('_UserGrpcServiceIntTest.java', testDir + 'grpc/UserGrpcServiceIntTest.java');
+                    if (this.databaseType === 'sql' || this.databaseType === 'mongodb') {
+                        this.template('_audit.proto', protoPackageDir + 'audit.proto');
+                        this.template('_AuditGrpcService.java', javaDir + 'grpc/AuditGrpcService.java');
+                        this.template('_AuditGrpcServiceIntTest.java', testDir + 'grpc/AuditGrpcServiceIntTest.java');
+                    }
+                    if (this.authenticationType === 'jwt') {
+                        this.template('_jwt.proto', protoPackageDir + 'jwt.proto');
+                        this.template('_JWTService.java', javaDir + 'grpc/JWTService.java');
+                        this.template('_JWTServiceIntTest.java', testDir + 'grpc/JWTServiceIntTest.java');
+                    }
+                }
             }
 
         },

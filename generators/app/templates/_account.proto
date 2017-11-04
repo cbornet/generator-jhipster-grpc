@@ -1,39 +1,41 @@
 syntax = "proto3";
 
 option java_multiple_files = true;
-option java_package = "<%=packageName%>.grpc";
+option java_package = "<%= packageName %>.grpc";
 
 import "google/protobuf/empty.proto";
 import "google/protobuf/wrappers.proto";
-<%_ if (authenticationType == 'session') { _%>
-    <%_ if (databaseType == 'cassandra') { _%>
+<%_ if (authenticationType === 'session') { _%>
+    <%_ if (databaseType === 'cassandra') { _%>
 import "google/protobuf/timestamp.proto";
     <%_ } else { _%>
 import "util/date.proto";
     <% _} _%>
 <%_ } _%>
-import "<%=packageFolder%>/user.proto";
+import "<%= packageFolder %>/user.proto";
 
-package <%=packageName%>;
+package <%= packageName %>;
 
 service AccountService {
-    rpc RegisterAccount(UserProto) returns (google.protobuf.Empty);
-    rpc ActivateAccount(google.protobuf.StringValue) returns (UserProto);
     rpc IsAuthenticated(google.protobuf.Empty) returns (google.protobuf.StringValue);
     rpc GetAccount(google.protobuf.Empty) returns (UserProto);
+    <%_ if (authenticationType !== 'oauth2') { _%>
+    rpc RegisterAccount(UserProto) returns (google.protobuf.Empty);
+    rpc ActivateAccount(google.protobuf.StringValue) returns (UserProto);
     rpc SaveAccount(UserProto) returns (google.protobuf.Empty);
     rpc ChangePassword(google.protobuf.StringValue) returns (google.protobuf.Empty);
-    <%_ if (authenticationType == 'session') { _%>
+    rpc RequestPasswordReset(google.protobuf.StringValue) returns (google.protobuf.Empty);
+    rpc FinishPasswordReset(KeyAndPassword) returns (google.protobuf.Empty);
+    <%_ } _%>
+    <%_ if (authenticationType === 'session') { _%>
     rpc GetCurrentSessions(google.protobuf.Empty) returns (stream PersistentToken);
     rpc InvalidateSession(google.protobuf.StringValue) returns (google.protobuf.Empty);
     <%_ } _%>
-    rpc RequestPasswordReset(google.protobuf.StringValue) returns (google.protobuf.Empty);
-    rpc FinishPasswordReset(KeyAndPassword) returns (google.protobuf.Empty);
 }
 
-<%_ if (authenticationType == 'session') { _%>
+<%_ if (authenticationType === 'session') { _%>
 message PersistentToken {
-    string series = 1;<% if (databaseType == 'cassandra') { %>
+    string series = 1;<% if (databaseType === 'cassandra') { %>
     google.protobuf.Timestamp token_date = 2;<% } else { %>
     util.Date token_date = 2;<% } %>
     string ip_address = 3;
@@ -41,7 +43,9 @@ message PersistentToken {
 }
 <%_ } _%>
 
+<%_ if (authenticationType !== 'oauth2') { _%>
 message KeyAndPassword {
     string key = 1;
     string new_password =2;
 }
+<%_ } _%>
