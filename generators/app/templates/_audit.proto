@@ -12,7 +12,7 @@ package <%= packageName %>;
 
 service AuditService {
     rpc getAuditEvents(AuditRequest) returns (stream AuditEvent);
-    rpc getAuditEvent(google.protobuf.<%=idProtoWrappedType%>) returns (AuditEvent);
+    rpc getAuditEvent(google.protobuf.<%= idProtoWrappedType %>) returns (AuditEvent);
 }
 
 message AuditRequest {

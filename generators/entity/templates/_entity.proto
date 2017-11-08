@@ -6,12 +6,22 @@ option java_package = "<%= packageName %>.grpc.entity.<%=entityUnderscoredName%>
 
 package <%= packageName %>.entity;
 
-import "google/protobuf/empty.proto";<% if (fieldsContainZonedDateTime || fieldsContainInstant) { %>
-import "google/protobuf/timestamp.proto";<% } %>
-import "google/protobuf/wrappers.proto";<% if (fieldsContainBigDecimal) { %>
-import "util/decimal.proto";<% } %><% if (fieldsContainLocalDate) { %>
-import "util/date.proto";<% } %><% if (pagination !== 'no') { %>
-import "util/pagination.proto";<% } %>
+import "google/protobuf/empty.proto";
+<%_ if (fieldsContainZonedDateTime || fieldsContainInstant) { _%>
+import "google/protobuf/timestamp.proto";
+<%_ } _%>
+import "google/protobuf/wrappers.proto";
+<%_ if (fieldsContainBigDecimal) { _%>
+import "util/decimal.proto";
+<%_ } _%>
+<%_ if (fieldsContainLocalDate) { _%>
+import "util/date.proto";
+<%_ } _%>
+<%_ if (jpaMetamodelFiltering) {  _%>
+import "util/queryfilter.proto";
+<%_ } else if (pagination !== 'no') { _%>
+import "util/pagination.proto";
+<%_ } _%>
 <%_ for (r of relationships.filter(r => r.relationshipType == 'many-to-many' && r.ownerSide == true)) { _%>
 import "<%= r.otherEntityProtobufFile %>";
 <%_ } _%>
@@ -30,7 +40,7 @@ service <%= entityClass %>Service {
 
     // Get all the <%=entityInstancePlural%>.
     // response : the list of <%= entityInstance %>Protos
-    rpc GetAll<%= entityClassPlural %> (<% if (pagination !== 'no') { %>util.PageRequest<% } else { %>google.protobuf.Empty<% } %>) returns (stream <%= entityClass %>Proto);
+    rpc GetAll<%= entityClassPlural %> (<% if (pagination !== 'no') { %>util.PageRequest<% if (jpaMetamodelFiltering) {  %>AndFilters<% }} else { if (jpaMetamodelFiltering) {  %>stream util.QueryFilter<% } else { %>google.protobuf.Empty<% }} %>) returns (stream <%= entityClass %>Proto);
 
     // Get a <%= entityInstance %> from it's id.
     // request : the id of the <%= entityInstance %>Proto to retrieve

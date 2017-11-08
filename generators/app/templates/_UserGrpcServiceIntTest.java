@@ -23,9 +23,7 @@ import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
-<%_ if (authenticationType !== 'oauth2') { _%>
 import org.apache.commons.lang3.RandomStringUtils;
-<%_ } _%>
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -133,12 +131,12 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
         <%_ if (databaseType === 'cassandra') { _%>
         user.setId(UUID.randomUUID().toString());
         <%_ } _%>
-        user.setLogin(DEFAULT_LOGIN);
+        user.setLogin(DEFAULT_LOGIN + RandomStringUtils.randomAlphanumeric(10));
         <%_ if (authenticationType !== 'oauth2') { _%>
         user.setPassword(RandomStringUtils.random(60));
         <%_ } _%>
         user.setActivated(true);
-        user.setEmail(DEFAULT_EMAIL);
+        user.setEmail(RandomStringUtils.randomAlphanumeric(10) + DEFAULT_EMAIL);
         user.setFirstName(DEFAULT_FIRSTNAME);
         user.setLastName(DEFAULT_LASTNAME);
         <%_ if (databaseType !== 'cassandra') { _%>
@@ -154,6 +152,8 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
         userRepository.deleteAll();
         <%_ } _%>
         user = createEntity(<% if (databaseType === 'sql') { %>null<% } %>);
+        user.setLogin(DEFAULT_LOGIN);
+        user.setEmail(DEFAULT_EMAIL);
     }
     <%_ if (authenticationType !== 'oauth2') { _%>
 

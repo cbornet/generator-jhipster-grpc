@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "<%= packageName %>.grpc";
+
+import "util/pagination.proto";
+
+package util;
+
+message QueryFilter {
+    string property = 1;
+    string value = 2;
+}
+
+message PageRequestAndFilters {
+    PageRequest page_request = 1;
+    repeated QueryFilter query_filters = 2;
+}

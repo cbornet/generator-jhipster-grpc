@@ -1,30 +1,41 @@
 package <%= packageName %>.grpc.entity.<%=entityUnderscoredName%>;
-<% if (databaseType == 'cassandra') { %>
+<% if (databaseType === 'cassandra') { %>
 import <%= packageName %>.AbstractCassandraTest;<% } %>
 import <%= packageName %>.<%= mainClass %>;
 <% if (authenticationType == 'uaa') { %>
 import <%= packageName %>.config.SecurityBeanOverrideConfiguration;
 <% } %>
-import <%= packageName %>.domain.<%= entityClass %>;<% if (pagination !== 'no') { %>
-import <%= packageName %>.grpc.Direction;
-import <%= packageName %>.grpc.Order;
-import <%= packageName %>.grpc.PageRequest;<% } else { %>
-import com.google.protobuf.Empty;<% } %>
+import <%= packageName %>.domain.<%= entityClass %>;
 <%_ for (r of relationships) { // import entities in required relationships
-        if (r.relationshipValidate != null && r.relationshipValidate === true) { _%>
+        if (r.relationshipValidate != null && r.relationshipValidate === true || jpaMetamodelFiltering) { _%>
 import <%= packageName %>.domain.<%= r.otherEntityNameCapitalized %>;
 <%_ } } _%>
 <%_ for (r of relationships) { // import entities in required relationships
-        if (r.relationshipValidate != null && r.relationshipValidate === true) { _%>
-import <%=r.otherEntityTest%>;
+        if (r.relationshipValidate != null && r.relationshipValidate === true || jpaMetamodelFiltering) { _%>
+import <%= r.otherEntityTest %>;
 <%_ } } _%>
-import <%= packageName %>.repository.<%= entityClass %>Repository;<% if (searchEngine == 'elasticsearch') { %>
-import <%= packageName %>.repository.search.<%= entityClass %>SearchRepository;<% } %>
-import <%= packageName %>.service.<%= entityClass %>Service;<% if (dto == 'mapstruct') { %>
+<%_ if (pagination !== 'no') { _%>
+import <%= packageName %>.grpc.*;
+<%_ } else if (jpaMetamodelFiltering) { _%>
+import <%= packageName %>.grpc.QueryFilter;
+<%_ } _%>
+import <%= packageName %>.repository.<%= entityClass %>Repository;
+<%_ if (searchEngine == 'elasticsearch') { _%>
+import <%= packageName %>.repository.search.<%= entityClass %>SearchRepository;
+<%_ } _%>
+import <%= packageName %>.service.<%= entityClass %>Service;
+<%_ if (jpaMetamodelFiltering) { _%>
+import <%= packageName %>.service.<%= entityClass %>QueryService;
+<%_ } _%>
+<%_ if (dto == 'mapstruct') { _%>
 import <%= packageName %>.service.dto.<%= entityClass %>DTO;
-import <%= packageName %>.service.mapper.<%= entityClass %>Mapper;<% } %>
+import <%= packageName %>.service.mapper.<%= entityClass %>Mapper;
+<%_ } _%>
 import <%= packageName %>.web.rest.TestUtil;
 
+<%_ if (!jpaMetamodelFiltering && pagination === 'no') { _%>
+import com.google.protobuf.Empty;
+<%_ } _%>
 import com.google.protobuf.<%=idProtoWrappedType%>;
 <%_ if (searchEngine == 'elasticsearch' && this.databaseType !== 'sql') { _%>
 import com.google.protobuf.StringValue;
@@ -34,6 +45,11 @@ import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
+<%_ if (pagination === 'no' && jpaMetamodelFiltering) { _%>
+import io.reactivex.Flowable;
+<%_ } else { _%>
+import io.reactivex.Single;
+<%_ } _%>
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -41,10 +57,18 @@ import org.junit.runner.RunWith;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;<% if (databaseType == 'sql') { %>
-import org.springframework.transaction.annotation.Transactional;<% } %>
-<% if (databaseType == 'sql') { %>
-import javax.persistence.EntityManager;<% } %><% if (fieldsContainLocalDate == true) { %>
+<%_ if (jpaMetamodelFiltering) { _%>
+import org.springframework.core.convert.ConversionService;
+<%_ } _%>
+import org.springframework.test.context.junit4.SpringRunner;
+<%_ if (databaseType === 'sql') { _%>
+import org.springframework.transaction.support.TransactionTemplate;
+<%_ } _%>
+
+<%_ if (databaseType === 'sql') { _%>
+import javax.persistence.EntityManager;
+<%_ } _%>
+<% if (fieldsContainLocalDate == true) { %>
 import java.time.LocalDate;<% } %><% if (fieldsContainZonedDateTime == true || fieldsContainInstant == true) { %>
 import java.time.Instant;<% } %><% if (fieldsContainZonedDateTime == true) { %>
 import java.time.ZonedDateTime;
@@ -53,7 +77,6 @@ import java.time.ZoneId;<% } %><% if (fieldsContainBigDecimal == true) { %>
 import java.math.BigDecimal;<% } %><% if (fieldsContainBlob == true && databaseType === 'cassandra') { %>
 import java.nio.ByteBuffer;<% } %>
 import java.util.*;
-import java.util.stream.StreamSupport;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 
@@ -70,7 +93,7 @@ import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 <%_ } else { _%>
 @SpringBootTest(classes = <%= mainClass %>.class)
 <%_ } _%>
-public class <%= entityClass %>GrpcServiceIntTest <% if (databaseType == 'cassandra') { %>extends AbstractCassandraTest <% } %>{
+public class <%= entityClass %>GrpcServiceIntTest <% if (databaseType === 'cassandra') { %>extends AbstractCassandraTest <% } %>{
 <%_
     let oldSource = '';
     try {
@@ -238,32 +261,45 @@ _%>
     private <%= entityClass %>ProtoMapper <%= entityInstance %>ProtoMapper;
 
     @Autowired
-    private <%= entityClass %>Service <%= entityInstance %>Service;<% if (searchEngine == 'elasticsearch') { %>
+    private <%= entityClass %>Service <%= entityInstance %>Service;
+
+    <%_ if (jpaMetamodelFiltering) { _%>
+    @Autowired
+    private <%= entityClass %>QueryService <%= entityInstance %>QueryService;
 
     @Autowired
-    private <%= entityClass %>SearchRepository <%= entityInstance %>SearchRepository;<% } %>
-<%_ if (databaseType == 'sql') { _%>
+    private ConversionService conversionService;
 
+    <%_ } _%>
+    <%_ if (searchEngine == 'elasticsearch') { _%>
+    @Autowired
+    private <%= entityClass %>SearchRepository <%= entityInstance %>SearchRepository;
+
+    <%_ } _%>
+    <%_ if (databaseType === 'sql') { _%>
     @Autowired
     private EntityManager em;
-<%_ } _%>
 
+    @Autowired
+    private TransactionTemplate transactionTemplate;
+
+    <%_ } _%>
     private Server mockServer;
 
     private <%= entityClass %>ServiceGrpc.<%= entityClass %>ServiceBlockingStub stub;
+
+    private Rx<%= entityClass %>ServiceGrpc.Rx<%= entityClass %>ServiceStub rxstub;
 
     private <%= entityClass %> <%= entityInstance %>;
 
     @Before
     public void setup() throws Exception {
         MockitoAnnotations.initMocks(this);
-        <%= entityClass %>GrpcService <%= entityInstance %>GrpcService = new <%= entityClass %>GrpcService(<%= entityInstance %>Service, <%= entityInstance %>ProtoMapper);
+        <%= entityClass %>GrpcService <%= entityInstance %>GrpcService = new <%= entityClass %>GrpcService(<%= entityInstance %>Service, <% if (jpaMetamodelFiltering) { %><%= entityInstance %>QueryService, conversionService, <% } %><%= entityInstance %>ProtoMapper);
         String uniqueServerName = "Mock server for " + <%= entityClass %>GrpcService.class;
-        mockServer = InProcessServerBuilder
-            .forName(uniqueServerName).directExecutor().addService(<%= entityInstance %>GrpcService).build().start();
-        InProcessChannelBuilder channelBuilder =
-            InProcessChannelBuilder.forName(uniqueServerName).directExecutor();
-        stub = <%= entityClass %>ServiceGrpc.newBlockingStub(channelBuilder.build());
+        mockServer = InProcessServerBuilder.forName(uniqueServerName).addService(<%= entityInstance %>GrpcService).build().start();
+        stub = <%= entityClass %>ServiceGrpc.newBlockingStub(InProcessChannelBuilder.forName(uniqueServerName).directExecutor().build());
+        rxstub = Rx<%= entityClass %>ServiceGrpc.newRxStub(InProcessChannelBuilder.forName(uniqueServerName).build());
     }
 
     @After
@@ -277,7 +313,7 @@ _%>
      * This is a static method, as tests for other entities might also need it,
      * if they test an entity which requires the current entity.
      */
-    public static <%= entityClass %> createEntity(<% if (databaseType == 'sql') { %>EntityManager em<% } %>) {
+    public static <%= entityClass %> createEntity(<% if (databaseType === 'sql') { %>EntityManager em<% } %>) {
         <%_ if (fluentMethods) { _%>
         <%= entityClass %> <%= entityInstance %> = new <%= entityClass %>()<% for (idx in fields) { %>
             .<%= fields[idx].fieldName %>(<%='DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase()%>)<% if ((fields[idx].fieldType == 'byte[]' || fields[idx].fieldType === 'ByteBuffer') && fields[idx].fieldTypeBlobContent != 'text') { %>
@@ -300,9 +336,9 @@ _%>
             const relationshipNameCapitalized = relationships[idx].relationshipNameCapitalized;
             if (relationshipValidate != null && relationshipValidate === true) { _%>
         // Add required entity
-        <%= otherEntityNameCapitalized %> <%= relationshipFieldName %> = <%= otherEntityNameCapitalized %>GrpcServiceIntTest.createEntity(em);
-        em.persist(<%= relationshipFieldName %>);
-        em.flush();
+            <%= otherEntityNameCapitalized %> <%= relationshipFieldName %> = <%= otherEntityNameCapitalized %>GrpcServiceIntTest.createEntity(em);
+            em.persist(<%= relationshipFieldName %>);
+            em.flush();
             <%_ if (relationshipType == 'many-to-many') { _%>
         <%= entityInstance %>.get<%= relationshipNameCapitalizedPlural %>().add(<%= relationshipFieldName %>);
             <%_ } else { _%>
@@ -317,16 +353,18 @@ _%>
         <%_ for (field of fields.filter(f => f.fieldType === 'ByteBuffer')) { _%>
         <%='DEFAULT_' + field.fieldNameUnderscored.toUpperCase()%>.rewind();
         <%_ } _%>
-        <%_ if (databaseType == 'mongodb' || databaseType == 'cassandra') { _%>
         <%= entityInstance %>Repository.deleteAll();
-        <%_ } if (searchEngine == 'elasticsearch') { _%>
+        <%_ if (searchEngine == 'elasticsearch') { _%>
         <%= entityInstance %>SearchRepository.deleteAll();
         <%_ } _%>
-        <%= entityInstance %> = createEntity(<% if (databaseType == 'sql') { %>em<% } %>);
+        <%_ if (databaseType === 'sql') { _%>
+        <%= entityInstance %> = transactionTemplate.execute(s -> createEntity(em));
+        <%_ } else { _%>
+        <%= entityInstance %> = createEntity();
+        <%_ } _%>
     }
 
-    @Test<% if (databaseType == 'sql') { %>
-    @Transactional<% } %>
+    @Test
     public void create<%= entityClass %>() throws Exception {
         int databaseSizeBeforeCreate = <%= entityInstance %>Repository.findAll().size();
 
@@ -342,16 +380,13 @@ _%>
         List<<%= entityClass %>> <%= entityInstance %>List = <%= entityInstance %>Repository.findAll();
         assertThat(<%= entityInstance %>List).hasSize(databaseSizeBeforeCreate + 1);
         <%= entityClass %> test<%= entityClass %> = <%= entityInstance %>List.get(<%= entityInstance %>List.size() - 1);
-        <%_ for (idx in fields) { if (fields[idx].fieldType == 'ZonedDateTime') { _%>
-        assertThat(test<%= entityClass %>.get<%=fields[idx].fieldInJavaBeanMethod%>()).isEqualTo(<%='DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase()%>);
-        <%_ } else if ((fields[idx].fieldType == 'byte[]' || fields[idx].fieldType === 'ByteBuffer') && fields[idx].fieldTypeBlobContent != 'text') { _%>
-        assertThat(test<%= entityClass %>.get<%=fields[idx].fieldInJavaBeanMethod%>()).isEqualTo(<%='DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase()%><% if (fields[idx].fieldType === 'ByteBuffer') { %>.rewind()<% } %>);
-        assertThat(test<%= entityClass %>.get<%=fields[idx].fieldInJavaBeanMethod%>ContentType()).isEqualTo(<%='DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase()%>_CONTENT_TYPE);
-        <%_ } else if (fields[idx].fieldType.toLowerCase() == 'boolean') { _%>
-        assertThat(test<%= entityClass %>.is<%=fields[idx].fieldInJavaBeanMethod%>()).isEqualTo(<%='DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase()%>);
-        <%_ } else { _%>
-        assertThat(test<%= entityClass %>.get<%=fields[idx].fieldInJavaBeanMethod%>()).isEqualTo(<%='DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase()%>);
-        <%_ }} if (searchEngine == 'elasticsearch') { _%>
+        <%_ for (idx in fields) { _%>
+            <%_ if ((fields[idx].fieldType == 'byte[]' || fields[idx].fieldType === 'ByteBuffer') && fields[idx].fieldTypeBlobContent != 'text') { _%>
+        assertThat(test<%= entityClass %>.get<%= fields[idx].fieldInJavaBeanMethod %>ContentType()).isEqualTo(<%='DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase()%>_CONTENT_TYPE);
+            <%_ } _%>
+        assertThat(test<%= entityClass %>.<% if (fields[idx].fieldType == 'Boolean') { %>is<% } else { %>get<% } %><%= fields[idx].fieldInJavaBeanMethod %>()).isEqual<% if (fields[idx].fieldType === 'BigDecimal') { %>ByComparing<% } %>To(<%='DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase()%>);
+        <%_ } _%>
+        <%_ if (searchEngine == 'elasticsearch') { _%>
 
         // Validate the <%= entityClass %> in Elasticsearch
         <%= entityClass %> <%= entityInstance %>Es = <%= entityInstance %>SearchRepository.findOne(test<%= entityClass %>.getId());
@@ -359,13 +394,12 @@ _%>
         <%_ } _%>
     }
 
-    @Test<% if (databaseType == 'sql') { %>
-    @Transactional<% } %>
+    @Test
     public void create<%= entityClass %>WithExistingId() throws Exception {
         int databaseSizeBeforeCreate = <%= entityInstance %>Repository.findAll().size();
 
         // Create the <%= entityClass %> with an existing ID
-        <%= entityInstance %>.setId(<% if (databaseType == 'sql') { %>1L<% } else if (databaseType == 'mongodb') { %>"existing_id"<% } else if (databaseType == 'cassandra') { %>UUID.randomUUID()<% } %>);
+        <%= entityInstance %>.setId(<% if (databaseType === 'sql') { %>1L<% } else if (databaseType === 'mongodb') { %>"existing_id"<% } else if (databaseType === 'cassandra') { %>UUID.randomUUID()<% } %>);
         <%_ if (dto == 'mapstruct') { _%>
         <%= entityClass %>DTO <%= entityInstance %>DTO = <%= entityInstance %>Mapper.toDto(<%= entityInstance %>);
         <%_ } _%>
@@ -383,46 +417,235 @@ _%>
         assertThat(<%= entityInstance %>List).hasSize(databaseSizeBeforeCreate);
     }
 
-    @Test<% if (databaseType == 'sql') { %>
-    @Transactional<% } %>
+    @Test
     public void getAll<%= entityClassPlural %>() throws Exception {
         // Initialize the database
-        <%= entityClass %> saved<%= entityClass %> = <%= entityInstance %>Repository.save<% if (databaseType == 'sql') { %>AndFlush<% } %>(<%= entityInstance %>);
+        <%= entityInstance %>Repository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(<%= entityInstance %>);
 
         // Get all the <%= entityInstancePlural %>
         <%_ if (pagination !== 'no') { _%>
-        PageRequest pageRequest = PageRequest.newBuilder()
+            <%_ if (jpaMetamodelFiltering) { _%>
+        PageRequestAndFilters query = PageRequestAndFilters.newBuilder()
+            .setPageRequest( PageRequest.newBuilder()
+                .addOrders(Order.newBuilder()
+                    .setProperty("id")
+                    .setDirection(Direction.DESC)))
+            .build();
+            <%_ } else { _%>
+        PageRequest query = PageRequest.newBuilder()
             .addOrders(Order.newBuilder().setProperty("id").setDirection(Direction.DESC))
             .build();
+            <%_ } _%>
         <%_ } _%>
-        Optional<<%= entityClass %>> maybe<%= entityClass %> = StreamSupport.stream(
-            Spliterators.spliteratorUnknownSize(stub.getAll<%= entityClassPlural %>(<% if (pagination !== 'no') { %>pageRequest<% } else { %>Empty.getDefaultInstance()<% } %>), Spliterator.ORDERED),
-            false)
-            .filter(<%= entityInstance %>Proto -> saved<%= entityClass %>.getId()<% if (databaseType == 'cassandra') { %>.toString()<% } %>.equals(<%= entityInstance %>Proto.getId()))
+
+        <%= entityClass %> found<%= entityClass %> = rxstub.getAll<%= entityClassPlural %>(<% if (pagination !== 'no') { %>Single.just(query)<% } else { %><% if (jpaMetamodelFiltering) { %>Flowable.empty()<% } else { %>Single.just(Empty.getDefaultInstance())<% }} %>)
+            .filter(<%= entityInstance %>Proto -> <%= entityInstance %>.getId()<% if (databaseType === 'cassandra') { %>.toString()<% } %>.equals(<%= entityInstance %>Proto.getId()))
             .map(<%= entityInstance %>ProtoMapper::<%= entityInstance %>ProtoTo<%= instanceType %>)
             <%_ if (dto == 'mapstruct') { _%>
             .map(<%= entityInstance %>Mapper::toEntity)
             <%_ } _%>
-            .findAny();
+            .blockingFirst();
 
-        assertThat(maybe<%= entityClass %>).isPresent();
-        <%= entityClass %> found<%= entityClass %> = maybe<%= entityClass %>.orElse(null);
         <%_ for (idx in fields) { _%>
             <%_ if ((fields[idx].fieldType == 'byte[]' || fields[idx].fieldType === 'ByteBuffer') && fields[idx].fieldTypeBlobContent != 'text') { _%>
         assertThat(found<%= entityClass %>.get<%= fields[idx].fieldInJavaBeanMethod %>ContentType()).isEqualTo(<%='DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase()%>_CONTENT_TYPE);
             <%_ } _%>
-        assertThat(found<%= entityClass %>.<% if (fields[idx].fieldType == 'Boolean') { %>is<% } else { %>get<% } %><%= fields[idx].fieldInJavaBeanMethod %>()).isEqualTo(<%='DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase()%>);
+        assertThat(found<%= entityClass %>.<% if (fields[idx].fieldType == 'Boolean') { %>is<% } else { %>get<% } %><%= fields[idx].fieldInJavaBeanMethod %>()).isEqual<% if (fields[idx].fieldType === 'BigDecimal') { %>ByComparing<% } %>To(<%='DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase()%>);
+        <%_ } _%>
+    }
+<%_ if (jpaMetamodelFiltering) {
+        fields.forEach((searchBy) => {
+            // we can't filter by all the fields.
+            if (isFilterableType(searchBy.fieldType)) {
+                 _%>
+
+    @Test
+    public void getAll<%= entityClassPlural %>By<%= searchBy.fieldInJavaBeanMethod %>IsEqualToSomething() throws Exception {
+        // Initialize the database
+        <%= entityInstance %>Repository.saveAndFlush(<%= entityInstance %>);
+
+        // Get all the <%= entityInstance %>List where <%= searchBy.fieldName %> equals to <%='DEFAULT_' + searchBy.fieldNameUnderscored.toUpperCase()%>
+        default<%= entityClass %>ShouldBeFound("<%= searchBy.fieldName %>.equals", <%='DEFAULT_' + searchBy.fieldNameUnderscored.toUpperCase()%>);
+
+        // Get all the <%= entityInstance %>List where <%= searchBy.fieldName %> equals to <%='UPDATED_' + searchBy.fieldNameUnderscored.toUpperCase()%>
+        default<%= entityClass %>ShouldNotBeFound("<%= searchBy.fieldName %>.equals", <%='UPDATED_' + searchBy.fieldNameUnderscored.toUpperCase()%>);
+    }
+
+    @Test
+    public void getAll<%= entityClassPlural %>By<%= searchBy.fieldInJavaBeanMethod %>IsInShouldWork() throws Exception {
+        // Initialize the database
+        <%= entityInstance %>Repository.saveAndFlush(<%= entityInstance %>);
+
+        // Get all the <%= entityInstance %>List where <%= searchBy.fieldName %> in <%='DEFAULT_' + searchBy.fieldNameUnderscored.toUpperCase()%> or <%='UPDATED_' + searchBy.fieldNameUnderscored.toUpperCase()%>
+        default<%= entityClass %>ShouldBeFound("<%= searchBy.fieldName %>.in", <%='DEFAULT_' + searchBy.fieldNameUnderscored.toUpperCase()%> + "," + <%='UPDATED_' + searchBy.fieldNameUnderscored.toUpperCase()%>);
+
+        // Get all the <%= entityInstance %>List where <%= searchBy.fieldName %> equals to <%='UPDATED_' + searchBy.fieldNameUnderscored.toUpperCase()%>
+        default<%= entityClass %>ShouldNotBeFound("<%= searchBy.fieldName %>.in", <%='UPDATED_' + searchBy.fieldNameUnderscored.toUpperCase()%>);
+    }
+
+    @Test
+    public void getAll<%= entityClassPlural %>By<%= searchBy.fieldInJavaBeanMethod %>IsNullOrNotNull() throws Exception {
+        // Initialize the database
+        <%= entityInstance %>Repository.saveAndFlush(<%= entityInstance %>);
+
+        // Get all the <%= entityInstance %>List where <%= searchBy.fieldName %> is not null
+        default<%= entityClass %>ShouldBeFound("<%= searchBy.fieldName %>.specified", "true");
+
+        // Get all the <%= entityInstance %>List where <%= searchBy.fieldName %> is null
+        default<%= entityClass %>ShouldNotBeFound("<%= searchBy.fieldName %>.specified", "false");
+    }
+<%_
+            }
+            // the range criterias
+            if (['Byte', 'Short', 'Integer', 'Long', 'LocalDate', 'ZonedDateTime'].includes(searchBy.fieldType)) { 
+              var defaultValue = 'DEFAULT_' + searchBy.fieldNameUnderscored.toUpperCase();
+              var biggerValue = 'UPDATED_' + searchBy.fieldNameUnderscored.toUpperCase();
+              if (searchBy.fieldValidate === true && searchBy.fieldValidateRules.includes('max')) {
+                  // if maximum is specified the updated variable is smaller than the default one!
+                  biggerValue = '(' + defaultValue + ' + 1)';
+              }
+            _%>
+
+    @Test
+    public void getAll<%= entityClassPlural %>By<%= searchBy.fieldInJavaBeanMethod %>IsGreaterThanOrEqualToSomething() throws Exception {
+        // Initialize the database
+        <%= entityInstance %>Repository.saveAndFlush(<%= entityInstance %>);
+
+        // Get all the <%= entityInstance %>List where <%= searchBy.fieldName %> greater than or equals to <%= defaultValue %>
+        default<%= entityClass %>ShouldBeFound("<%= searchBy.fieldName %>.greaterOrEqualThan", <%= defaultValue %>);
+
+        // Get all the <%= entityInstance %>List where <%= searchBy.fieldName %> greater than or equals to <%= biggerValue %>
+        default<%= entityClass %>ShouldNotBeFound("<%= searchBy.fieldName %>.greaterOrEqualThan", <%= biggerValue %>);
+    }
+
+    @Test
+    public void getAll<%= entityClassPlural %>By<%= searchBy.fieldInJavaBeanMethod %>IsLessThanSomething() throws Exception {
+        // Initialize the database
+        <%= entityInstance %>Repository.saveAndFlush(<%= entityInstance %>);
+
+        // Get all the <%= entityInstance %>List where <%= searchBy.fieldName %> less than or equals to <%= defaultValue %>
+        default<%= entityClass %>ShouldNotBeFound("<%= searchBy.fieldName %>.lessThan", <%= defaultValue %>);
+
+        // Get all the <%= entityInstance %>List where <%= searchBy.fieldName %> less than or equals to <%= biggerValue %>
+        default<%= entityClass %>ShouldBeFound("<%= searchBy.fieldName %>.lessThan", <%= biggerValue %>);
+    }
+
+<%_         } _%>
+<%_     }); _%>
+<%_ relationships.forEach((relationship) => { _%>
+
+    @Test
+    public void getAll<%= entityClassPlural %>By<%= relationship.relationshipNameCapitalized %>IsEqualToSomething() throws Exception {
+        // Initialize the database
+        <%= relationship.otherEntityNameCapitalized %> <%= relationship.relationshipFieldName %> = transactionTemplate.execute(status -> {
+            <%= relationship.otherEntityNameCapitalized %> <%= relationship.relationshipFieldName %>1 = <%= relationship.otherEntityNameCapitalized %>GrpcServiceIntTest.createEntity(em);
+            em.persist(<%= relationship.relationshipFieldName %>1);
+            em.flush();
+    <%_ if (relationship.relationshipType === 'many-to-many' || relationship.relationshipType === 'one-to-many') { _%>
+            <%= entityInstance %>.add<%= relationship.relationshipNameCapitalized %>(<%= relationship.relationshipFieldName %>1);
+    <%_ } else { _%>
+            <%= entityInstance %>.set<%= relationship.relationshipNameCapitalized %>(<%= relationship.relationshipFieldName %>1);
+        <%_ if (relationship.ownerSide === false) { _%>
+            <%= relationship.relationshipFieldName %>1.set<%= relationship.otherEntityRelationshipNameCapitalized %>(<%= entityInstance %>);
+        <%_ } _%>
+    <%_ } _%>
+            <%= entityInstance %>Repository.saveAndFlush(<%= entityInstance %>);
+            return <%= relationship.relationshipFieldName %>1;
+        });
+        Long <%= relationship.relationshipFieldName %>Id = <%= relationship.relationshipFieldName %>.getId();
+
+        <%_ if (relationship.ownerSide === true || (relationship.relationshipType === 'one-to-many' || relationship.relationshipType === 'many-to-many')) { _%>
+        try {
+            // Get all the <%= entityInstance %>List where <%= relationship.relationshipFieldName %> equals to <%= relationship.relationshipFieldName %>Id
+            default<%= entityClass %>ShouldBeFound("<%= relationship.relationshipFieldName %>Id.equals", <%= relationship.relationshipFieldName %>Id);
+
+            // Get all the <%= entityInstance %>List where <%= relationship.relationshipFieldName %> equals to <%= relationship.relationshipFieldName %>Id + 1
+            default<%= entityClass %>ShouldNotBeFound("<%= relationship.relationshipFieldName %>Id.equals", <%= relationship.relationshipFieldName %>Id + 1);
+        } finally {
+            transactionTemplate.execute(s -> {
+                em.remove(em.find(<%= relationship.otherEntityNameCapitalized %>.class, <%= relationship.relationshipFieldName %>Id));
+                return null;
+            });
+        }
+        <%_ } else { _%>
+        // Get all the <%= entityInstance %>List where <%= relationship.relationshipFieldName %> equals to <%= relationship.relationshipFieldName %>Id
+        default<%= entityClass %>ShouldBeFound("<%= relationship.relationshipFieldName %>Id.equals", <%= relationship.relationshipFieldName %>Id);    
+
+        // Get all the <%= entityInstance %>List where <%= relationship.relationshipFieldName %> equals to <%= relationship.relationshipFieldName %>Id + 1
+        default<%= entityClass %>ShouldNotBeFound("<%= relationship.relationshipFieldName %>Id.equals", <%= relationship.relationshipFieldName %>Id + 1);
         <%_ } _%>
     }
 
-    @Test<% if (databaseType == 'sql') { %>
-    @Transactional<% } %>
+<%_ }); _%>
+    /**
+     * Executes the search, and checks that the default entity is returned
+     */
+    private void default<%= entityClass %>ShouldBeFound(String property, Object value) throws Exception {
+        <%_ if (pagination !== 'no') { _%>
+        PageRequestAndFilters query = PageRequestAndFilters.newBuilder()
+            .setPageRequest( PageRequest.newBuilder()
+                .addOrders(Order.newBuilder()
+                    .setProperty("id")
+                    .setDirection(Direction.DESC)))
+            .addQueryFilters(QueryFilter.newBuilder()
+                .setProperty(property)
+                .setValue(value.toString()))
+            .build();
+        <%_ } else { _%>
+        QueryFilter query = QueryFilter.newBuilder()
+                .setProperty(property)
+                .setValue(value.toString())
+                .build();
+        <%_ } _%>
+
+        <%= entityClass %> found<%= entityClass %> = rxstub.getAll<%= entityClassPlural %>(<% if (pagination !== 'no') { %>Single<% } else { %>Flowable<% } %>.just(query))
+            .filter(<%= entityInstance %>Proto -> <%= entityInstance %>.getId()<% if (databaseType === 'cassandra') { %>.toString()<% } %>.equals(<%= entityInstance %>Proto.getId()))
+            .map(<%= entityInstance %>ProtoMapper::<%= entityInstance %>ProtoTo<%= instanceType %>)
+            <%_ if (dto == 'mapstruct') { _%>
+            .map(<%= entityInstance %>Mapper::toEntity)
+            <%_ } _%>
+            .blockingFirst();
+
+        <%_ for (idx in fields) { _%>
+            <%_ if ((fields[idx].fieldType == 'byte[]' || fields[idx].fieldType === 'ByteBuffer') && fields[idx].fieldTypeBlobContent != 'text') { _%>
+        assertThat(found<%= entityClass %>.get<%= fields[idx].fieldInJavaBeanMethod %>ContentType()).isEqualTo(<%='DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase()%>_CONTENT_TYPE);
+            <%_ } _%>
+        assertThat(found<%= entityClass %>.<% if (fields[idx].fieldType == 'Boolean') { %>is<% } else { %>get<% } %><%= fields[idx].fieldInJavaBeanMethod %>()).isEqual<% if (fields[idx].fieldType === 'BigDecimal') { %>ByComparing<% } %>To(<%='DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase()%>);
+        <%_ } _%>
+    }
+
+    /**
+     * Executes the search, and checks that the default entity is not returned
+     */
+    private void default<%= entityClass %>ShouldNotBeFound(String property, Object value) throws Exception {
+                <%_ if (pagination !== 'no') { _%>
+        PageRequestAndFilters query = PageRequestAndFilters.newBuilder()
+            .setPageRequest( PageRequest.newBuilder()
+                .addOrders(Order.newBuilder()
+                    .setProperty("id")
+                    .setDirection(Direction.DESC)))
+            .addQueryFilters(QueryFilter.newBuilder()
+                .setProperty(property)
+                .setValue(value.toString()))
+            .build();
+        <%_ } else { _%>
+        QueryFilter query = QueryFilter.newBuilder()
+                .setProperty(property)
+                .setValue(value.toString())
+                .build();
+        <%_ } _%>
+
+        rxstub.getAll<%= entityClassPlural %>(<% if (pagination !== 'no') { %>Single<% } else { %>Flowable<% } %>.just(query)).test().assertNoValues();
+    }
+<%_  } _%>
+
+    @Test
     public void get<%= entityClass %>() throws Exception {
         // Initialize the database
-        <%= entityInstance %>Repository.save<% if (databaseType == 'sql') { %>AndFlush<% } %>(<%= entityInstance %>);
+        <%= entityInstance %>Repository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(<%= entityInstance %>);
 
         // Get the <%= entityInstance %>
-        <%= entityClass %>Proto <%= entityInstance %>Proto = stub.get<%= entityClass %>(<%=idProtoWrappedType%>.newBuilder().setValue(<%= entityInstance %>.getId()<% if (databaseType == 'cassandra') { %>.toString()<% } %>).build());
+        <%= entityClass %>Proto <%= entityInstance %>Proto = stub.get<%= entityClass %>(<%=idProtoWrappedType%>.newBuilder().setValue(<%= entityInstance %>.getId()<% if (databaseType === 'cassandra') { %>.toString()<% } %>).build());
         <% if (dto == 'mapstruct') { %><%= entityClass %>DTO <%= entityInstance %>DTO<% } else { %><%= entityClass %> found<%= entityClass %><% } %> = <%= entityInstance %>ProtoMapper.<%= entityInstance %>ProtoTo<%= instanceType %>(<%= entityInstance %>Proto);
         <%_ if (dto == 'mapstruct') { _%>
         <%= entityClass %> found<%= entityClass %> = <%= entityInstance %>Mapper.toEntity(<%= entityInstance %>DTO);
@@ -432,53 +655,74 @@ _%>
             <%_ if ((fields[idx].fieldType == 'byte[]' || fields[idx].fieldType === 'ByteBuffer') && fields[idx].fieldTypeBlobContent != 'text') { _%>
         assertThat(found<%= entityClass %>.get<%= fields[idx].fieldInJavaBeanMethod %>ContentType()).isEqualTo(<%='DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase()%>_CONTENT_TYPE);
             <%_ } _%>
-        assertThat(found<%= entityClass %>.<% if (fields[idx].fieldType == 'Boolean') { %>is<% } else { %>get<% } %><%= fields[idx].fieldInJavaBeanMethod %>()).isEqualTo(<%='DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase()%>);
+        assertThat(found<%= entityClass %>.<% if (fields[idx].fieldType == 'Boolean') { %>is<% } else { %>get<% } %><%= fields[idx].fieldInJavaBeanMethod %>()).isEqual<% if (fields[idx].fieldType === 'BigDecimal') { %>ByComparing<% } %>To(<%='DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase()%>);
         <%_ } _%>
     }
 
-    @Test<% if (databaseType == 'sql') { %>
-    @Transactional<% } %>
+    @Test
     public void getNonExisting<%= entityClass %>() throws Exception {
         try {
             // Get the <%= entityInstance %>
-            stub.get<%= entityClass %>(<%=idProtoWrappedType%>.newBuilder().setValue(<% if (databaseType == 'sql') { %>Long.MAX_VALUE<% } else if (databaseType == 'mongodb') { %>String.valueOf(Long.MAX_VALUE)<% } else if (databaseType == 'cassandra') { %>UUID.randomUUID().toString()<% } %>).build());
+            stub.get<%= entityClass %>(<%=idProtoWrappedType%>.newBuilder().setValue(<% if (databaseType === 'sql') { %>Long.MAX_VALUE<% } else if (databaseType === 'mongodb') { %>String.valueOf(Long.MAX_VALUE)<% } else if (databaseType === 'cassandra') { %>UUID.randomUUID().toString()<% } %>).build());
             failBecauseExceptionWasNotThrown(StatusRuntimeException.class);
         } catch (StatusRuntimeException e) {
             assertThat(e.getStatus().getCode()).isEqualTo(Status.Code.NOT_FOUND);
         }
     }
 
-    @Test<% if (databaseType == 'sql') { %>
-    @Transactional<% } %>
+    @Test
     public void update<%= entityClass %>() throws Exception {
         // Initialize the database
-<%_ if (dto != 'mapstruct') { _%>
+<%_ if (dto !== 'mapstruct') { _%>
         <%= entityInstance %>Service.save(<%= entityInstance %>);
 <%_ } else { _%>
-        <%= entityInstance %>Repository.save<% if (databaseType == 'sql') { %>AndFlush<% } %>(<%= entityInstance %>);<% if (searchEngine == 'elasticsearch') { %>
+        <%= entityInstance %>Repository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(<%= entityInstance %>);<% if (searchEngine === 'elasticsearch') { %>
         <%= entityInstance %>SearchRepository.save(<%= entityInstance %>);<%_ } _%>
 <%_ } _%>
 
         int databaseSizeBeforeUpdate = <%= entityInstance %>Repository.findAll().size();
 
         // Update the <%= entityInstance %>
+        <%_ if (databaseType === 'sql') { _%>
+        <%= entityClass %>Proto <%= entityInstance %>Proto = transactionTemplate.execute(s-> {
+            <%= entityClass %> updated<%= entityClass %> = <%= entityInstance %>Repository.findOne(<%= entityInstance %>.getId());
+            <%_ if (fluentMethods && fields.length > 0) { _%>
+            updated<%= entityClass %><% for (idx in fields) { %>
+                .<%= fields[idx].fieldName %>(<%='UPDATED_' + fields[idx].fieldNameUnderscored.toUpperCase()%>)<% if ((fields[idx].fieldType == 'byte[]' || fields[idx].fieldType === 'ByteBuffer') && fields[idx].fieldTypeBlobContent != 'text') { %>
+                .<%= fields[idx].fieldName %>ContentType(<%='UPDATED_' + fields[idx].fieldNameUnderscored.toUpperCase()%>_CONTENT_TYPE)<% } %><% } %>;
+            <%_ } else { _%>
+                <%_ for (idx in fields) { _%>
+            updated<%= entityClass %>.set<%= fields[idx].fieldInJavaBeanMethod %>(<%='UPDATED_' + fields[idx].fieldNameUnderscored.toUpperCase()%>);
+                    <%_ if ((fields[idx].fieldType == 'byte[]' || fields[idx].fieldType == 'ByteBuffer') && fields[idx].fieldTypeBlobContent != 'text') { _%>
+            updated<%= entityClass %>.set<%= fields[idx].fieldInJavaBeanMethod %>ContentType(<%='UPDATED_' + fields[idx].fieldNameUnderscored.toUpperCase()%>_CONTENT_TYPE);
+                    <%_ } _%>
+                <%_ } _%>
+            <%_ } _%>
+            <%_ if (dto == 'mapstruct') { _%>
+            <%= entityClass %>DTO updated<%= entityClass %>DTO = <%= entityInstance %>Mapper.toDto(updated<%= entityClass %>);
+            <%_ } _%>
+            em.detach(updated<%= entityClass %>);            
+            return <%= entityInstance %>ProtoMapper.<%=instanceName%>To<%=entityClass%>Proto(updated<%= instanceType %>);
+        });
+        <%_ } else { _%>
         <%= entityClass %> updated<%= entityClass %> = <%= entityInstance %>Repository.findOne(<%= entityInstance %>.getId());
-        <%_ if (fluentMethods && fields.length > 0) { _%>
+            <%_ if (fluentMethods && fields.length > 0) { _%>
         updated<%= entityClass %><% for (idx in fields) { %>
             .<%= fields[idx].fieldName %>(<%='UPDATED_' + fields[idx].fieldNameUnderscored.toUpperCase()%>)<% if ((fields[idx].fieldType == 'byte[]' || fields[idx].fieldType === 'ByteBuffer') && fields[idx].fieldTypeBlobContent != 'text') { %>
             .<%= fields[idx].fieldName %>ContentType(<%='UPDATED_' + fields[idx].fieldNameUnderscored.toUpperCase()%>_CONTENT_TYPE)<% } %><% } %>;
-        <%_ } else { _%>
-            <%_ for (idx in fields) { _%>
+            <%_ } else { _%>
+                <%_ for (idx in fields) { _%>
         updated<%= entityClass %>.set<%= fields[idx].fieldInJavaBeanMethod %>(<%='UPDATED_' + fields[idx].fieldNameUnderscored.toUpperCase()%>);
-                <%_ if ((fields[idx].fieldType == 'byte[]' || fields[idx].fieldType == 'ByteBuffer') && fields[idx].fieldTypeBlobContent != 'text') { _%>
+                    <%_ if ((fields[idx].fieldType == 'byte[]' || fields[idx].fieldType == 'ByteBuffer') && fields[idx].fieldTypeBlobContent != 'text') { _%>
         updated<%= entityClass %>.set<%= fields[idx].fieldInJavaBeanMethod %>ContentType(<%='UPDATED_' + fields[idx].fieldNameUnderscored.toUpperCase()%>_CONTENT_TYPE);
+                    <%_ } _%>
                 <%_ } _%>
             <%_ } _%>
-        <%_ } _%>
-        <%_ if (dto == 'mapstruct') { _%>
+            <%_ if (dto == 'mapstruct') { _%>
         <%= entityClass %>DTO updated<%= entityClass %>DTO = <%= entityInstance %>Mapper.toDto(updated<%= entityClass %>);
-        <%_ } _%>
+            <%_ } _%>
         <%= entityClass %>Proto <%= entityInstance %>Proto = <%= entityInstance %>ProtoMapper.<%=instanceName%>To<%=entityClass%>Proto(updated<%= instanceType %>);
+        <%_ } _%>
 
         stub.update<%= entityClass %>(<%= entityInstance %>Proto);
 
@@ -486,16 +730,13 @@ _%>
         List<<%= entityClass %>> <%= entityInstance %>List = <%= entityInstance %>Repository.findAll();
         assertThat(<%= entityInstance %>List).hasSize(databaseSizeBeforeUpdate);
         <%= entityClass %> test<%= entityClass %> = <%= entityInstance %>List.get(<%= entityInstance %>List.size() - 1);
-        <%_ for (idx in fields) { if (fields[idx].fieldType == 'ZonedDateTime') { _%>
-        assertThat(test<%= entityClass %>.get<%=fields[idx].fieldInJavaBeanMethod%>()).isEqualTo(<%='UPDATED_' + fields[idx].fieldNameUnderscored.toUpperCase()%>);
-        <%_ } else if ((fields[idx].fieldType == 'byte[]' || fields[idx].fieldType === 'ByteBuffer') && fields[idx].fieldTypeBlobContent != 'text') { _%>
-        assertThat(test<%= entityClass %>.get<%=fields[idx].fieldInJavaBeanMethod%>()).isEqualTo(<%='UPDATED_' + fields[idx].fieldNameUnderscored.toUpperCase()%><% if (fields[idx].fieldType === 'ByteBuffer') { %>.rewind()<% } %>);
-        assertThat(test<%= entityClass %>.get<%=fields[idx].fieldInJavaBeanMethod%>ContentType()).isEqualTo(<%='UPDATED_' + fields[idx].fieldNameUnderscored.toUpperCase()%>_CONTENT_TYPE);
-        <%_ } else if (fields[idx].fieldType.toLowerCase() == 'boolean') { _%>
-        assertThat(test<%= entityClass %>.is<%=fields[idx].fieldInJavaBeanMethod%>()).isEqualTo(<%='UPDATED_' + fields[idx].fieldNameUnderscored.toUpperCase()%>);
-        <%_ } else { _%>
-        assertThat(test<%= entityClass %>.get<%=fields[idx].fieldInJavaBeanMethod%>()).isEqualTo(<%='UPDATED_' + fields[idx].fieldNameUnderscored.toUpperCase()%>);
-        <%_ } } if (searchEngine == 'elasticsearch') { _%>
+        <%_ for (idx in fields) { _%>
+            <%_ if ((fields[idx].fieldType == 'byte[]' || fields[idx].fieldType === 'ByteBuffer') && fields[idx].fieldTypeBlobContent != 'text') { _%>
+        assertThat(test<%= entityClass %>.get<%= fields[idx].fieldInJavaBeanMethod %>ContentType()).isEqualTo(<%='UPDATED_' + fields[idx].fieldNameUnderscored.toUpperCase()%>_CONTENT_TYPE);
+            <%_ } _%>
+        assertThat(test<%= entityClass %>.<% if (fields[idx].fieldType == 'Boolean') { %>is<% } else { %>get<% } %><%= fields[idx].fieldInJavaBeanMethod %>()).isEqual<% if (fields[idx].fieldType === 'BigDecimal') { %>ByComparing<% } %>To(<%='UPDATED_' + fields[idx].fieldNameUnderscored.toUpperCase()%>);
+        <%_ } _%>
+        <%_ if (searchEngine == 'elasticsearch') { _%>
 
         // Validate the <%= entityClass %> in Elasticsearch
         <%= entityClass %> <%= entityInstance %>Es = <%= entityInstance %>SearchRepository.findOne(test<%= entityClass %>.getId());
@@ -503,8 +744,7 @@ _%>
         <%_ } _%>
     }
 
-    @Test<% if (databaseType == 'sql') { %>
-    @Transactional<% } %>
+    @Test
     public void updateNonExisting<%= entityClass %>() throws Exception {
         int databaseSizeBeforeUpdate = <%= entityInstance %>Repository.findAll().size();
 
@@ -520,21 +760,20 @@ _%>
         assertThat(<%= entityInstance %>List).hasSize(databaseSizeBeforeUpdate + 1);
     }
 
-    @Test<% if (databaseType == 'sql') { %>
-    @Transactional<% } %>
+    @Test
     public void delete<%= entityClass %>() throws Exception {
         // Initialize the database
 <%_ if (dto != 'mapstruct') { _%>
         <%= entityInstance %>Service.save(<%= entityInstance %>);
 <%_ } else { _%>
-        <%= entityInstance %>Repository.save<% if (databaseType == 'sql') { %>AndFlush<% } %>(<%= entityInstance %>);<% if (searchEngine == 'elasticsearch') { %>
+        <%= entityInstance %>Repository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(<%= entityInstance %>);<% if (searchEngine == 'elasticsearch') { %>
         <%= entityInstance %>SearchRepository.save(<%= entityInstance %>);<%_ } _%>
 <%_ } _%>
 
         int databaseSizeBeforeDelete = <%= entityInstance %>Repository.findAll().size();
 
         // Get the <%= entityInstance %>
-        stub.delete<%= entityClass %>(<%=idProtoWrappedType%>.newBuilder().setValue(<%= entityInstance %>.getId()<% if (databaseType == 'cassandra') { %>.toString()<% } %>).build());
+        stub.delete<%= entityClass %>(<%=idProtoWrappedType%>.newBuilder().setValue(<%= entityInstance %>.getId()<% if (databaseType === 'cassandra') { %>.toString()<% } %>).build());
         <%_ if (searchEngine == 'elasticsearch') { _%>
 
         // Validate Elasticsearch is empty
@@ -548,11 +787,10 @@ _%>
     }
     <%_ if (searchEngine == 'elasticsearch') { _%>
 
-    @Test<% if (databaseType == 'sql') { %>
-    @Transactional<% } %>
+    @Test
     public void search<%= entityClassPlural %>() throws Exception {
         // Initialize the database
-        <%= entityClass %> saved<%= entityClass %> = <%= entityInstance %>Repository.save<% if (databaseType == 'sql') { %>AndFlush<% } %>(<%= entityInstance %>);
+        <%= entityClass %> saved<%= entityClass %> = <%= entityInstance %>Repository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(<%= entityInstance %>);
         <%= entityInstance %>SearchRepository.save(<%= entityInstance %>);
 
         // Search the <%= entityInstancePlural %>
@@ -586,7 +824,7 @@ _%>
             <%_ if ((fields[idx].fieldType == 'byte[]' || fields[idx].fieldType === 'ByteBuffer') && fields[idx].fieldTypeBlobContent != 'text') { _%>
         assertThat(found<%= entityClass %>.get<%= fields[idx].fieldInJavaBeanMethod %>ContentType()).isEqualTo(<%='DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase()%>_CONTENT_TYPE);
             <%_ } _%>
-        assertThat(found<%= entityClass %>.<% if (fields[idx].fieldType == 'Boolean') { %>is<% } else { %>get<% } %><%= fields[idx].fieldInJavaBeanMethod %>()).isEqualTo(<%='DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase()%>);
+        assertThat(found<%= entityClass %>.<% if (fields[idx].fieldType == 'Boolean') { %>is<% } else { %>get<% } %><%= fields[idx].fieldInJavaBeanMethod %>()).isEqual<% if (fields[idx].fieldType === 'BigDecimal') { %>ByComparing<% } %>To(<%='DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase()%>);
         <%_ } _%>
     }
     <%_ } _%>

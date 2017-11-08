@@ -101,6 +101,7 @@ module.exports = yeoman.Base.extend({
             this.template('_date.proto', protoDir + 'util/date.proto', this, {});
             this.template('_decimal.proto', protoDir + 'util/decimal.proto', this, {});
             this.template('_pagination.proto', protoDir + 'util/pagination.proto', this, {});
+            this.template('_queryfilter.proto', protoDir + 'util/queryfilter.proto', this, {});
 
             this.template('_AuthenticationInterceptor.java', javaDir + 'grpc/AuthenticationInterceptor.java');
             this.template('_AuthenticationInterceptorTest.java', testDir + 'grpc/AuthenticationInterceptorTest.java');
@@ -131,7 +132,7 @@ module.exports = yeoman.Base.extend({
             this.template('_ProfileInfoService.java', javaDir + 'grpc/ProfileInfoService.java');
             this.template('_ProfileInfoServiceIntTest.java', testDir + 'grpc/ProfileInfoServiceIntTest.java');
 
-            this.grpcVersion = '1.1.1';
+            this.grpcVersion = '1.6.1';
             var grpcSpringVersion = '2.0.0';
             this.protocVersion = '3.1.0';
             var guavaVersion = '20.0';

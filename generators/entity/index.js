@@ -94,6 +94,7 @@ module.exports = yeoman.Base.extend({
             this.fieldsContainBigDecimal = this.entityConfig.fieldsContainBigDecimal;
             this.fieldsContainBlob = this.entityConfig.fieldsContainBlob;
             this.pagination = this.entityConfig.data.pagination || 'no';
+            this.jpaMetamodelFiltering = (this.databaseType === 'sql') && (this.entityConfig.data.jpaMetamodelFiltering || false);
             this.entitySearchType = (this.pagination === 'no') ? 'StringValue' : this.entityClass + 'SearchPageRequest';
             if(this.entityConfig.data.javadoc === undefined) {
                 this.entityJavadoc = '// Protobuf message for entity ' + this.entityClass;
@@ -138,6 +139,10 @@ module.exports = yeoman.Base.extend({
             } else {
                 this.idProtoType = 'string';
                 this.idProtoWrappedType = 'StringValue';
+            }
+
+            this.isFilterableType = function(fieldType) {
+                return !(['byte[]', 'ByteBuffer'].includes(fieldType));
             }
         },
 
