@@ -67,12 +67,7 @@ before_install:
   - curl -o- -L https://yarnpkg.com/install.sh | bash
   - export PATH=$HOME/.yarn/bin:$PATH
   - yarn -v
-  - yarn global add yo bower gulp-cli
-  - cd "$TRAVIS_BUILD_DIR"/
-  - git clone https://github.com/jhipster/generator-jhipster.git
-  - cd "$TRAVIS_BUILD_DIR"/generator-jhipster
-  - yarn install
-  - yarn global add file:"$TRAVIS_BUILD_DIR"/generator-jhipster
+  - yarn global add yo bower gulp-cli generator-jhipster@4.11.0
 install:
   - cd "$TRAVIS_BUILD_DIR"/
   - yarn install
