@@ -220,6 +220,7 @@ module.exports = yeoman.Base.extend({
                 jhipsterFunc.addGradleDependency('compile', 'org.lognet', 'grpc-spring-boot-starter', grpcSpringVersion);
                 // Resolve conflict with springfox
                 jhipsterFunc.addGradleDependency('compile', 'com.google.guava', 'guava', guavaVersion);
+                jhipsterFunc.addGradleDependency('compile', 'com.google.protobuf', 'protobuf-java', this.protocVersion);
                 jhipsterFunc.addGradleDependency('compile', 'io.grpc', 'grpc-core', this.grpcVersion);
                 jhipsterFunc.addGradleDependency('compile', 'io.grpc', 'grpc-context', this.grpcVersion);
                 jhipsterFunc.addGradleDependency('compile', 'io.grpc', 'grpc-protobuf', this.grpcVersion);
