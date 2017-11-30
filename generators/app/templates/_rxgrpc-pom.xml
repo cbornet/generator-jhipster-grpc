@@ -9,7 +9,7 @@
         <dependency>
             <groupId>com.google.protobuf</groupId>
             <artifactId>protobuf-java</artifactId>
-            <version>3.1.0</version>
+            <version><%= protocVersion %></version>
         </dependency>
     </dependencies>
     <build>
@@ -30,9 +30,9 @@
                     <protoSourceRoot>../src/main/proto</protoSourceRoot>
                     <clearOutputDirectory>false</clearOutputDirectory>
                     <outputDirectory>${project.build.directory}/generated/source/proto/main/java</outputDirectory>
-                    <protocArtifact>com.google.protobuf:protoc:3.1.0:exe:${os.detected.classifier}</protocArtifact>
+                    <protocArtifact>com.google.protobuf:protoc:<%= protocVersion %>:exe:${os.detected.classifier}</protocArtifact>
                     <pluginId>grpc-java</pluginId>
-                    <pluginArtifact>io.grpc:protoc-gen-grpc-java:1.1.1:exe:${os.detected.classifier}</pluginArtifact>
+                    <pluginArtifact>io.grpc:protoc-gen-grpc-java:<%= grpcVersion %>:exe:${os.detected.classifier}</pluginArtifact>
                 </configuration>
                 <executions>
                     <execution>
