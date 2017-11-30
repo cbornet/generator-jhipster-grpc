@@ -77,6 +77,10 @@ import java.time.ZoneId;<% } %><% if (fieldsContainBigDecimal == true) { %>
 import java.math.BigDecimal;<% } %><% if (fieldsContainBlob == true && databaseType === 'cassandra') { %>
 import java.nio.ByteBuffer;<% } %>
 import java.util.*;
+<%_ if (searchEngine == 'elasticsearch') { _%>
+import java.util.stream.StreamSupport;
+<%_ } _%>
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 
