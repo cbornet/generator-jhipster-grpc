@@ -394,7 +394,12 @@ _%>
 
         // Validate the <%= entityClass %> in Elasticsearch
         <%= entityClass %> <%= entityInstance %>Es = <%= entityInstance %>SearchRepository.findOne(test<%= entityClass %>.getId());
-        assertThat(<%= entityInstance %>Es).isEqualToComparingFieldByField(test<%= entityClass %>);
+            <%_ for (idx in fields) { _%>
+                <%_ if ((fields[idx].fieldType == 'byte[]' || fields[idx].fieldType === 'ByteBuffer') && fields[idx].fieldTypeBlobContent != 'text') { _%>
+        assertThat(<%= entityInstance %>Es.get<%= fields[idx].fieldInJavaBeanMethod %>ContentType()).isEqualTo(<%='DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase()%>_CONTENT_TYPE);
+                <%_ } _%>
+        assertThat(<%= entityInstance %>Es.<% if (fields[idx].fieldType == 'Boolean') { %>is<% } else { %>get<% } %><%= fields[idx].fieldInJavaBeanMethod %>()).isEqual<% if (fields[idx].fieldType === 'BigDecimal') { %>ByComparing<% } %>To(<%='DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase()%>);
+            <%_ } _%>
         <%_ } _%>
     }
 
@@ -744,7 +749,12 @@ _%>
 
         // Validate the <%= entityClass %> in Elasticsearch
         <%= entityClass %> <%= entityInstance %>Es = <%= entityInstance %>SearchRepository.findOne(test<%= entityClass %>.getId());
-        assertThat(<%= entityInstance %>Es).isEqualToComparingFieldByField(test<%= entityClass %>);
+            <%_ for (idx in fields) { _%>
+                <%_ if ((fields[idx].fieldType == 'byte[]' || fields[idx].fieldType === 'ByteBuffer') && fields[idx].fieldTypeBlobContent != 'text') { _%>
+        assertThat(<%= entityInstance %>Es.get<%= fields[idx].fieldInJavaBeanMethod %>ContentType()).isEqualTo(<%='DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase()%>_CONTENT_TYPE);
+                <%_ } _%>
+        assertThat(<%= entityInstance %>Es.<% if (fields[idx].fieldType == 'Boolean') { %>is<% } else { %>get<% } %><%= fields[idx].fieldInJavaBeanMethod %>()).isEqual<% if (fields[idx].fieldType === 'BigDecimal') { %>ByComparing<% } %>To(<%='DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase()%>);
+            <%_ } _%>
         <%_ } _%>
     }
 
