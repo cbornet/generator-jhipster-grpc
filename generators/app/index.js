@@ -153,6 +153,7 @@ module.exports = yeoman.Base.extend({
                 jhipsterFunc.addMavenDependency('com.google.protobuf', 'protobuf-java', this.protocVersion);
                 jhipsterFunc.addMavenDependency('io.grpc', 'grpc-core', this.grpcVersion);
                 jhipsterFunc.addMavenDependency('io.grpc', 'grpc-context', this.grpcVersion);
+                jhipsterFunc.addMavenDependency('io.grpc', 'grpc-netty', this.grpcVersion);
                 jhipsterFunc.addMavenDependency('io.grpc', 'grpc-protobuf', this.grpcVersion);
                 jhipsterFunc.addMavenDependency('io.grpc', 'grpc-stub', this.grpcVersion);
                 jhipsterFunc.addMavenDependency('io.reactivex.rxjava2', 'rxjava', '2.1.5');
@@ -224,6 +225,7 @@ module.exports = yeoman.Base.extend({
                 jhipsterFunc.addGradleDependency('compile', 'com.google.protobuf', 'protobuf-java', this.protocVersion);
                 jhipsterFunc.addGradleDependency('compile', 'io.grpc', 'grpc-core', this.grpcVersion);
                 jhipsterFunc.addGradleDependency('compile', 'io.grpc', 'grpc-context', this.grpcVersion);
+                jhipsterFunc.addGradleDependency('compile', 'io.grpc', 'grpc-netty', this.grpcVersion);
                 jhipsterFunc.addGradleDependency('compile', 'io.grpc', 'grpc-protobuf', this.grpcVersion);
                 jhipsterFunc.addGradleDependency('compile', 'io.grpc', 'grpc-stub', this.grpcVersion);
                 jhipsterFunc.addGradleDependency('compile', 'io.reactivex.rxjava2', 'rxjava', '2.1.5');
