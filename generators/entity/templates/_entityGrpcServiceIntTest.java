@@ -563,7 +563,7 @@ _%>
         });
         Long <%= relationship.relationshipFieldName %>Id = <%= relationship.relationshipFieldName %>.getId();
 
-        <%_ if (relationship.ownerSide === false || (relationship.relationshipType === 'one-to-many' || relationship.relationshipType === 'many-to-many')) { _%>
+        <%_ if (relationship.ownerSide === false || relationship.relationshipType === 'one-to-many') { _%>
         try {
             // Get all the <%= entityInstance %>List where <%= relationship.relationshipFieldName %> equals to <%= relationship.relationshipFieldName %>Id
             default<%= entityClass %>ShouldBeFound("<%= relationship.relationshipFieldName %>Id.equals", <%= relationship.relationshipFieldName %>Id);
