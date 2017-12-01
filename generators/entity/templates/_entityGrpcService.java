@@ -30,10 +30,10 @@ import org.slf4j.LoggerFactory;
 <%_ if (jpaMetamodelFiltering) { _%>
 import org.springframework.beans.MutablePropertyValues;
 import org.springframework.beans.PropertyValue;
-import org.springframework.core.convert.ConversionService;
     <%_ if (pagination !== 'no') { _%>
 import org.springframework.data.util.Pair;
     <%_ } _%>
+import org.springframework.format.support.FormattingConversionService;
 import org.springframework.validation.DataBinder;
 <%_ } _%>
 
@@ -58,12 +58,12 @@ public class <%= entityClass %>GrpcService extends Rx<%= entityClass %>ServiceGr
     <%_ if (jpaMetamodelFiltering) { _%>
     private final <%= entityClass %>QueryService <%= entityInstance %>QueryService;
 
-    private final ConversionService conversionService;
+    private final FormattingConversionService conversionService;
     
     <%_ } _%>
     private final <%= entityClass %>ProtoMapper <%= entityInstance %>ProtoMapper;
 
-    public <%= entityClass %>GrpcService(<%= entityClass %>Service <%= entityInstance %>Service, <% if (jpaMetamodelFiltering) { %><%= entityClass %>QueryService <%= entityInstance %>QueryService, ConversionService conversionService, <% } %><%= entityClass %>ProtoMapper <%= entityInstance %>ProtoMapper) {
+    public <%= entityClass %>GrpcService(<%= entityClass %>Service <%= entityInstance %>Service, <% if (jpaMetamodelFiltering) { %><%= entityClass %>QueryService <%= entityInstance %>QueryService, FormattingConversionService conversionService, <% } %><%= entityClass %>ProtoMapper <%= entityInstance %>ProtoMapper) {
         this.<%= entityInstance %>Service = <%= entityInstance %>Service;
         <%_ if (jpaMetamodelFiltering) { _%>
         this.<%= entityInstance %>QueryService = <%= entityInstance %>QueryService;

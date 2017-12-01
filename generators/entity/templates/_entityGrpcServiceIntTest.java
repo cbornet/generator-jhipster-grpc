@@ -58,7 +58,7 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 <%_ if (jpaMetamodelFiltering) { _%>
-import org.springframework.core.convert.ConversionService;
+import org.springframework.format.support.FormattingConversionService;
 <%_ } _%>
 import org.springframework.test.context.junit4.SpringRunner;
 <%_ if (databaseType === 'sql') { _%>
@@ -272,7 +272,7 @@ _%>
     private <%= entityClass %>QueryService <%= entityInstance %>QueryService;
 
     @Autowired
-    private ConversionService conversionService;
+    private FormattingConversionService conversionService;
 
     <%_ } _%>
     <%_ if (searchEngine == 'elasticsearch') { _%>
