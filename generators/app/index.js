@@ -137,14 +137,6 @@ module.exports = yeoman.Base.extend({
             this.protocVersion = '3.1.0';
             var guavaVersion = '20.0';
             var nettyVersion = '4.1.8.Final';
-            if (jhipsterVar.databaseType === 'cassandra') {
-                // Downgrade grpc to get a compatible guava version
-                this.grpcVersion = '1.0.2';
-                grpcSpringVersion = '1.0.0';
-                this.protocVersion = '3.0.2';
-                guavaVersion = '19.0';
-                nettyVersion = '4.1.6.Final';
-            }
 
             if (jhipsterVar.buildTool === 'maven') {
                 jhipsterFunc.addMavenDependency('org.lognet', 'grpc-spring-boot-starter', grpcSpringVersion);

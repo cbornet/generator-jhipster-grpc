@@ -392,7 +392,7 @@ _%>
             <%_ if ((fields[idx].fieldType == 'byte[]' || fields[idx].fieldType === 'ByteBuffer') && fields[idx].fieldTypeBlobContent != 'text') { _%>
         assertThat(test<%= entityClass %>.get<%= fields[idx].fieldInJavaBeanMethod %>ContentType()).isEqualTo(<%='DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase()%>_CONTENT_TYPE);
             <%_ } _%>
-        assertThat(test<%= entityClass %>.<% if (fields[idx].fieldType == 'Boolean') { %>is<% } else { %>get<% } %><%= fields[idx].fieldInJavaBeanMethod %>()).isEqual<% if (fields[idx].fieldType === 'BigDecimal') { %>ByComparing<% } %>To(<%='DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase()%>);
+        assertThat(test<%= entityClass %>.<% if (fields[idx].fieldType == 'Boolean') { %>is<% } else { %>get<% } %><%= fields[idx].fieldInJavaBeanMethod %>()).isEqual<% if (fields[idx].fieldType === 'BigDecimal') { %>ByComparing<% } %>To(<%='DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase()%><% if (fields[idx].fieldType == 'ByteBuffer') { %>.rewind()<% } %>);
         <%_ } _%>
         <%_ if (searchEngine == 'elasticsearch') { _%>
 
@@ -463,7 +463,7 @@ _%>
             <%_ if ((fields[idx].fieldType == 'byte[]' || fields[idx].fieldType === 'ByteBuffer') && fields[idx].fieldTypeBlobContent != 'text') { _%>
         assertThat(found<%= entityClass %>.get<%= fields[idx].fieldInJavaBeanMethod %>ContentType()).isEqualTo(<%='DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase()%>_CONTENT_TYPE);
             <%_ } _%>
-        assertThat(found<%= entityClass %>.<% if (fields[idx].fieldType == 'Boolean') { %>is<% } else { %>get<% } %><%= fields[idx].fieldInJavaBeanMethod %>()).isEqual<% if (fields[idx].fieldType === 'BigDecimal') { %>ByComparing<% } %>To(<%='DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase()%>);
+        assertThat(found<%= entityClass %>.<% if (fields[idx].fieldType == 'Boolean') { %>is<% } else { %>get<% } %><%= fields[idx].fieldInJavaBeanMethod %>()).isEqual<% if (fields[idx].fieldType === 'BigDecimal') { %>ByComparing<% } %>To(<%='DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase()%><% if (fields[idx].fieldType == 'ByteBuffer') { %>.rewind()<% } %>);
         <%_ } _%>
     }
 <%_ if (jpaMetamodelFiltering) {
@@ -623,7 +623,7 @@ _%>
             <%_ if ((fields[idx].fieldType == 'byte[]' || fields[idx].fieldType === 'ByteBuffer') && fields[idx].fieldTypeBlobContent != 'text') { _%>
         assertThat(found<%= entityClass %>.get<%= fields[idx].fieldInJavaBeanMethod %>ContentType()).isEqualTo(<%='DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase()%>_CONTENT_TYPE);
             <%_ } _%>
-        assertThat(found<%= entityClass %>.<% if (fields[idx].fieldType == 'Boolean') { %>is<% } else { %>get<% } %><%= fields[idx].fieldInJavaBeanMethod %>()).isEqual<% if (fields[idx].fieldType === 'BigDecimal') { %>ByComparing<% } %>To(<%='DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase()%>);
+        assertThat(found<%= entityClass %>.<% if (fields[idx].fieldType == 'Boolean') { %>is<% } else { %>get<% } %><%= fields[idx].fieldInJavaBeanMethod %>()).isEqual<% if (fields[idx].fieldType === 'BigDecimal') { %>ByComparing<% } %>To(<%='DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase()%><% if (fields[idx].fieldType == 'ByteBuffer') { %>.rewind()<% } %>);
         <%_ } _%>
     }
 
@@ -668,7 +668,7 @@ _%>
             <%_ if ((fields[idx].fieldType == 'byte[]' || fields[idx].fieldType === 'ByteBuffer') && fields[idx].fieldTypeBlobContent != 'text') { _%>
         assertThat(found<%= entityClass %>.get<%= fields[idx].fieldInJavaBeanMethod %>ContentType()).isEqualTo(<%='DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase()%>_CONTENT_TYPE);
             <%_ } _%>
-        assertThat(found<%= entityClass %>.<% if (fields[idx].fieldType == 'Boolean') { %>is<% } else { %>get<% } %><%= fields[idx].fieldInJavaBeanMethod %>()).isEqual<% if (fields[idx].fieldType === 'BigDecimal') { %>ByComparing<% } %>To(<%='DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase()%>);
+        assertThat(found<%= entityClass %>.<% if (fields[idx].fieldType == 'Boolean') { %>is<% } else { %>get<% } %><%= fields[idx].fieldInJavaBeanMethod %>()).isEqual<% if (fields[idx].fieldType === 'BigDecimal') { %>ByComparing<% } %>To(<%='DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase()%><% if (fields[idx].fieldType == 'ByteBuffer') { %>.rewind()<% } %>);
         <%_ } _%>
     }
 
@@ -747,7 +747,7 @@ _%>
             <%_ if ((fields[idx].fieldType == 'byte[]' || fields[idx].fieldType === 'ByteBuffer') && fields[idx].fieldTypeBlobContent != 'text') { _%>
         assertThat(test<%= entityClass %>.get<%= fields[idx].fieldInJavaBeanMethod %>ContentType()).isEqualTo(<%='UPDATED_' + fields[idx].fieldNameUnderscored.toUpperCase()%>_CONTENT_TYPE);
             <%_ } _%>
-        assertThat(test<%= entityClass %>.<% if (fields[idx].fieldType == 'Boolean') { %>is<% } else { %>get<% } %><%= fields[idx].fieldInJavaBeanMethod %>()).isEqual<% if (fields[idx].fieldType === 'BigDecimal') { %>ByComparing<% } %>To(<%='UPDATED_' + fields[idx].fieldNameUnderscored.toUpperCase()%>);
+        assertThat(test<%= entityClass %>.<% if (fields[idx].fieldType == 'Boolean') { %>is<% } else { %>get<% } %><%= fields[idx].fieldInJavaBeanMethod %>()).isEqual<% if (fields[idx].fieldType === 'BigDecimal') { %>ByComparing<% } %>To(<%='UPDATED_' + fields[idx].fieldNameUnderscored.toUpperCase()%><% if (fields[idx].fieldType == 'ByteBuffer') { %>.rewind()<% } %>);
         <%_ } _%>
         <%_ if (searchEngine == 'elasticsearch') { _%>
 
@@ -757,7 +757,7 @@ _%>
                 <%_ if ((fields[idx].fieldType == 'byte[]' || fields[idx].fieldType === 'ByteBuffer') && fields[idx].fieldTypeBlobContent != 'text') { _%>
         assertThat(<%= entityInstance %>Es.get<%= fields[idx].fieldInJavaBeanMethod %>ContentType()).isEqualTo(<%='UPDATED_' + fields[idx].fieldNameUnderscored.toUpperCase()%>_CONTENT_TYPE);
                 <%_ } _%>
-        assertThat(<%= entityInstance %>Es.<% if (fields[idx].fieldType == 'Boolean') { %>is<% } else { %>get<% } %><%= fields[idx].fieldInJavaBeanMethod %>()).isEqual<% if (fields[idx].fieldType === 'BigDecimal') { %>ByComparing<% } %>To(<%='UPDATED_' + fields[idx].fieldNameUnderscored.toUpperCase()%>);
+        assertThat(<%= entityInstance %>Es.<% if (fields[idx].fieldType == 'Boolean') { %>is<% } else { %>get<% } %><%= fields[idx].fieldInJavaBeanMethod %>()).isEqual<% if (fields[idx].fieldType === 'BigDecimal') { %>ByComparing<% } %>To(<%='UPDATED_' + fields[idx].fieldNameUnderscored.toUpperCase()%><% if (fields[idx].fieldType == 'ByteBuffer') { %>.rewind()<% } %>);
             <%_ } _%>
         <%_ } _%>
     }
@@ -842,7 +842,7 @@ _%>
             <%_ if ((fields[idx].fieldType == 'byte[]' || fields[idx].fieldType === 'ByteBuffer') && fields[idx].fieldTypeBlobContent != 'text') { _%>
         assertThat(found<%= entityClass %>.get<%= fields[idx].fieldInJavaBeanMethod %>ContentType()).isEqualTo(<%='DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase()%>_CONTENT_TYPE);
             <%_ } _%>
-        assertThat(found<%= entityClass %>.<% if (fields[idx].fieldType == 'Boolean') { %>is<% } else { %>get<% } %><%= fields[idx].fieldInJavaBeanMethod %>()).isEqual<% if (fields[idx].fieldType === 'BigDecimal') { %>ByComparing<% } %>To(<%='DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase()%>);
+        assertThat(found<%= entityClass %>.<% if (fields[idx].fieldType == 'Boolean') { %>is<% } else { %>get<% } %><%= fields[idx].fieldInJavaBeanMethod %>()).isEqual<% if (fields[idx].fieldType === 'BigDecimal') { %>ByComparing<% } %>To(<%='DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase()%><% if (fields[idx].fieldType == 'ByteBuffer') { %>.rewind()<% } %>);
         <%_ } _%>
     }
     <%_ } _%>
