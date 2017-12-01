@@ -308,6 +308,10 @@ _%>
 
     @After
     public void tearDown() {
+        <%= entityInstance %>Repository.deleteAll();
+        <%_ if (searchEngine == 'elasticsearch') { _%>
+        <%= entityInstance %>SearchRepository.deleteAll();
+        <%_ } _%>
         mockServer.shutdownNow();
     }
 
