@@ -105,8 +105,8 @@ public class <%= entityClass %>GrpcService extends Rx<%= entityClass %>ServiceGr
                 binder.bind(new MutablePropertyValues(pvs));
                 return Pair.of(criteria, ProtobufMappers.pageRequestProtoToPageRequest(pageRequestAndFilters.getPageRequest()));
             })
-            .doOnSuccess(pair -> log.debug("REST request to get a page of Bars by criteria {}", pair.getFirst()))
-            .map(pair -> barQueryService.findByCriteria(pair.getFirst(), pair.getSecond()))
+            .doOnSuccess(pair -> log.debug("REST request to get a page of <%= entityClassPlural %> by criteria {}", pair.getFirst()))
+            .map(pair -> <%= entityInstance %>QueryService.findByCriteria(pair.getFirst(), pair.getSecond()))
                 <%_ } else { _%>   
             .doOnSuccess(p -> log.debug("REST request to get a page of <%= entityClassPlural %>"))
             .map(ProtobufMappers::pageRequestProtoToPageRequest)
