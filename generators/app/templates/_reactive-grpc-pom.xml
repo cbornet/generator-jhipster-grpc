@@ -43,11 +43,11 @@
                         <configuration>
                             <protocPlugins>
                                 <protocPlugin>
-                                    <id>rxgrpc</id>
+                                    <id>reactor-grpc</id>
                                     <groupId>com.salesforce.servicelibs</groupId>
-                                    <artifactId>rxgrpc</artifactId>
-                                    <version>0.6.1</version>
-                                    <mainClass>com.salesforce.rxgrpc.RxGrpcGenerator</mainClass>
+                                    <artifactId>reactor-grpc</artifactId>
+                                    <version>0.7.1</version>
+                                    <mainClass>com.salesforce.reactorgrpc.ReactorGrpcGenerator</mainClass>
                                 </protocPlugin>
                             </protocPlugins>
                         </configuration>

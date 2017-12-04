@@ -3,7 +3,6 @@ package <%= packageName %>.grpc;
 import <%= packageName %>.security.jwt.TokenProvider;
 
 import io.grpc.Status;
-import io.reactivex.Single;
 import org.lognet.springboot.grpc.GRpcService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,9 +11,10 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
+import reactor.core.publisher.Mono;
 
 @GRpcService
-public class JWTService extends RxJWTServiceGrpc.JWTServiceImplBase {
+public class JWTService extends ReactorJWTServiceGrpc.JWTServiceImplBase {
 
     private final Logger log = LoggerFactory.getLogger(JWTService.class);
 
@@ -28,7 +28,7 @@ public class JWTService extends RxJWTServiceGrpc.JWTServiceImplBase {
     }
 
     @Override
-    public Single<JWTToken> authenticate(Single<Login> request) {
+    public Mono<JWTToken> authenticate(Mono<Login> request) {
         return request
             .map( login -> {
                 UsernamePasswordAuthenticationToken authenticationToken =

@@ -17,16 +17,16 @@ import <%= packageName %>.service.UserService;
 import com.google.protobuf.Empty;
 import com.google.protobuf.StringValue;
 import io.grpc.Status;
-import io.reactivex.Flowable;
-import io.reactivex.Single;
 <%_ if (searchEngine === 'elasticsearch') { _%>
 import org.elasticsearch.index.query.QueryBuilders;
 <%_ } _%>
 import org.lognet.springboot.grpc.GRpcService;
 import org.slf4j.LoggerFactory;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 @GRpcService(interceptors = {AuthenticationInterceptor.class})
-public class UserGrpcService extends RxUserServiceGrpc.UserServiceImplBase {
+public class UserGrpcService extends ReactorUserServiceGrpc.UserServiceImplBase {
 
     private final org.slf4j.Logger log = LoggerFactory.getLogger(UserGrpcService.class);
 
@@ -59,15 +59,15 @@ public class UserGrpcService extends RxUserServiceGrpc.UserServiceImplBase {
     <%_ if (authenticationType !== 'oauth2') { _%>
 
     @Override
-    public Single<UserProto> createUser(Single<UserProto> request) {
+    public Mono<UserProto> createUser(Mono<UserProto> request) {
         return request
             .doOnSuccess(userProto -> log.debug("gRPC request to save User : {}", userProto))
             .filter(userProto -> userProto.getIdOneofCase() != UserProto.IdOneofCase.ID)
-            .switchIfEmpty(Single.error(Status.INVALID_ARGUMENT.withDescription("A new user cannot already have an ID").asException()))
+            .switchIfEmpty(Mono.error(Status.INVALID_ARGUMENT.withDescription("A new user cannot already have an ID").asRuntimeException()))
             .filter(userProto -> !userRepository.findOneByLogin(userProto.getLogin().toLowerCase()).isPresent())
-            .switchIfEmpty(Single.error(Status.ALREADY_EXISTS.withDescription("Login already in use").asException()))
+            .switchIfEmpty(Mono.error(Status.ALREADY_EXISTS.withDescription("Login already in use").asRuntimeException()))
             .filter(userProto -> !userRepository.findOneByEmailIgnoreCase(userProto.getEmail()).isPresent())
-            .switchIfEmpty(Single.error(Status.ALREADY_EXISTS.withDescription("Email already in use").asException()))
+            .switchIfEmpty(Mono.error(Status.ALREADY_EXISTS.withDescription("Email already in use").asRuntimeException()))
             .map(userProtoMapper::userProtoToUserDTO)
             .map(userService::createUser)
             .doOnSuccess(mailService::sendCreationEmail)
@@ -75,7 +75,7 @@ public class UserGrpcService extends RxUserServiceGrpc.UserServiceImplBase {
     }
 
     @Override
-    public Single<UserProto> updateUser(Single<UserProto> request) {
+    public Mono<UserProto> updateUser(Mono<UserProto> request) {
         return request
             .doOnSuccess(userProto -> log.debug("gRPC request to update User : {}", userProto))
             .filter(userProto -> !userRepository
@@ -84,46 +84,45 @@ public class UserGrpcService extends RxUserServiceGrpc.UserServiceImplBase {
                 .filter(id -> !id.equals(userProto.getId()))
                 .isPresent()
             )
-            .switchIfEmpty(Single.error(Status.ALREADY_EXISTS.withDescription("Email already in use").asException()))
+            .switchIfEmpty(Mono.error(Status.ALREADY_EXISTS.withDescription("Email already in use").asRuntimeException()))
             .filter(userProto -> !userRepository
                 .findOneByLogin(userProto.getLogin().toLowerCase())
                 .map(User::getId)
                 .filter(id -> !id.equals(userProto.getId()))
                 .isPresent()
             )
-            .switchIfEmpty(Single.error(Status.ALREADY_EXISTS.withDescription("Login already in use").asException()))
+            .switchIfEmpty(Mono.error(Status.ALREADY_EXISTS.withDescription("Login already in use").asRuntimeException()))
             .map(userProtoMapper::userProtoToUserDTO)
-            .map(user -> userService.updateUser(user).orElseThrow(Status.NOT_FOUND::asException))
+            .map(user -> userService.updateUser(user).orElseThrow(Status.NOT_FOUND::asRuntimeException))
             .map(userProtoMapper::userDTOToUserProto);
     }
     <%_ } _%>
 
     @Override
-    public Flowable<UserProto> getAllUsers(Single<<% if (databaseType === 'sql' || databaseType === 'mongodb') { %>PageRequest<% } else { %>Empty<% } %>> request) {
+    public Flux<UserProto> getAllUsers(Mono<<% if (databaseType === 'sql' || databaseType === 'mongodb') { %>PageRequest<% } else { %>Empty<% } %>> request) {
         log.debug("gRPC request to get all users");
         return request
             <%_ if (databaseType === 'sql' || databaseType === 'mongodb') { _%>
             .map(ProtobufMappers::pageRequestProtoToPageRequest)
-            .map(userService::getAllManagedUsers)
+            .flatMapIterable(userService::getAllManagedUsers)
             <%_ } else { _%>
-            .map(e-> userService.getAllManagedUsers())
+            .flatMapIterable(e-> userService.getAllManagedUsers())
             <%_ } _%>
-            .flatMapPublisher(Flowable::fromIterable)
             .map(userProtoMapper::userDTOToUserProto);
     }
 
     @Override
-    public Single<UserProto> getUser(Single<StringValue> request) {
+    public Mono<UserProto> getUser(Mono<StringValue> request) {
         return request
             .map(StringValue::getValue)
             .doOnSuccess(login -> log.debug("gRPC request to get User : {}", login))
-            .map(login -> userService.getUserWithAuthoritiesByLogin(login).orElseThrow(Status.NOT_FOUND::asException))
+            .map(login -> userService.getUserWithAuthoritiesByLogin(login).orElseThrow(Status.NOT_FOUND::asRuntimeException))
             .map(userProtoMapper::userToUserProto);
     }
     <%_ if (authenticationType !== 'oauth2') { _%>
 
     @Override
-    public Single<Empty> deleteUser(Single<StringValue> request) {
+    public Mono<Empty> deleteUser(Mono<StringValue> request) {
         return request
             .map(StringValue::getValue)
             .doOnSuccess(login -> log.debug("gRPC request to delete User: {}", login))
@@ -134,20 +133,19 @@ public class UserGrpcService extends RxUserServiceGrpc.UserServiceImplBase {
     <%_ if (databaseType === 'sql' || databaseType === 'mongodb') { _%>
 
     @Override
-    public Flowable<StringValue> getAllAuthorities(Single<Empty> request) {
+    public Flux<StringValue> getAllAuthorities(Mono<Empty> request) {
         return request
             .doOnSuccess(e -> log.debug("gRPC request to gat all authorities"))
             .filter(e -> SecurityUtils.isCurrentUserInRole(AuthoritiesConstants.ADMIN))
-            .switchIfEmpty(Single.error(Status.PERMISSION_DENIED.asException()))
-            .map(e -> userService.getAuthorities())
-            .flatMapPublisher(Flowable::fromIterable)
+            .switchIfEmpty(Mono.error(Status.PERMISSION_DENIED.asRuntimeException()))
+            .flatMapIterable(e -> userService.getAuthorities())
             .map(authority -> StringValue.newBuilder().setValue(authority).build());
     }
     <%_ } _%>
     <%_ if (searchEngine === 'elasticsearch') { _%>
 
     @Override
-    public Flowable<UserProto> searchUsers(Single<UserSearchPageRequest> request) {
+    public Flux<UserProto> searchUsers(Mono<UserSearchPageRequest> request) {
         return request
             .map(UserSearchPageRequest::getQuery)
             .map(StringValue::getValue)
@@ -156,8 +154,7 @@ public class UserGrpcService extends RxUserServiceGrpc.UserServiceImplBase {
             .flatMapPublisher(query -> request
                 .map(UserSearchPageRequest::getPageRequest)
                 .map(ProtobufMappers::pageRequestProtoToPageRequest)
-                .map(pageRequest -> userSearchRepository.search(query, pageRequest))
-                .flatMapPublisher(Flowable::fromIterable)
+                .flatMapIterable(pageRequest -> userSearchRepository.search(query, pageRequest))
             )
             .map(userProtoMapper::userToUserProto);
     }

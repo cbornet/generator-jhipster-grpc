@@ -24,10 +24,6 @@ import <%= packageName %>.web.rest.vm.ManagedUserVM;
 import com.google.protobuf.Empty;
 import com.google.protobuf.StringValue;
 import io.grpc.Status;
-<%_ if (authenticationType === 'session') { _%>
-import io.reactivex.Flowable;
-<%_ } _%>
-import io.reactivex.Single;
 <%_ if (authenticationType !== 'oauth2') { _%>
 import org.apache.commons.lang3.StringUtils;
 <%_ } _%>
@@ -47,24 +43,27 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 <%_ if (authenticationType === 'oauth2') { _%>
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
-    <%_ if (applicationType !== 'monolith') { _%>
+<%_ } else if (databaseType === 'sql') { _%>
+import org.springframework.transaction.TransactionSystemException;
+<%_ } _%>
+<%_ if (authenticationType === 'session') { _%>
+import reactor.core.publisher.Flux;
+<%_ } _%>
+import reactor.core.publisher.Mono;
 
+<%_ if (authenticationType === 'oauth2' && applicationType !== 'monolith') { _%>
 import java.util.Map;
 import java.util.stream.Collectors;
-    <%_ } _%>
-<%_ } else { _%>
-    <%_ if (databaseType === 'sql') { _%>
-import org.springframework.transaction.TransactionSystemException;
-    <%_ } _%>
-
-import javax.validation.ConstraintViolationException;
-    <%_ if (authenticationType === 'session') { _%>
+<%_ } _%>
+<%_ if (authenticationType === 'session') { _%>
 import java.util.ArrayList;
-    <%_ } _%>
+<%_ } _%>
+<%_ if (authenticationType !== 'oauth2') { _%>
+import javax.validation.ConstraintViolationException;
 <%_ } _%>
 
 @GRpcService
-public class AccountService extends RxAccountServiceGrpc.AccountServiceImplBase {
+public class AccountService extends ReactorAccountServiceGrpc.AccountServiceImplBase {
 
     private final Logger log = LoggerFactory.getLogger(AccountService.class);
 
@@ -99,7 +98,7 @@ public class AccountService extends RxAccountServiceGrpc.AccountServiceImplBase 
     }
 
     @Override
-    public Single<StringValue> isAuthenticated(Single<Empty> request) {
+    public Mono<StringValue> isAuthenticated(Mono<Empty> request) {
         return request.map(e -> {
             log.debug("gRPC request to check if the current user is authenticated");
             Authentication principal = SecurityContextHolder.getContext().getAuthentication();
@@ -112,12 +111,12 @@ public class AccountService extends RxAccountServiceGrpc.AccountServiceImplBase 
     }
 
     @Override
-    public Single<UserProto> getAccount(Single<Empty> request) {
+    public Mono<UserProto> getAccount(Mono<Empty> request) {
         return request
 <%_ if (authenticationType === 'oauth2') { _%>
             .map(e -> SecurityContextHolder.getContext())
             .filter(context -> context.getAuthentication() != null)
-            .switchIfEmpty(Single.error(Status.INTERNAL.withDescription("Authentication could not be found").asException()))
+            .switchIfEmpty(Mono.error(Status.INTERNAL.withDescription("Authentication could not be found").asRuntimeException()))
             .map(SecurityContext::getAuthentication)
     <%_ if (applicationType === 'monolith') { _%>
             .map(authentication -> {
@@ -125,7 +124,7 @@ public class AccountService extends RxAccountServiceGrpc.AccountServiceImplBase 
                 if (authentication instanceof OAuth2Authentication) {
                     return authentication;
                 }
-                throw Status.INTERNAL.withDescription("User must be authenticated with OAuth2").asException();
+                throw Status.INTERNAL.withDescription("User must be authenticated with OAuth2").asRuntimeException();
             })
             .map(it -> userService.getUserFromAuthentication((OAuth2Authentication) it))
             .map(userProtoMapper::userDTOToUserProto);
@@ -156,21 +155,21 @@ public class AccountService extends RxAccountServiceGrpc.AccountServiceImplBase 
     }
     <%_ } _%>
 <%_ } else { _%>
-            .map(e -> userService.getUserWithAuthorities().orElseThrow(Status.INTERNAL::asException))
+            .map(e -> userService.getUserWithAuthorities().orElseThrow(Status.INTERNAL::asRuntimeException))
             .map(UserDTO::new)
             .map(userProtoMapper::userDTOToUserProto);
     }
 
     @Override
-    public Single<Empty> registerAccount(Single<UserProto> request) {
+    public Mono<Empty> registerAccount(Mono<UserProto> request) {
         return request
             .doOnSuccess(userProto -> log.debug("gRPC request to register account {}", userProto.getLogin()))
             .filter(userProto -> checkPasswordLength(userProto.getPassword()))
-            .switchIfEmpty(Single.error(Status.INVALID_ARGUMENT.withDescription("Incorrect password").asException()))
+            .switchIfEmpty(Mono.error(Status.INVALID_ARGUMENT.withDescription("Incorrect password").asRuntimeException()))
             .filter(userProto -> !userRepository.findOneByLogin(userProto.getLogin().toLowerCase()).isPresent())
-            .switchIfEmpty(Single.error(Status.ALREADY_EXISTS.withDescription("Login already in use").asException()))
+            .switchIfEmpty(Mono.error(Status.ALREADY_EXISTS.withDescription("Login already in use").asRuntimeException()))
             .filter(userProto -> !userRepository.findOneByEmailIgnoreCase(userProto.getEmail()).isPresent())
-            .switchIfEmpty(Single.error(Status.ALREADY_EXISTS.withDescription("Email already in use").asException()))
+            .switchIfEmpty(Mono.error(Status.ALREADY_EXISTS.withDescription("Email already in use").asRuntimeException()))
             .map(userProto -> Pair.of(userProtoMapper.userProtoToUserDTO(userProto), userProto.getPassword()))
             .map(pair -> {
                 try {
@@ -179,14 +178,14 @@ public class AccountService extends RxAccountServiceGrpc.AccountServiceImplBase 
                 } catch (TransactionSystemException e) {
                     if (e.getOriginalException().getCause() instanceof ConstraintViolationException) {
                         log.info("Invalid user", e);
-                        throw Status.INVALID_ARGUMENT.withDescription("Invalid user").asException();
+                        throw Status.INVALID_ARGUMENT.withDescription("Invalid user").asRuntimeException();
                     } else {
                         throw e;
                     }
                 <%_ } _%>
                 } catch (ConstraintViolationException e) {
                     log.error("Invalid user", e);
-                    throw Status.INVALID_ARGUMENT.withDescription("Invalid user").asException();
+                    throw Status.INVALID_ARGUMENT.withDescription("Invalid user").asRuntimeException();
                 }
             })
             .doOnSuccess(mailService::sendCreationEmail)
@@ -194,15 +193,15 @@ public class AccountService extends RxAccountServiceGrpc.AccountServiceImplBase 
     }
 
     @Override
-    public Single<UserProto> activateAccount(Single<StringValue> request) {
+    public Mono<UserProto> activateAccount(Mono<StringValue> request) {
         return request
             .map(StringValue::getValue)
-            .map(key -> userService.activateRegistration(key).orElseThrow(Status.INTERNAL::asException))
+            .map(key -> userService.activateRegistration(key).orElseThrow(Status.INTERNAL::asRuntimeException))
             .map(userProtoMapper::userToUserProto);
     }
 
     @Override
-    public Single<Empty> saveAccount(Single<UserProto> request) {
+    public Mono<Empty> saveAccount(Mono<UserProto> request) {
         String currentLogin = SecurityUtils.getCurrentUserLogin().orElseThrow(Status.INTERNAL::asRuntimeException);
         return request
             .filter(user -> !userRepository.findOneByEmailIgnoreCase(user.getEmail())
@@ -210,9 +209,9 @@ public class AccountService extends RxAccountServiceGrpc.AccountServiceImplBase 
                 .map(login -> !login.equalsIgnoreCase(currentLogin))
                 .isPresent()
             )
-            .switchIfEmpty(Single.error(Status.ALREADY_EXISTS.withDescription("Email already in use").asException()))
+            .switchIfEmpty(Mono.error(Status.ALREADY_EXISTS.withDescription("Email already in use").asRuntimeException()))
             .filter(user -> userRepository.findOneByLogin(currentLogin).isPresent())
-            .switchIfEmpty(Single.error(Status.INTERNAL.asException()))
+            .switchIfEmpty(Mono.error(Status.INTERNAL.asRuntimeException()))
             .doOnSuccess(user -> {
                 try {
                     userService.updateUser(
@@ -240,30 +239,29 @@ public class AccountService extends RxAccountServiceGrpc.AccountServiceImplBase 
     }
 
     @Override
-    public Single<Empty> changePassword(Single<StringValue> request) {
+    public Mono<Empty> changePassword(Mono<StringValue> request) {
         return request
             .map(StringValue::getValue)
             .filter(AccountService::checkPasswordLength)
-            .switchIfEmpty(Single.error(Status.INVALID_ARGUMENT.withDescription("Incorrect password").asException()))
+            .switchIfEmpty(Mono.error(Status.INVALID_ARGUMENT.withDescription("Incorrect password").asRuntimeException()))
             .doOnSuccess(userService::changePassword)
             .map(p -> Empty.newBuilder().build());
     }
 
     <%_ if (authenticationType === 'session') { _%>
     @Override
-    public Flowable<PersistentToken> getCurrentSessions(Single<Empty> request) {
+    public Flux<PersistentToken> getCurrentSessions(Mono<Empty> request) {
         return request
             .map(e-> SecurityUtils.getCurrentUserLogin()
                 .flatMap(userRepository::findOneByLogin)
-                .orElseThrow(Status.INTERNAL::asException)
+                .orElseThrow(Status.INTERNAL::asRuntimeException)
             )
-            .map(persistentTokenRepository::findByUser)
-            .flatMapPublisher(Flowable::fromIterable)
+            .flatMapIterable(persistentTokenRepository::findByUser)
             .map(ProtobufMappers::persistentTokenToPersistentTokenProto);
     }
 
     @Override
-    public Single<Empty> invalidateSession(Single<StringValue> request) {
+    public Mono<Empty> invalidateSession(Mono<StringValue> request) {
         return request
             .map(StringValue::getValue)
             .doOnSuccess(series -> SecurityUtils.getCurrentUserLogin()
@@ -279,24 +277,24 @@ public class AccountService extends RxAccountServiceGrpc.AccountServiceImplBase 
 
     <%_ } _%>
     @Override
-    public Single<Empty> requestPasswordReset(Single<StringValue> request) {
+    public Mono<Empty> requestPasswordReset(Mono<StringValue> request) {
         return request
             .map(StringValue::getValue)
             .map(mail -> userService.requestPasswordReset(mail)
-                .orElseThrow(Status.INVALID_ARGUMENT.withDescription("e-mail address not registered")::asException)
+                .orElseThrow(Status.INVALID_ARGUMENT.withDescription("e-mail address not registered")::asRuntimeException)
             )
             .doOnSuccess(mailService::sendPasswordResetMail)
             .map(u -> Empty.newBuilder().build());
     }
 
     @Override
-    public Single<Empty> finishPasswordReset(Single<KeyAndPassword> request) {
+    public Mono<Empty> finishPasswordReset(Mono<KeyAndPassword> request) {
         return request
             .filter(keyAndPassword -> checkPasswordLength(keyAndPassword.getNewPassword()))
-            .switchIfEmpty(Single.error(Status.INVALID_ARGUMENT.withDescription("Incorrect password").asException()))
+            .switchIfEmpty(Mono.error(Status.INVALID_ARGUMENT.withDescription("Incorrect password").asRuntimeException()))
             .map(keyAndPassword -> userService
                 .completePasswordReset(keyAndPassword.getNewPassword(), keyAndPassword.getKey())
-                .orElseThrow(Status.INTERNAL::asException)
+                .orElseThrow(Status.INTERNAL::asRuntimeException)
             )
             .doOnSuccess(mailService::sendPasswordResetMail)
             .map(user -> Empty.newBuilder().build());

@@ -2,15 +2,15 @@ import org.gradle.internal.os.OperatingSystem
 
 /*
  * The protobuf-maven-plugin is used because
- * the rxgrpc plugin is a native Java one (not directly executable) and this is
+ * the reactive-grpc plugin is a native Java one (not directly executable) and this is
  * not supported by the gradle plugin at the moment
  */
 
 task generateProtobuf(type:Exec) {
     if (OperatingSystem.current().isWindows()) {
-        commandLine 'cmd', '/c', '.mvn/mvnw.cmd generate-sources -f gradle/rxgrpc-pom.xml'
+        commandLine 'cmd', '/c', '.mvn/mvnw.cmd generate-sources -f gradle/reactive-grpc-pom.xml'
     } else {
-        commandLine 'sh', '-c', 'sh .mvn/mvnw generate-sources -f gradle/rxgrpc-pom.xml'
+        commandLine 'sh', '-c', 'sh .mvn/mvnw generate-sources -f gradle/reactive-grpc-pom.xml'
     }
 }
 

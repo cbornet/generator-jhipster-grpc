@@ -1,17 +1,17 @@
 package <%= packageName %>.grpc;
 
 import com.google.protobuf.Empty;
-import io.reactivex.Single;
 import org.lognet.springboot.grpc.GRpcService;
 import org.springframework.boot.actuate.health.CompositeHealthIndicator;
 import org.springframework.boot.actuate.health.HealthAggregator;
 import org.springframework.util.Assert;
+import reactor.core.publisher.Mono;
 
 import java.util.HashMap;
 import java.util.Map;
 
 @GRpcService
-public class HealthService extends RxHealthServiceGrpc.HealthServiceImplBase {
+public class HealthService extends ReactorHealthServiceGrpc.HealthServiceImplBase {
 
     private final Map<String, org.springframework.boot.actuate.health.HealthIndicator> healthIndicators;
 
@@ -30,7 +30,7 @@ public class HealthService extends RxHealthServiceGrpc.HealthServiceImplBase {
     }
 
     @Override
-    public Single<Health> getHealth(Single<Empty> request) {
+    public Mono<Health> getHealth(Mono<Empty> request) {
         Map<String, HealthIndicator> healthIndicatorProtos = new HashMap<>();
         this.healthIndicators.forEach((key, indicator) -> healthIndicatorProtos.put(key, healthIndicatorToHealthIndicatorProto(indicator)));
 

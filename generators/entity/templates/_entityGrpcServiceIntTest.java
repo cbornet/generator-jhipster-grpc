@@ -45,11 +45,6 @@ import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
-<%_ if (pagination === 'no' && jpaMetamodelFiltering) { _%>
-import io.reactivex.Flowable;
-<%_ } else { _%>
-import io.reactivex.Single;
-<%_ } _%>
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -64,18 +59,37 @@ import org.springframework.test.context.junit4.SpringRunner;
 <%_ if (databaseType === 'sql') { _%>
 import org.springframework.transaction.support.TransactionTemplate;
 <%_ } _%>
+<%_ if (pagination === 'no' && jpaMetamodelFiltering) { _%>
+import reactor.core.publisher.Flux;
+<%_ } else { _%>
+import reactor.core.publisher.Mono;
+<%_ } _%>
 
 <%_ if (databaseType === 'sql') { _%>
 import javax.persistence.EntityManager;
 <%_ } _%>
-<% if (fieldsContainLocalDate == true) { %>
-import java.time.LocalDate;<% } %><% if (fieldsContainZonedDateTime == true || fieldsContainInstant == true) { %>
-import java.time.Instant;<% } %><% if (fieldsContainZonedDateTime == true) { %>
+<%_ if (jpaMetamodelFiltering) { _%>
+import java.time.Duration;
+<%_ } _%>
+<%_ if (fieldsContainLocalDate == true) { _%>
+import java.time.LocalDate;
+<%_ } _%>
+<%_ if (fieldsContainZonedDateTime == true || fieldsContainInstant == true) { _%>
+import java.time.Instant;
+<%_ } _%>
+<%_ if (fieldsContainZonedDateTime == true) { _%>
 import java.time.ZonedDateTime;
-import java.time.ZoneOffset;<% } %><% if (fieldsContainLocalDate == true || fieldsContainZonedDateTime == true) { %>
-import java.time.ZoneId;<% } %><% if (fieldsContainBigDecimal == true) { %>
-import java.math.BigDecimal;<% } %><% if (fieldsContainBlob == true && databaseType === 'cassandra') { %>
-import java.nio.ByteBuffer;<% } %>
+import java.time.ZoneOffset;
+<%_ } _%>
+<%_ if (fieldsContainLocalDate == true || fieldsContainZonedDateTime == true) { _%>
+import java.time.ZoneId;
+<%_ } _%>
+<%_ if (fieldsContainBigDecimal == true) { _%>
+import java.math.BigDecimal;
+<%_ } _%>
+<%_ if (fieldsContainBlob == true && databaseType === 'cassandra') { _%>
+import java.nio.ByteBuffer;
+<%_ } _%>
 import java.util.*;
 <%_ if (searchEngine == 'elasticsearch') { _%>
 import java.util.stream.StreamSupport;
@@ -292,7 +306,7 @@ _%>
 
     private <%= entityClass %>ServiceGrpc.<%= entityClass %>ServiceBlockingStub stub;
 
-    private Rx<%= entityClass %>ServiceGrpc.Rx<%= entityClass %>ServiceStub rxstub;
+    private Reactor<%= entityClass %>ServiceGrpc.Reactor<%= entityClass %>ServiceStub rxstub;
 
     private <%= entityClass %> <%= entityInstance %>;
 
@@ -303,7 +317,7 @@ _%>
         String uniqueServerName = "Mock server for " + <%= entityClass %>GrpcService.class;
         mockServer = InProcessServerBuilder.forName(uniqueServerName).addService(<%= entityInstance %>GrpcService).build().start();
         stub = <%= entityClass %>ServiceGrpc.newBlockingStub(InProcessChannelBuilder.forName(uniqueServerName).directExecutor().build());
-        rxstub = Rx<%= entityClass %>ServiceGrpc.newRxStub(InProcessChannelBuilder.forName(uniqueServerName).build());
+        rxstub = Reactor<%= entityClass %>ServiceGrpc.newReactorStub(InProcessChannelBuilder.forName(uniqueServerName).build());
     }
 
     @After
@@ -451,13 +465,13 @@ _%>
             <%_ } _%>
         <%_ } _%>
 
-        <%= entityClass %> found<%= entityClass %> = rxstub.getAll<%= entityClassPlural %>(<% if (pagination !== 'no') { %>Single.just(query)<% } else { %><% if (jpaMetamodelFiltering) { %>Flowable.empty()<% } else { %>Single.just(Empty.getDefaultInstance())<% }} %>)
+        <%= entityClass %> found<%= entityClass %> = rxstub.getAll<%= entityClassPlural %>(<% if (pagination !== 'no') { %>Mono.just(query)<% } else { %><% if (jpaMetamodelFiltering) { %>Flux.empty()<% } else { %>Mono.just(Empty.getDefaultInstance())<% }} %>)
             .filter(<%= entityInstance %>Proto -> <%= entityInstance %>.getId()<% if (databaseType === 'cassandra') { %>.toString()<% } %>.equals(<%= entityInstance %>Proto.getId()))
             .map(<%= entityInstance %>ProtoMapper::<%= entityInstance %>ProtoTo<%= instanceType %>)
             <%_ if (dto == 'mapstruct') { _%>
             .map(<%= entityInstance %>Mapper::toEntity)
             <%_ } _%>
-            .blockingFirst();
+            .blockFirst();
 
         <%_ for (idx in fields) { _%>
             <%_ if ((fields[idx].fieldType == 'byte[]' || fields[idx].fieldType === 'ByteBuffer') && fields[idx].fieldTypeBlobContent != 'text') { _%>
@@ -582,7 +596,7 @@ _%>
         }
         <%_ } else { _%>
         // Get all the <%= entityInstance %>List where <%= relationship.relationshipFieldName %> equals to <%= relationship.relationshipFieldName %>Id
-        default<%= entityClass %>ShouldBeFound("<%= relationship.relationshipFieldName %>Id.equals", <%= relationship.relationshipFieldName %>Id);    
+        default<%= entityClass %>ShouldBeFound("<%= relationship.relationshipFieldName %>Id.equals", <%= relationship.relationshipFieldName %>Id);
 
         // Get all the <%= entityInstance %>List where <%= relationship.relationshipFieldName %> equals to <%= relationship.relationshipFieldName %>Id + 1
         default<%= entityClass %>ShouldNotBeFound("<%= relationship.relationshipFieldName %>Id.equals", <%= relationship.relationshipFieldName %>Id + 1);
@@ -611,13 +625,13 @@ _%>
                 .build();
         <%_ } _%>
 
-        <%= entityClass %> found<%= entityClass %> = rxstub.getAll<%= entityClassPlural %>(<% if (pagination !== 'no') { %>Single<% } else { %>Flowable<% } %>.just(query))
+        <%= entityClass %> found<%= entityClass %> = rxstub.getAll<%= entityClassPlural %>(<% if (pagination !== 'no') { %>Mono<% } else { %>Flux<% } %>.just(query))
             .filter(<%= entityInstance %>Proto -> <%= entityInstance %>.getId()<% if (databaseType === 'cassandra') { %>.toString()<% } %>.equals(<%= entityInstance %>Proto.getId()))
             .map(<%= entityInstance %>ProtoMapper::<%= entityInstance %>ProtoTo<%= instanceType %>)
             <%_ if (dto == 'mapstruct') { _%>
             .map(<%= entityInstance %>Mapper::toEntity)
             <%_ } _%>
-            .blockingFirst();
+            .blockFirst();
 
         <%_ for (idx in fields) { _%>
             <%_ if ((fields[idx].fieldType == 'byte[]' || fields[idx].fieldType === 'ByteBuffer') && fields[idx].fieldTypeBlobContent != 'text') { _%>
@@ -648,7 +662,7 @@ _%>
                 .build();
         <%_ } _%>
 
-        rxstub.getAll<%= entityClassPlural %>(<% if (pagination !== 'no') { %>Single<% } else { %>Flowable<% } %>.just(query)).test().assertNoValues();
+        assertThat(rxstub.getAll<%= entityClassPlural %>(<% if (pagination !== 'no') { %>Mono<% } else { %>Flux<% } %>.just(query)).count().block(Duration.ofSeconds(5))).isZero();
     }
 <%_  } _%>
 
@@ -714,7 +728,7 @@ _%>
             <%_ if (dto == 'mapstruct') { _%>
             <%= entityClass %>DTO updated<%= entityClass %>DTO = <%= entityInstance %>Mapper.toDto(updated<%= entityClass %>);
             <%_ } _%>
-            em.detach(updated<%= entityClass %>);            
+            em.detach(updated<%= entityClass %>);
             return <%= entityInstance %>ProtoMapper.<%=instanceName%>To<%=entityClass%>Proto(updated<%= instanceType %>);
         });
         <%_ } else { _%>

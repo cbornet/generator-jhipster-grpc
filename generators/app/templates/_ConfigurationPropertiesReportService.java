@@ -3,15 +3,15 @@ package <%= packageName %>.grpc;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.protobuf.Empty;
-import io.reactivex.Single;
 import org.lognet.springboot.grpc.GRpcService;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.actuate.endpoint.ConfigurationPropertiesReportEndpoint;
+import reactor.core.publisher.Mono;
 
 import java.util.Map;
 
 @GRpcService(interceptors = {AuthenticationInterceptor.class})
-public class ConfigurationPropertiesReportService extends RxConfigurationPropertiesReportServiceGrpc.ConfigurationPropertiesReportServiceImplBase {
+public class ConfigurationPropertiesReportService extends ReactorConfigurationPropertiesReportServiceGrpc.ConfigurationPropertiesReportServiceImplBase {
 
     private final org.slf4j.Logger log = LoggerFactory.getLogger(ConfigurationPropertiesReportService.class);
 
@@ -22,7 +22,7 @@ public class ConfigurationPropertiesReportService extends RxConfigurationPropert
     }
 
     @Override
-    public Single<ConfigurationPropertiesReport> getConfigurationProperties(Single<Empty> request) {
+    public Mono<ConfigurationPropertiesReport> getConfigurationProperties(Mono<Empty> request) {
         return request.map(e -> mapToConfigurationPropertiesReport(endpoint.invoke()));
     }
 

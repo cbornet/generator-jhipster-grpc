@@ -22,8 +22,6 @@ import com.google.protobuf.<%=idProtoWrappedType%>;
 import com.google.protobuf.StringValue;
 <%_ } _%>
 import io.grpc.Status;
-import io.reactivex.Flowable;
-import io.reactivex.Single;
 import org.lognet.springboot.grpc.GRpcService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,6 +34,8 @@ import org.springframework.data.util.Pair;
 import org.springframework.format.support.FormattingConversionService;
 import org.springframework.validation.DataBinder;
 <%_ } _%>
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 <%_ if (jpaMetamodelFiltering && pagination !== 'no') { _%>
 import java.util.List;
@@ -49,7 +49,7 @@ import java.util.stream.Collectors;
  * gRPC service providing CRUD methods for entity <%= entityClass %>.
  */
 @GRpcService(interceptors = {AuthenticationInterceptor.class})
-public class <%= entityClass %>GrpcService extends Rx<%= entityClass %>ServiceGrpc.<%= entityClass %>ServiceImplBase {
+public class <%= entityClass %>GrpcService extends Reactor<%= entityClass %>ServiceGrpc.<%= entityClass %>ServiceImplBase {
 
     private final Logger log = LoggerFactory.getLogger(<%= entityClass %>GrpcService.class);
 
@@ -59,7 +59,7 @@ public class <%= entityClass %>GrpcService extends Rx<%= entityClass %>ServiceGr
     private final <%= entityClass %>QueryService <%= entityInstance %>QueryService;
 
     private final FormattingConversionService conversionService;
-    
+
     <%_ } _%>
     private final <%= entityClass %>ProtoMapper <%= entityInstance %>ProtoMapper;
 
@@ -73,16 +73,16 @@ public class <%= entityClass %>GrpcService extends Rx<%= entityClass %>ServiceGr
     }
 
     @Override
-    public Single<<%= entityClass %>Proto> create<%= entityClass %>(Single<<%= entityClass %>Proto> request) {
+    public Mono<<%= entityClass %>Proto> create<%= entityClass %>(Mono<<%= entityClass %>Proto> request) {
         return update<%= entityClass %>(request
             .doOnSuccess(<%= entityInstance %>Proto -> log.debug("REST request to save <%= entityClass %> : {}", <%= entityInstance %>Proto))
             .filter(<%= entityInstance %>Proto -> <%= entityInstance %>Proto.getIdOneofCase() != <%= entityClass %>Proto.IdOneofCase.ID)
-            .switchIfEmpty(Single.error(Status.ALREADY_EXISTS.asException()))
+            .switchIfEmpty(Mono.error(Status.ALREADY_EXISTS.asRuntimeException()))
         );
     }
 
     @Override
-    public Single<<%= entityClass %>Proto> update<%= entityClass %>(Single<<%= entityClass %>Proto> request) {
+    public Mono<<%= entityClass %>Proto> update<%= entityClass %>(Mono<<%= entityClass %>Proto> request) {
         return request
             .map(<%= entityInstance %>ProtoMapper::<%= entityInstance %>ProtoTo<%= instanceType %>)
             .doOnSuccess(<%= instanceName %> -> log.debug("REST request to update <%= entityClass %> : {}", <%= instanceName %>))
@@ -91,7 +91,7 @@ public class <%= entityClass %>GrpcService extends Rx<%= entityClass %>ServiceGr
     }
 
     @Override
-    public Flowable<<%= entityClass %>Proto> getAll<%= entityClassPlural %>(<% if (pagination !== 'no') { %>Single<PageRequest<% if (jpaMetamodelFiltering) { %>AndFilters<% } } else { if (jpaMetamodelFiltering) {  %>Flowable<QueryFilter<% } else { %>Single<Empty<% }} %>> request) {
+    public Flux<<%= entityClass %>Proto> getAll<%= entityClassPlural %>(<% if (pagination !== 'no') { %>Mono<PageRequest<% if (jpaMetamodelFiltering) { %>AndFilters<% } } else { if (jpaMetamodelFiltering) {  %>Flux<QueryFilter<% } else { %>Mono<Empty<% }} %>> request) {
         return request
             <%_ if (pagination !== 'no') { _%>
                 <%_ if (jpaMetamodelFiltering) { _%>
@@ -106,16 +106,16 @@ public class <%= entityClass %>GrpcService extends Rx<%= entityClass %>ServiceGr
                 return Pair.of(criteria, ProtobufMappers.pageRequestProtoToPageRequest(pageRequestAndFilters.getPageRequest()));
             })
             .doOnSuccess(pair -> log.debug("REST request to get a page of <%= entityClassPlural %> by criteria {}", pair.getFirst()))
-            .map(pair -> <%= entityInstance %>QueryService.findByCriteria(pair.getFirst(), pair.getSecond()))
+            .flatMapIterable(pair -> <%= entityInstance %>QueryService.findByCriteria(pair.getFirst(), pair.getSecond()))
                 <%_ } else { _%>   
             .doOnSuccess(p -> log.debug("REST request to get a page of <%= entityClassPlural %>"))
             .map(ProtobufMappers::pageRequestProtoToPageRequest)
-            .map(<%= entityInstance %>Service::findAll)
+            .flatMapIterable(<%= entityInstance %>Service::findAll)
                 <%_ } _%>
             <%_ } else { _%>
                 <%_ if (jpaMetamodelFiltering) { _%>
             .map(filter -> new PropertyValue(filter.getProperty(), filter.getValue().split(",")))
-            .collectInto(new MutablePropertyValues(), MutablePropertyValues::addPropertyValue)
+            .collect(MutablePropertyValues::new, MutablePropertyValues::addPropertyValue)
             .map(mutablePropertyValues -> {
                 <%= entityClass %>Criteria criteria = new <%= entityClass %>Criteria();
                 DataBinder binder = new DataBinder(criteria);
@@ -124,27 +124,26 @@ public class <%= entityClass %>GrpcService extends Rx<%= entityClass %>ServiceGr
                 return criteria;
             })
             .doOnSuccess(criteria -> log.debug("REST request to get <%= entityClassPlural %> by criteria: {}", criteria))
-            .map(<%= entityInstance %>QueryService::findByCriteria)
+            .flatMapIterable(<%= entityInstance %>QueryService::findByCriteria)
                 <%_ } else { _%>
             .doOnSuccess(e-> log.debug("REST request to get all <%= entityClassPlural %>"))
-            .map(e -> <%= entityInstance %>Service.findAll())
+            .flatMapIterable(e -> <%= entityInstance %>Service.findAll())
                 <%_ } _%>
             <%_ } _%>
-            .flatMapPublisher(Flowable::fromIterable)
             .map(<%= entityInstance %>ProtoMapper::<%= instanceName %>To<%= entityClass %>Proto);
     }
 
     @Override
-    public Single<<%= entityClass %>Proto> get<%= entityClass %>(Single<<%= idProtoWrappedType %>> request) {
+    public Mono<<%= entityClass %>Proto> get<%= entityClass %>(Mono<<%= idProtoWrappedType %>> request) {
         return request
             .map(<%= idProtoWrappedType %>::getValue)
             .doOnSuccess(id -> log.debug("REST request to get <%= entityClass %> : {}", id))
-            .map(id -> Optional.ofNullable(<%= entityInstance %>Service.findOne(id)).orElseThrow(Status.NOT_FOUND::asException))
+            .map(id -> Optional.ofNullable(<%= entityInstance %>Service.findOne(id)).orElseThrow(Status.NOT_FOUND::asRuntimeException))
             .map(<%= entityInstance %>ProtoMapper::<%= instanceName %>To<%= entityClass %>Proto);
     }
 
     @Override
-    public Single<Empty> delete<%= entityClass %>(Single<<%= idProtoWrappedType %>> request) {
+    public Mono<Empty> delete<%= entityClass %>(Mono<<%= idProtoWrappedType %>> request) {
         return request
             .map(<%= idProtoWrappedType %>::getValue)
             .doOnSuccess(id -> log.debug("REST request to delete <%= entityClass %> : {}", id))
@@ -154,7 +153,7 @@ public class <%= entityClass %>GrpcService extends Rx<%= entityClass %>ServiceGr
     <%_ if (searchEngine == 'elasticsearch') { _%>
 
     @Override
-    public Flowable<<%= entityClass %>Proto> search<%= entityClassPlural %>(Single<<%= entitySearchType %>> request) {
+    public Flux<<%= entityClass %>Proto> search<%= entityClassPlural %>(Mono<<%= entitySearchType %>> request) {
         return request
             <%_ if (pagination !== 'no') { _%>
             .map(<%= entitySearchType %>::getQuery)
@@ -163,14 +162,12 @@ public class <%= entityClass %>GrpcService extends Rx<%= entityClass %>ServiceGr
             .flatMapPublisher(query -> request
                 .map(<%= entitySearchType %>::getPageRequest)
                 .map(ProtobufMappers::pageRequestProtoToPageRequest)
-                .map(pageRequest -> <%= entityInstance %>Service.search(query, pageRequest))
-                .flatMapPublisher(Flowable::fromIterable)
-            )
+                .flatMapIterable(pageRequest -> <%= entityInstance %>Service.search(query, pageRequest))
+                )
             <%_ } else { _%>
             .map(StringValue::getValue)
             .doOnSuccess(query -> log.debug("REST request to search <%= entityClassPlural %> for query {}", query))
-            .map(<%= entityInstance %>Service::search)
-            .flatMapPublisher(Flowable::fromIterable)
+            .flatMapIterable(<%= entityInstance %>Service::search)
             <%_ } _%>
             .map(<%= entityInstance %>ProtoMapper::<%= instanceName %>To<%= entityClass %>Proto);
     }

@@ -4,12 +4,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.protobuf.Empty;
 import io.grpc.Status;
-import io.reactivex.Single;
 import org.lognet.springboot.grpc.GRpcService;
 import org.springframework.boot.actuate.endpoint.EnvironmentEndpoint;
+import reactor.core.publisher.Mono;
 
 @GRpcService(interceptors = {AuthenticationInterceptor.class})
-public class EnvironmentService extends RxEnvironmentServiceGrpc.EnvironmentServiceImplBase {
+public class EnvironmentService extends ReactorEnvironmentServiceGrpc.EnvironmentServiceImplBase {
 
     private final EnvironmentEndpoint endpoint;
 
@@ -18,7 +18,7 @@ public class EnvironmentService extends RxEnvironmentServiceGrpc.EnvironmentServ
     }
 
     @Override
-    public Single<Environment> getEnv(Single<Empty> request) {
+    public Mono<Environment> getEnv(Mono<Empty> request) {
         return request.map( empty -> {
             ObjectMapper mapper = new ObjectMapper();
             try {

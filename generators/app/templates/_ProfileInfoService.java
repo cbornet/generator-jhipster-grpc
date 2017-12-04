@@ -4,16 +4,16 @@ import <%= packageName %>.config.DefaultProfileUtil;
 
 import com.google.protobuf.Empty;
 import io.github.jhipster.config.JHipsterProperties;
-import io.reactivex.Single;
 import org.lognet.springboot.grpc.GRpcService;
 import org.springframework.core.env.Environment;
+import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 @GRpcService
-public class ProfileInfoService extends RxProfileInfoServiceGrpc.ProfileInfoServiceImplBase {
+public class ProfileInfoService extends ReactorProfileInfoServiceGrpc.ProfileInfoServiceImplBase {
     private final JHipsterProperties jHipsterProperties;
     private final Environment env;
 
@@ -23,7 +23,7 @@ public class ProfileInfoService extends RxProfileInfoServiceGrpc.ProfileInfoServ
     }
 
     @Override
-    public Single<ProfileInfo> getActiveProfiles(Single<Empty> request) {
+    public Mono<ProfileInfo> getActiveProfiles(Mono<Empty> request) {
         return request.map(e -> {
             ProfileInfo.Builder builder = ProfileInfo.newBuilder();
             String[] activeProfiles = DefaultProfileUtil.getActiveProfiles(env);

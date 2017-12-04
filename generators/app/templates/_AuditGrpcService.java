@@ -5,15 +5,15 @@ import <%= packageName %>.service.AuditEventService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.protobuf.<%= idProtoWrappedType %>;
 import io.grpc.Status;
-import io.reactivex.Flowable;
-import io.reactivex.Single;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.time.Instant;
 import java.time.ZoneId;
 
-public class AuditGrpcService extends RxAuditServiceGrpc.AuditServiceImplBase {
+public class AuditGrpcService extends ReactorAuditServiceGrpc.AuditServiceImplBase {
 
     private final Logger log = LoggerFactory.getLogger(AuditGrpcService.class);
 
@@ -24,9 +24,9 @@ public class AuditGrpcService extends RxAuditServiceGrpc.AuditServiceImplBase {
     }
 
     @Override
-    public Flowable<AuditEvent> getAuditEvents(Single<AuditRequest> request) {
+    public Flux<AuditEvent> getAuditEvents(Mono<AuditRequest> request) {
         return request
-            .map( auditRequest -> {
+            .flatMapIterable( auditRequest -> {
                 if (auditRequest.hasFromDate() || auditRequest.hasToDate()) {
                     Instant fromDate = auditRequest.hasFromDate() ?
                         ProtobufMappers
@@ -46,7 +46,6 @@ public class AuditGrpcService extends RxAuditServiceGrpc.AuditServiceImplBase {
                     return auditEventService.findAll(ProtobufMappers.pageRequestProtoToPageRequest(auditRequest.getPaginationParams()));
                 }
             })
-            .flatMapPublisher(Flowable::fromIterable)
             .map(auditEvent ->  {
                 try {
                     return ProtobufMappers.auditEventToAuditEventProto(auditEvent);
@@ -58,10 +57,10 @@ public class AuditGrpcService extends RxAuditServiceGrpc.AuditServiceImplBase {
     }
 
     @Override
-    public Single<AuditEvent> getAuditEvent(Single<<%= idProtoWrappedType %>> request) {
+    public Mono<AuditEvent> getAuditEvent(Mono<<%= idProtoWrappedType %>> request) {
         return request
             .map(<%= idProtoWrappedType %>::getValue)
-            .map(id -> auditEventService.find(id).orElseThrow(Status.NOT_FOUND::asException))
+            .map(id -> auditEventService.find(id).orElseThrow(Status.NOT_FOUND::asRuntimeException))
             .map(auditEvent -> {
                 try {
                     return ProtobufMappers.auditEventToAuditEventProto(auditEvent);

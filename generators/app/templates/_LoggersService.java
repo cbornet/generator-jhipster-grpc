@@ -1,15 +1,15 @@
 package <%= packageName %>.grpc;
 
 import com.google.protobuf.Empty;
-import io.reactivex.Flowable;
-import io.reactivex.Single;
 import org.lognet.springboot.grpc.GRpcService;
 import org.springframework.boot.logging.LogLevel;
 import org.springframework.boot.logging.LoggingSystem;
 import org.springframework.util.Assert;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 @GRpcService(interceptors = {AuthenticationInterceptor.class})
-public class LoggersService extends RxLoggersServiceGrpc.LoggersServiceImplBase {
+public class LoggersService extends ReactorLoggersServiceGrpc.LoggersServiceImplBase {
 
     private final LoggingSystem loggingSystem;
 
@@ -19,10 +19,9 @@ public class LoggersService extends RxLoggersServiceGrpc.LoggersServiceImplBase 
     }
 
     @Override
-    public Flowable<Logger> getLoggers(Single<Empty> request) {
+    public Flux<Logger> getLoggers(Mono<Empty> request) {
         return request
-            .map(e ->  loggingSystem.getLoggerConfigurations())
-            .flatMapPublisher(Flowable::fromIterable)
+            .flatMapIterable(e ->  loggingSystem.getLoggerConfigurations())
             .map(loggerConfiguration ->
                 Logger.newBuilder()
                     .setName(loggerConfiguration.getName())
@@ -32,7 +31,7 @@ public class LoggersService extends RxLoggersServiceGrpc.LoggersServiceImplBase 
     }
 
     @Override
-    public Single<Empty> changeLevel(Single<Logger> request) {
+    public Mono<Empty> changeLevel(Mono<Logger> request) {
         return request
             .doOnSuccess(logger -> this.loggingSystem.setLogLevel(
                 logger.getName(),

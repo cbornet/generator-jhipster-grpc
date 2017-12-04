@@ -1,19 +1,19 @@
 package <%= packageName %>.grpc;
 
 import com.google.protobuf.Empty;
-import io.reactivex.Flowable;
-import io.reactivex.Single;
 import org.lognet.springboot.grpc.GRpcService;
 import org.springframework.boot.actuate.endpoint.PublicMetrics;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.util.Assert;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 @GRpcService(interceptors = {AuthenticationInterceptor.class})
-public class MetricService extends RxMetricServiceGrpc.MetricServiceImplBase {
+public class MetricService extends ReactorMetricServiceGrpc.MetricServiceImplBase {
 
     private final List<PublicMetrics> publicMetrics;
 
@@ -29,12 +29,10 @@ public class MetricService extends RxMetricServiceGrpc.MetricServiceImplBase {
     }
 
     @Override
-    public Flowable<Metric> getMetrics(Single<Empty> request) {
+    public Flux<Metric> getMetrics(Mono<Empty> request) {
         return request
-            .map(empty -> publicMetrics)
-            .flatMapPublisher(Flowable::fromIterable)
-            .map(PublicMetrics::metrics)
-            .flatMap(Flowable::fromIterable)
+            .flatMapIterable(empty -> publicMetrics)
+            .flatMapIterable(PublicMetrics::metrics)
             .map(metric -> {
                 Metric.Builder builder = Metric.newBuilder()
                     .setName(metric.getName());
