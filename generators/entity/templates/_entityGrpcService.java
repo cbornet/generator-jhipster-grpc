@@ -159,7 +159,7 @@ public class <%= entityClass %>GrpcService extends Reactor<%= entityClass %>Serv
             .map(<%= entitySearchType %>::getQuery)
             .map(StringValue::getValue)
             .doOnSuccess(query -> log.debug("REST request to search for a page of <%= entityClassPlural %> for query {}", query))
-            .flatMapPublisher(query -> request
+            .flatMapMany(query -> request
                 .map(<%= entitySearchType %>::getPageRequest)
                 .map(ProtobufMappers::pageRequestProtoToPageRequest)
                 .flatMapIterable(pageRequest -> <%= entityInstance %>Service.search(query, pageRequest))

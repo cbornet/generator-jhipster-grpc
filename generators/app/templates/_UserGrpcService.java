@@ -151,7 +151,7 @@ public class UserGrpcService extends ReactorUserServiceGrpc.UserServiceImplBase 
             .map(StringValue::getValue)
             .doOnSuccess(query -> log.debug("gRPC request to search Users for query {}", query))
             .map(QueryBuilders::queryStringQuery)
-            .flatMapPublisher(query -> request
+            .flatMapMany(query -> request
                 .map(UserSearchPageRequest::getPageRequest)
                 .map(ProtobufMappers::pageRequestProtoToPageRequest)
                 .flatMapIterable(pageRequest -> userSearchRepository.search(query, pageRequest))
