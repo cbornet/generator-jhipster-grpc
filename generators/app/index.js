@@ -137,6 +137,7 @@ module.exports = yeoman.Base.extend({
             this.protocVersion = '3.1.0';
             var guavaVersion = '20.0';
             var nettyVersion = '4.1.8.Final';
+            this.reactiveGrpcVersion = '0.7.2';
 
             if (jhipsterVar.buildTool === 'maven') {
                 jhipsterFunc.addMavenDependency('org.lognet', 'grpc-spring-boot-starter', grpcSpringVersion);
@@ -149,7 +150,7 @@ module.exports = yeoman.Base.extend({
                 jhipsterFunc.addMavenDependency('io.grpc', 'grpc-protobuf', this.grpcVersion);
                 jhipsterFunc.addMavenDependency('io.grpc', 'grpc-stub', this.grpcVersion);
                 jhipsterFunc.addMavenDependency('io.projectreactor', 'reactor-core', '3.1.1.RELEASE');
-                jhipsterFunc.addMavenDependency('com.salesforce.servicelibs', 'reactor-grpc-stub', '0.7.1');
+                jhipsterFunc.addMavenDependency('com.salesforce.servicelibs', 'reactor-grpc-stub', this.reactiveGrpcVersion);
                 if (jhipsterVar.databaseType === 'cassandra' || ['microservice', 'gateway', 'uaa'].includes(jhipsterVar.applicationType)) {
                     // grpc-java needs netty 4.1
                     jhipsterFunc.addMavenDependency('io.netty', 'netty-handler', nettyVersion);
@@ -173,7 +174,7 @@ module.exports = yeoman.Base.extend({
                     '                    <id>reactor-grpc</id>' + '\n                ' +
                     '                    <groupId>com.salesforce.servicelibs</groupId>' + '\n                ' +
                     '                    <artifactId>reactor-grpc</artifactId>' + '\n                ' +
-                    '                    <version>0.7.1</version>' + '\n                ' +
+                    '                    <version>' + this.reactiveGrpcVersion + '</version>' + '\n                ' +
                     '                    <mainClass>com.salesforce.reactorgrpc.ReactorGrpcGenerator</mainClass>' + '\n                ' +
                     '                </protocPlugin>' + '\n                ' +
                     '            </protocPlugins>' + '\n                ' +
@@ -221,7 +222,7 @@ module.exports = yeoman.Base.extend({
                 jhipsterFunc.addGradleDependency('compile', 'io.grpc', 'grpc-protobuf', this.grpcVersion);
                 jhipsterFunc.addGradleDependency('compile', 'io.grpc', 'grpc-stub', this.grpcVersion);
                 jhipsterFunc.addGradleDependency('compile', 'io.projectreactor', 'reactor-core', '3.1.1.RELEASE');
-                jhipsterFunc.addGradleDependency('compile', 'com.salesforce.servicelibs', 'reactor-grpc-stub', '0.7.1');
+                jhipsterFunc.addGradleDependency('compile', 'com.salesforce.servicelibs', 'reactor-grpc-stub', this.reactiveGrpcVersion);
                 if (jhipsterVar.databaseType === 'cassandra' || ['microservice', 'gateway', 'uaa'].includes(jhipsterVar.applicationType)) {
                     // grpc-java needs netty 4.1
                     jhipsterFunc.addGradleDependency('compile', 'io.netty', 'netty-handler', nettyVersion);
