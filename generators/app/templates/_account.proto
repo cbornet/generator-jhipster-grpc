@@ -10,7 +10,7 @@ import "google/protobuf/wrappers.proto";
 import "google/protobuf/timestamp.proto";
     <%_ } else { _%>
 import "util/date.proto";
-    <% _} _%>
+    <%_ } _%>
 <%_ } _%>
 import "<%= packageFolder %>/user.proto";
 

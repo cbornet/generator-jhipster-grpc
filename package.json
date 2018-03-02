@@ -21,32 +21,30 @@
     "url": "git+https://github.com/cbornet/generator-jhipster-grpc.git"
   },
   "dependencies": {
-    "chalk": "1.1.1",
-    "generator-jhipster": ">2.26.0",
+    "chalk": "2.1.0",
+    "generator-jhipster": ">=4.6.0",
     "lodash": "4.17.4",
     "mkdirp": "0.5.1",
     "pluralize": "^3.1.0",
-    "yeoman-generator": "0.22.4"
+    "yeoman-generator": "2.0.0"
   },
   "devDependencies": {
-    "fs-extra": "0.26.4",
-    "gulp": "^3.9.0",
-    "gulp-bump": "1.0.0",
-    "gulp-eslint": "1.0.0",
-    "gulp-exclude-gitignore": "1.0.0",
-    "gulp-git": "1.6.1",
-    "gulp-istanbul": "0.10.3",
-    "gulp-mocha": "2.2.0",
-    "gulp-nsp": "2.3.0",
-    "gulp-plumber": "1.0.1",
-    "gulp-rename": "^1.2.0",
-    "gulp-sequence": "0.4.4",
-    "gulp-shell": "^0.5.1",
-    "mocha": "2.3.4",
-    "yeoman-assert": "2.1.1",
-    "yeoman-test": "1.0.0"
+    "eslint": "4.7.2",
+    "eslint-config-airbnb-base": "12.0.0",
+    "eslint-plugin-import": "2.7.0",
+    "fs-extra": "4.0.2",
+    "mocha": "3.5.3",
+    "yeoman-assert": "3.1.0",
+    "yeoman-test": "1.7.0"
   },
   "scripts": {
+    "pretest": "eslint .",
+    "lint": "eslint .",
+    "lint-fix": "eslint . --fix",
+    "release": "git push && git push --tags && npm publish",
+    "release:patch": "npm version patch -a -m \"Update to %s\" && npm run release",
+    "release:minor": "npm version minor -a -m \"Update to %s\" && npm run release",
+    "release:major": "npm version major -a -m \"Update to %s\" && npm run release",
     "test": "mocha test/*"
   },
   "license": "Apache-2.0",
