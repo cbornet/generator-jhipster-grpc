@@ -238,17 +238,14 @@ public class AccountService extends ReactorAccountServiceGrpc.AccountServiceImpl
             .map(u -> Empty.newBuilder().build());
     }
 
-    // TODO: To be reworked
-    /*
     @Override
-    public Mono<Empty> changePassword(Mono<StringValue> request) {
+    public Mono<Empty> changePassword(Mono<PasswordChange> request) {
         return request
-            .map(StringValue::getValue)
-            .filter(AccountService::checkPasswordLength)
+            .filter(passwordChange -> AccountService.checkPasswordLength(passwordChange.getNewPassword()))
             .switchIfEmpty(Mono.error(Status.INVALID_ARGUMENT.withDescription("Incorrect password").asRuntimeException()))
-            .doOnSuccess(userService::changePassword)
+            .doOnSuccess(passwordChange -> userService.changePassword(passwordChange.getCurrentPassword(), passwordChange.getNewPassword()))
             .map(p -> Empty.newBuilder().build());
-    }*/
+    }
 
     <%_ if (authenticationType === 'session') { _%>
     @Override

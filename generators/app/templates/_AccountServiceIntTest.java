@@ -85,10 +85,6 @@ import java.util.Set;
 <%_ if (databaseType === 'cassandra') { _%>
 import java.util.UUID;
 <%_ } _%>
-<%_ if (authenticationType !== 'oauth2') { _%>
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-<%_ } _%>
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
@@ -618,11 +614,12 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
         assertThat(updatedUser.getEmail()).isEqualTo(user.getEmail());
     }
 
-    @org.junit.Ignore("Change password not implemented")
     @Test<% if (databaseType === 'sql') { %>
     @Transactional<% } %>
     public void testChangePassword() {
         User user = createUser();
+        String currentPassword = RandomStringUtils.random(60);
+        user.setPassword(passwordEncoder.encode(currentPassword));
         user.setLogin("grpc-change-password");
         user.setEmail("grpc-change-password@example.com");
         userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(user);
@@ -631,18 +628,22 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
             new TestingAuthenticationToken(user.getLogin(), "password");
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        stub.changePassword(StringValue.newBuilder().setValue("new password").build());
-
+        stub.changePassword(PasswordChange.newBuilder()
+            .setCurrentPassword(currentPassword)
+            .setNewPassword("new password")
+            .build()
+        );
         User updatedUser = userRepository.findOneByLogin("grpc-change-password").orElse(null);
         assertThat(passwordEncoder.matches("new password", updatedUser.getPassword())).isTrue();
     }
 
     <%_ } _%>
-    @org.junit.Ignore("Change password not implemented")
     @Test<% if (databaseType === 'sql') { %>
     @Transactional<% } %>
     public void testChangePasswordTooSmall() {
         User user = createUser();
+        String currentPassword = RandomStringUtils.random(60);
+        user.setPassword(passwordEncoder.encode(currentPassword));
         user.setLogin("grpc-change-password-too-small");
         user.setEmail("grpc-change-password-too-small@example.com");
         userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(user);
@@ -652,18 +653,23 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         try {
-            stub.changePassword(StringValue.newBuilder().setValue("foo").build());
+            stub.changePassword(PasswordChange.newBuilder()
+                .setCurrentPassword(currentPassword)
+                .setNewPassword("foo")
+                .build()
+            );
             failBecauseExceptionWasNotThrown(StatusRuntimeException.class);
         } catch (StatusRuntimeException e) {
             assertThat(e.getStatus().getCode()).isEqualTo(Status.Code.INVALID_ARGUMENT);
         }
     }
 
-    @org.junit.Ignore("Change password not implemented")
     @Test<% if (databaseType === 'sql') { %>
     @Transactional<% } %>
     public void testChangePasswordTooLong() {
         User user = createUser();
+        String currentPassword = RandomStringUtils.random(60);
+        user.setPassword(passwordEncoder.encode(currentPassword));
         user.setLogin("grpc-change-password-too-long");
         user.setEmail("grpc-change-password-too-long@example.com");
         userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(user);
@@ -673,9 +679,12 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         try {
-            String longPassword = Stream.generate(() -> String.valueOf("A")).limit(101).collect(Collectors.joining());
-            assertThat(longPassword.length()).isEqualTo(101);
-            stub.changePassword(StringValue.newBuilder().setValue(longPassword).build());
+            String longPassword = RandomStringUtils.random(101);
+            stub.changePassword(PasswordChange.newBuilder()
+                .setCurrentPassword(currentPassword)
+                .setNewPassword(longPassword)
+                .build()
+            );
             failBecauseExceptionWasNotThrown(StatusRuntimeException.class);
         } catch (StatusRuntimeException e) {
             assertThat(e.getStatus().getCode()).isEqualTo(Status.Code.INVALID_ARGUMENT);
