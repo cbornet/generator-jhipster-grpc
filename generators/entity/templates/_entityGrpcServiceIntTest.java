@@ -712,7 +712,7 @@ _%>
         // Update the <%= entityInstance %>
         <%_ if (databaseType === 'sql') { _%>
         <%= entityClass %>Proto <%= entityInstance %>Proto = transactionTemplate.execute(s-> {
-            <%= entityClass %> updated<%= entityClass %> = <%= entityInstance %>Repository.findOne(<%= entityInstance %>.getId());
+            <%= entityClass %> updated<%= entityClass %> = <%= entityInstance %>Repository.findById(<%= entityInstance %>.getId()).orElseThrow(RuntimeException::new);
             <%_ if (fluentMethods && fields.length > 0) { _%>
             updated<%= entityClass %><% for (idx in fields) { %>
                 .<%= fields[idx].fieldName %>(<%='UPDATED_' + fields[idx].fieldNameUnderscored.toUpperCase()%>)<% if ((fields[idx].fieldType == 'byte[]' || fields[idx].fieldType === 'ByteBuffer') && fields[idx].fieldTypeBlobContent != 'text') { %>
@@ -732,7 +732,7 @@ _%>
             return <%= entityInstance %>ProtoMapper.<%=instanceName%>To<%=entityClass%>Proto(updated<%= instanceType %>);
         });
         <%_ } else { _%>
-        <%= entityClass %> updated<%= entityClass %> = <%= entityInstance %>Repository.findOne(<%= entityInstance %>.getId());
+        <%= entityClass %> updated<%= entityClass %> = <%= entityInstance %>Repository.findById(<%= entityInstance %>.getId()).orElseThrow(RuntimeException::new);
             <%_ if (fluentMethods && fields.length > 0) { _%>
         updated<%= entityClass %><% for (idx in fields) { %>
             .<%= fields[idx].fieldName %>(<%='UPDATED_' + fields[idx].fieldNameUnderscored.toUpperCase()%>)<% if ((fields[idx].fieldType == 'byte[]' || fields[idx].fieldType === 'ByteBuffer') && fields[idx].fieldTypeBlobContent != 'text') { %>

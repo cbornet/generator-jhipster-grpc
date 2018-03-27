@@ -389,7 +389,7 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
         int databaseSizeBeforeUpdate = userRepository.findAll().size();
 
         // Update the user
-        User updatedUser = userRepository.findOne(user.getId());
+        User updatedUser = userRepository.findById(user.getId()).orElseThrow(RuntimeException::new);
 
         UserProto userProto = UserProto.newBuilder()
             .setId(updatedUser.getId())
@@ -437,7 +437,7 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
         int databaseSizeBeforeUpdate = userRepository.findAll().size();
 
         // Update the user
-        User updatedUser = userRepository.findOne(user.getId());
+        User updatedUser = userRepository.findById(user.getId()).orElseThrow(RuntimeException::new);
 
         UserProto userProto = UserProto.newBuilder()
             .setId(updatedUser.getId())
@@ -501,7 +501,7 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
         userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(anotherUser);
 
         // Update the user
-        User updatedUser = userRepository.findOne(user.getId());
+        User updatedUser = userRepository.findById(user.getId()).orElseThrow(RuntimeException::new);
 
         UserProto userProto = UserProto.newBuilder()
             .setId(updatedUser.getId())
@@ -558,7 +558,7 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
         userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(anotherUser);
 
         // Update the user
-        User updatedUser = userRepository.findOne(user.getId());
+        User updatedUser = userRepository.findById(user.getId()).orElseThrow(RuntimeException::new);
 
         UserProto userProto = UserProto.newBuilder()
             .setId(updatedUser.getId())
