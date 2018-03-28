@@ -11,5 +11,5 @@
     "entityTableName": "entity_with_dto",
     "dto": "mapstruct",
     "pagination": "no",
-    "service": "no"
+    "service": "serviceClass"
 }

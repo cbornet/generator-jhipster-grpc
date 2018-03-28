@@ -56,6 +56,6 @@
     "entityTableName": "division",
     "dto": "no",
     "pagination": "no",
-    "service": "no",
+    "service": "serviceClass",
     "clientRootFolder": "test-root"
 }
