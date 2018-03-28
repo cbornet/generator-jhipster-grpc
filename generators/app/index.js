@@ -128,9 +128,9 @@ module.exports = class extends BaseGenerator {
 
                 this.template('_ProtobufMappers.java', javaDir + 'grpc/ProtobufMappers.java');
 
-                //this.template('_configprops.proto', protoPackageDir + 'configprops.proto');
-                //this.template('_ConfigurationPropertiesReportService.java', javaDir + 'grpc/ConfigurationPropertiesReportService.java');
-                //this.template('_ConfigurationPropertiesReportServiceIntTest.java', testDir + 'grpc/ConfigurationPropertiesReportServiceIntTest.java');
+                this.template('_configprops.proto', protoPackageDir + 'configprops.proto');
+                this.template('_ConfigurationPropertiesReportService.java', javaDir + 'grpc/ConfigurationPropertiesReportService.java');
+                this.template('_ConfigurationPropertiesReportServiceIntTest.java', testDir + 'grpc/ConfigurationPropertiesReportServiceIntTest.java');
 
                 //this.template('_environment.proto', protoPackageDir + 'environment.proto');
                 //this.template('_EnvironmentService.java', javaDir + 'grpc/EnvironmentService.java');

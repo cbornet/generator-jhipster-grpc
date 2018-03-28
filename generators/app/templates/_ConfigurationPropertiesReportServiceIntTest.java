@@ -8,7 +8,6 @@ import <%= packageName %>.<%=mainClass%>;
 import <%= packageName %>.config.SecurityBeanOverrideConfiguration;
 <%_ } _%>
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.protobuf.Empty;
 import io.grpc.Server;
 import io.grpc.inprocess.InProcessChannelBuilder;
@@ -18,8 +17,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.actuate.endpoint.ConfigurationPropertiesReportEndpoint;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.actuate.context.properties.ConfigurationPropertiesReportEndpoint;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationContext;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
@@ -32,6 +33,12 @@ public class ConfigurationPropertiesReportServiceIntTest <% if (databaseType ===
 
     @Autowired
     private ConfigurationPropertiesReportEndpoint configurationPropertiesReportEndpoint;
+
+    @Autowired
+    private ApplicationContext applicationContext;
+
+    @Value("${spring.mail.host}")
+    private String mailHost;
 
     private Server mockServer;
 
@@ -54,12 +61,14 @@ public class ConfigurationPropertiesReportServiceIntTest <% if (databaseType ===
     }
 
     @Test
-    public void getConfigurationProperties() throws IOException {
-        ConfigurationPropertiesReport report = stub.getConfigurationProperties(Empty.newBuilder().build());
-        String configurationPropertiesReportEndpointStr = report.getConfigurationPropertiesMap().get("configurationPropertiesReportEndpoint").getProperties();
-        ObjectMapper mapper = new ObjectMapper();
-        ConfigurationPropertiesReportEndpoint configurationPropertiesReportEndpoint = mapper.readValue(configurationPropertiesReportEndpointStr, ConfigurationPropertiesReportEndpoint.class);
-        assertThat(configurationPropertiesReportEndpoint.getId()).isEqualTo(this.configurationPropertiesReportEndpoint.getId());
+    public void getConfigurationProperties() {
+        ApplicationConfigurationProperties props = stub.getConfigurationProperties(Empty.newBuilder().build());
+        ConfigurationPropertiesBeanDescriptor beans = stub.getConfigurationProperties(Empty.newBuilder().build())
+            .getContextsOrThrow(applicationContext.getId())
+            .getBeansOrThrow("spring.mail-org.springframework.boot.autoconfigure.mail.MailProperties");
+        assertThat(beans.getPrefix()).isEqualTo("spring.mail");
+        assertThat(beans.getPropertiesMap()).containsKey("host");
+        assertThat(beans.getPropertiesMap().get("host")).isEqualTo(String.format("\"%s\"", mailHost));
     }
 
 }
