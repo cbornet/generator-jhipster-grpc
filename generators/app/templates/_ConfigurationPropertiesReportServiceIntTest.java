@@ -8,6 +8,7 @@ import <%= packageName %>.<%=mainClass%>;
 import <%= packageName %>.config.SecurityBeanOverrideConfiguration;
 <%_ } _%>
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.protobuf.Empty;
 import io.grpc.Server;
 import io.grpc.inprocess.InProcessChannelBuilder;
@@ -37,6 +38,9 @@ public class ConfigurationPropertiesReportServiceIntTest <% if (databaseType ===
     @Autowired
     private ApplicationContext applicationContext;
 
+    @Autowired
+    private ObjectMapper mapper;
+
     @Value("${spring.mail.host}")
     private String mailHost;
 
@@ -46,7 +50,7 @@ public class ConfigurationPropertiesReportServiceIntTest <% if (databaseType ===
 
     @Before
     public void setUp() throws IOException {
-        ConfigurationPropertiesReportService service = new ConfigurationPropertiesReportService(configurationPropertiesReportEndpoint);
+        ConfigurationPropertiesReportService service = new ConfigurationPropertiesReportService(configurationPropertiesReportEndpoint, mapper);
         String uniqueServerName = "Mock server for " + ConfigurationPropertiesReportService.class;
         mockServer = InProcessServerBuilder
             .forName(uniqueServerName).directExecutor().addService(service).build().start();
@@ -62,8 +66,7 @@ public class ConfigurationPropertiesReportServiceIntTest <% if (databaseType ===
 
     @Test
     public void getConfigurationProperties() {
-        ApplicationConfigurationProperties props = stub.getConfigurationProperties(Empty.newBuilder().build());
-        ConfigurationPropertiesBeanDescriptor beans = stub.getConfigurationProperties(Empty.newBuilder().build())
+        ConfigurationPropertiesBean beans = stub.getConfigurationProperties(Empty.newBuilder().build())
             .getContextsOrThrow(applicationContext.getId())
             .getBeansOrThrow("spring.mail-org.springframework.boot.autoconfigure.mail.MailProperties");
         assertThat(beans.getPrefix()).isEqualTo("spring.mail");

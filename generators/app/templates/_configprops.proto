@@ -16,11 +16,11 @@ message ApplicationConfigurationProperties {
 }
 
 message ContextConfigurationProperties {
-    map<string, ConfigurationPropertiesBeanDescriptor> beans = 1;
+    map<string, ConfigurationPropertiesBean> beans = 1;
     string parentId = 2;
 }
 
-message ConfigurationPropertiesBeanDescriptor {
+message ConfigurationPropertiesBean {
     string prefix = 1;
     map<string, string> properties = 2;
 }
