@@ -213,6 +213,6 @@
     ],
     "changelogDate": "20160208184031",
     "dto": "no",
-    "service": "serviceClass",
+    "service": "no",
     "pagination": "no"
 }

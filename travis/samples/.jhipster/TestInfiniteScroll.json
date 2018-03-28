@@ -46,6 +46,6 @@
     "fields": [],
     "changelogDate": "20160208210109",
     "dto": "no",
-    "service": "serviceClass",
+    "service": "no",
     "pagination": "infinite-scroll"
 }

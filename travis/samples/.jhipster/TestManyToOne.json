@@ -53,6 +53,7 @@
     "fields": [],
     "changelogDate": "20160208211440",
     "dto": "no",
-    "service": "serviceClass",
+    "service": "no",
+    "angularJSSuffix": "mySuffix",
     "pagination": "no"
 }

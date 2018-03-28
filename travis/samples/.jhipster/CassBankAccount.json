@@ -58,6 +58,7 @@
     ],
     "changelogDate": "20150805124838",
     "dto": "mapstruct",
-    "service": "serviceClass",
+    "service": "no",
+    "angularJSSuffix": "mySuffix",
     "pagination": "no"
 }

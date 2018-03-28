@@ -37,7 +37,8 @@
         }
     ],
     "changelogDate": "20150805125054",
-    "dto": "mapstruct",
-    "service": "serviceClass",
-    "pagination": "infinite-scroll"
+    "dto": "no",
+    "service": "no",
+    "pagination": "infinite-scroll",
+    "clientRootFolder": "test-root"
 }

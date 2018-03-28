@@ -37,7 +37,7 @@
         }
     ],
     "changelogDate": "20150805125054",
-    "dto": "mapstruct",
-    "service": "serviceClass",
+    "dto": "no",
+    "service": "no",
     "pagination": "infinite-scroll"
 }

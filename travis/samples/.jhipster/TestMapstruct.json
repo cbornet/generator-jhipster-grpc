@@ -45,7 +45,7 @@
     ],
     "fields": [],
     "changelogDate": "20160208210109",
-    "dto": "no",
-    "service": "serviceClass",
+    "dto": "mapstruct",
+    "service": "no",
     "pagination": "no"
 }

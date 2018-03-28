@@ -30,6 +30,7 @@
     "changelogDate": "20160208210109",
     "entityTableName": "test_multiple_rel",
     "dto": "no",
-    "service": "serviceClass",
+    "service": "no",
+    "angularJSSuffix": "mySuffix",
     "pagination": "no"
 }
