@@ -21,7 +21,7 @@
         }
     ],
     "changelogDate": "20150805124936",
-    "dto": "no",
+    "dto": "mapstruct",
     "pagination": "pagination",
     "jpaMetamodelFiltering": true,
     "service": "serviceClass"
