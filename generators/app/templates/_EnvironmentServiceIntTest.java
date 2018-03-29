@@ -35,13 +35,16 @@ public class EnvironmentServiceIntTest <% if (databaseType === 'cassandra') { %>
     @Autowired
     private EnvironmentEndpoint endpoint;
 
+    @Autowired
+    private ObjectMapper mapper;
+
     private Server mockServer;
 
     private EnvironmentServiceGrpc.EnvironmentServiceBlockingStub stub;
 
     @Before
     public void setUp() throws IOException {
-        EnvironmentService service = new EnvironmentService(endpoint);
+        EnvironmentService service = new EnvironmentService(endpoint, mapper);
         String uniqueServerName = "Mock server for " + EnvironmentService.class;
         mockServer = InProcessServerBuilder
             .forName(uniqueServerName).directExecutor().addService(service).build().start();

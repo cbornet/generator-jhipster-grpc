@@ -1,53 +1,44 @@
 package <%= packageName %>.grpc;
 
+import com.codahale.metrics.MetricFilter;
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.json.MetricsModule;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.protobuf.Empty;
+import com.google.protobuf.StringValue;
+import io.grpc.Status;
 import org.lognet.springboot.grpc.GRpcService;
-import org.springframework.boot.actuate.endpoint.PublicMetrics;
-import org.springframework.core.annotation.AnnotationAwareOrderComparator;
-import org.springframework.util.Assert;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.concurrent.TimeUnit;
+
 
 @GRpcService(interceptors = {AuthenticationInterceptor.class})
 public class MetricService extends ReactorMetricServiceGrpc.MetricServiceImplBase {
 
-    private final List<PublicMetrics> publicMetrics;
+    private final ObjectMapper mapper;
 
-    /**
-     * Create a new {@link MetricService} instance.
-     * @param publicMetrics the metrics to expose. The collection will be sorted using the
-     * {@link AnnotationAwareOrderComparator}.
-     */
-    public MetricService(Collection<PublicMetrics> publicMetrics) {
-        Assert.notNull(publicMetrics, "PublicMetrics must not be null");
-        this.publicMetrics = new ArrayList<>(publicMetrics);
-        AnnotationAwareOrderComparator.sort(this.publicMetrics);
+    private final MetricRegistry registry;
+
+    public MetricService(MetricRegistry registry) {
+        this.registry = registry;
+        this.mapper = (new ObjectMapper()).registerModule(
+            new MetricsModule(TimeUnit.SECONDS, TimeUnit.SECONDS, false, MetricFilter.ALL)
+        );
     }
 
     @Override
-    public Flux<Metric> getMetrics(Mono<Empty> request) {
+    public Mono<StringValue> getMetrics(Mono<Empty> request) {
         return request
-            .flatMapIterable(empty -> publicMetrics)
-            .flatMapIterable(PublicMetrics::metrics)
-            .map(metric -> {
-                Metric.Builder builder = Metric.newBuilder()
-                    .setName(metric.getName());
-                if (metric.getTimestamp() != null) {
-                    builder.setTimestamp(ProtobufMappers.dateToTimestamp(metric.getTimestamp()));
+            .map(empty -> {
+                try {
+                    return StringValue.newBuilder().setValue(mapper.writeValueAsString(registry)).build();
+                } catch (JsonProcessingException e) {
+                    throw Status.INTERNAL.withCause(e).asRuntimeException();
                 }
-                if (metric.getValue() instanceof Long || metric.getValue() instanceof Integer) {
-                    builder.setLongValue(metric.getValue().longValue());
-                } else if (metric.getValue() instanceof Float || metric.getValue() instanceof Double) {
-                    builder.setDoubleValue((metric.getValue()).doubleValue());
-                } else {
-                    builder.setStringValue(metric.getValue().toString());
-                }
-                return builder.build();
             });
+
     }
 
 }

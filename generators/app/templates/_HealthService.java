@@ -20,11 +20,8 @@ public class HealthService extends ReactorHealthServiceGrpc.HealthServiceImplBas
     public HealthService(HealthAggregator healthAggregator, Map<String, org.springframework.boot.actuate.health.HealthIndicator> healthIndicators) {
         Assert.notNull(healthAggregator, "HealthAggregator must not be null");
         Assert.notNull(healthIndicators, "HealthIndicators must not be null");
-        CompositeHealthIndicator healthIndicator = new CompositeHealthIndicator(
-            healthAggregator);
-        for (Map.Entry<String, org.springframework.boot.actuate.health.HealthIndicator> entry : healthIndicators.entrySet()) {
-            healthIndicator.addHealthIndicator(getKey(entry.getKey()), entry.getValue());
-        }
+        CompositeHealthIndicator healthIndicator = new CompositeHealthIndicator(healthAggregator);
+        healthIndicators.forEach((key, value) -> healthIndicator.addHealthIndicator(getKey(key), value));
         this.healthIndicators = healthIndicators;
         this.healthIndicator = healthIndicator;
     }

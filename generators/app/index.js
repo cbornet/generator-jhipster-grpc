@@ -132,9 +132,9 @@ module.exports = class extends BaseGenerator {
                 this.template('_ConfigurationPropertiesReportService.java', javaDir + 'grpc/ConfigurationPropertiesReportService.java');
                 this.template('_ConfigurationPropertiesReportServiceIntTest.java', testDir + 'grpc/ConfigurationPropertiesReportServiceIntTest.java');
 
-                //this.template('_environment.proto', protoPackageDir + 'environment.proto');
-                //this.template('_EnvironmentService.java', javaDir + 'grpc/EnvironmentService.java');
-                //this.template('_EnvironmentServiceIntTest.java', testDir + 'grpc/EnvironmentServiceIntTest.java');
+                this.template('_environment.proto', protoPackageDir + 'environment.proto');
+                this.template('_EnvironmentService.java', javaDir + 'grpc/EnvironmentService.java');
+                this.template('_EnvironmentServiceIntTest.java', testDir + 'grpc/EnvironmentServiceIntTest.java');
 
                 this.template('_health.proto', protoPackageDir + 'health.proto');
                 this.template('_HealthService.java', javaDir + 'grpc/HealthService.java');
@@ -144,9 +144,9 @@ module.exports = class extends BaseGenerator {
                 this.template('_LoggersService.java', javaDir + 'grpc/LoggersService.java');
                 this.template('_LoggersServiceIntTest.java', testDir + 'grpc/LoggersServiceIntTest.java');
 
-                //this.template('_metric.proto', protoPackageDir + 'metric.proto');
-                //this.template('_MetricService.java', javaDir + 'grpc/MetricService.java');
-                //this.template('_MetricServiceIntTest.java', testDir + 'grpc/MetricServiceIntTest.java');
+                this.template('_metric.proto', protoPackageDir + 'metric.proto');
+                this.template('_MetricService.java', javaDir + 'grpc/MetricService.java');
+                this.template('_MetricServiceIntTest.java', testDir + 'grpc/MetricServiceIntTest.java');
 
                 this.template('_profile_info.proto', protoPackageDir + 'profile_info.proto');
                 this.template('_ProfileInfoService.java', javaDir + 'grpc/ProfileInfoService.java');

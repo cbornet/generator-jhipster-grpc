@@ -26,7 +26,7 @@ public class EnvironmentService extends ReactorEnvironmentServiceGrpc.Environmen
 
     @Override
     public Mono<Environment> getEnv(Mono<Empty> request) {
-        return request.map( empty -> mapEnvironment(endpoint.environment(null)));
+        return request.map(empty -> mapEnvironment(endpoint.environment(null)));
     }
 
 
