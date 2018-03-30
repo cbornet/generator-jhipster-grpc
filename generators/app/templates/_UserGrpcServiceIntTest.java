@@ -28,6 +28,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 <%_ if (cacheManagerIsAvailable === true) { _%>
@@ -49,6 +50,9 @@ import java.util.stream.StreamSupport;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
+<%_ if (searchEngine === 'elasticsearch') { _%>
+import static org.mockito.Mockito.when;
+<%_ } _%>
 
 /**
  * Test class for the UserGrpcService gRPC endpoint.
@@ -97,8 +101,13 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
     private UserProtoMapper userProtoMapper;
 
     <%_ if (searchEngine === 'elasticsearch') { _%>
+    /**
+     * This repository is mocked in the <%=packageName%>.repository.search test package.
+     *
+     * @see <%= packageName %>.repository.search.UserSearchRepositoryMockConfiguration
+     */
     @Autowired
-    private UserSearchRepository userSearchRepository;
+    private UserSearchRepository mockUserSearchRepository;
 
     <%_ } _%>
     <%_ if (cacheManagerIsAvailable === true) { _%>
@@ -114,6 +123,7 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
 
     @Before
     public void setUp() throws IOException {
+        MockitoAnnotations.initMocks(this);
         <%_ if (cacheManagerIsAvailable === true) { _%>
         cacheManager.getCache(UserRepository.USERS_BY_LOGIN_CACHE).clear();
         cacheManager.getCache(UserRepository.USERS_BY_EMAIL_CACHE).clear();
@@ -670,9 +680,12 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
     @Test
     @Transactional
     public void searchUsers() throws Exception {
+
         // Initialize the database
         User savedUser = userRepository.saveAndFlush(user);
-        userSearchRepository.save(user);
+
+        when(mockUserSearchRepository.search(queryStringQuery("id:" + user.getId()), PageRequest.of(0, 20)))
+            .thenReturn(new PageImpl<>(Collections.singletonList(user), PageRequest.of(0, 1), 1));
 
         // Search the users
         UserSearchPageRequest query = UserSearchPageRequest.newBuilder()
