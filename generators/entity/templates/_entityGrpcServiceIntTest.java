@@ -582,7 +582,7 @@ _%>
             <%= entityInstance %>Repository.saveAndFlush(<%= entityInstance %>);
             return <%= relationship.relationshipFieldName %>1;
         });
-        Long <%= relationship.relationshipFieldName %>Id = <%= relationship.relationshipFieldName %>.getId();
+        <% if (authenticationType === 'oauth2' && relationship.relationshipFieldName === 'user') { _%>String<%_ } else { _%>Long<% } %> <%= relationship.relationshipFieldName %>Id = <%= relationship.relationshipFieldName %>.getId();
 
         <%_ if (relationship.ownerSide === false || relationship.relationshipType === 'one-to-many') { _%>
         try {
