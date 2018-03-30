@@ -16,6 +16,7 @@ import <%= packageName %>.service.MailService;
 import <%= packageName %>.service.UserService;
 <%_ if (authenticationType !== 'oauth2') { _%>
 import <%= packageName %>.service.dto.UserDTO;
+import <%= packageName %>.web.rest.errors.InvalidPasswordException;
 import <%= packageName %>.web.rest.vm.ManagedUserVM;
 <%_ } _%>
 
@@ -206,7 +207,13 @@ public class AccountService extends ReactorAccountServiceGrpc.AccountServiceImpl
         return request
             .filter(passwordChange -> AccountService.checkPasswordLength(passwordChange.getNewPassword()))
             .switchIfEmpty(Mono.error(Status.INVALID_ARGUMENT.withDescription("Incorrect password").asRuntimeException()))
-            .doOnSuccess(passwordChange -> userService.changePassword(passwordChange.getCurrentPassword(), passwordChange.getNewPassword()))
+            .doOnSuccess(passwordChange -> {
+                try {
+                    userService.changePassword(passwordChange.getCurrentPassword(), passwordChange.getNewPassword());
+                } catch (InvalidPasswordException e) {
+                    throw Status.INVALID_ARGUMENT.withCause(e).asRuntimeException();
+                }
+            })
             .map(p -> Empty.newBuilder().build());
     }
 
