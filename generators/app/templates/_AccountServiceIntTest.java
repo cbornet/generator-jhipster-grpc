@@ -44,9 +44,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
-<%_ if (authenticationType === 'oauth2' && applicationType !== 'monolith') { _%>
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-<%_ } _%>
 import org.springframework.security.core.context.SecurityContextHolder;
 <%_ if (authenticationType === 'oauth2') { _%>
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
@@ -55,7 +52,7 @@ import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 <%_ } _%>
 import org.springframework.test.context.junit4.SpringRunner;
-<%_ if ((authenticationType !== 'oauth2' || applicationType === 'monolith') && databaseType === 'sql') { _%>
+<%_ if (databaseType === 'sql') { _%>
 import org.springframework.transaction.annotation.Transactional;
 <%_ } _%>
 
@@ -69,17 +66,12 @@ import java.time.Instant;
 import java.time.LocalDate;
     <%_ } _%>
 import java.time.temporal.ChronoUnit;
-<%_ } _%>
-<%_ if (authenticationType === 'oauth2') { _%>
-    <%_ if (applicationType === 'monolith') { _%>
-import java.util.*;
-    <%_ } else { _%>
-import java.util.Collections;
-    <%_ } _%>
-<%_ } _%>
-<%_ if (authenticationType !== 'oauth2') { _%>
 import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
+<%_ } else { _%>
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 <%_ } _%>
 <%_ if (databaseType === 'cassandra') { _%>
@@ -163,7 +155,7 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
         <%_ } _%>
 
         User user = new User();
-        <%_ if (databaseType === 'cassandra') { _%>
+        <%_ if (databaseType === 'cassandra' || authenticationType === 'oauth2') { _%>
         user.setId(UUID.randomUUID().toString());
         <%_ } _%>
         <%_ if (authenticationType !== 'oauth2') { _%>
@@ -188,7 +180,7 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
 
         <%_ } _%>
         AccountService service =
-            new AccountService(<% if (authenticationType !== 'oauth2') { %>userRepository, mockMailService, <% } if (authenticationType !== 'oauth2' || applicationType === 'monolith') { %>userService, <% } if (authenticationType === 'session') { %>persistentTokenRepository, <% } %>userProtoMapper);
+            new AccountService(<% if (authenticationType !== 'oauth2') { %>userRepository, mockMailService, <% } %>userService, <% if (authenticationType === 'session') { %>persistentTokenRepository, <% } %>userProtoMapper);
 
         String uniqueServerName = "Mock server for " + AccountService.class;
         mockServer = InProcessServerBuilder
@@ -231,33 +223,27 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
     @Test<% if (databaseType === 'sql') { %>
     @Transactional<% } %>
     public void testGetExistingAccount() throws Exception {
-        <%_ if (authenticationType !== 'oauth2' || applicationType === 'monolith') { _%>
         User user = createUser();
         user.setLogin("grpc-existing-account");
         user.setEmail("grpc-existing-account@example.com");
         userRepository.save(user);
 
-        <%_ } _%>
         TestingAuthenticationToken authentication = new TestingAuthenticationToken(
             user.getLogin(),
-            "password"<% if (authenticationType === 'oauth2' && applicationType !== 'monolith') { %>,
-            Collections.singletonList(new SimpleGrantedAuthority(AuthoritiesConstants.ADMIN))<% } %>
+            "password"
         );
 
         <%_ if (authenticationType === 'oauth2') { _%>
         Map<String, Object> details = new HashMap<>();
-            <%_ if (applicationType === 'monolith') { _%>
+        details.put("sub", user.getId());
         details.put("preferred_username", user.getLogin());
-            <%_ } _%>
         details.put("given_name", DEFAULT_FIRSTNAME);
         details.put("family_name", DEFAULT_LASTNAME);
         details.put("email_verified", true);
         details.put("email", "grpc-existing-account@example.com");
         details.put("langKey", DEFAULT_LANGKEY);
         details.put("imageUrl", DEFAULT_IMAGEURL);
-            <%_ if (applicationType === 'monolith') { _%>
         details.put("roles", Collections.singletonList(AuthoritiesConstants.ADMIN));
-            <%_ } _%>
 
         authentication.setDetails(details);
         OAuth2Authentication oAuth2Authentication = new OAuth2Authentication(null, authentication);

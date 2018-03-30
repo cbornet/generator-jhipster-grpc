@@ -60,7 +60,7 @@ public interface UserProtoMapper {
     @Mapping(target = "resetKey", ignore = true)
     UserProto.Builder userToUserProtoBuilder (User user);
 
-    default User userFromId(<% if (databaseType == 'mongodb' || databaseType == 'cassandra') { %>String<% } else { %>Long<% } %> id) {
+    default User userFromId(<% if (databaseType === 'sql' && authenticationType !== 'oauth2') { %>Long<% } else { %>String<% } %> id) {
         if (id == null) {
             return null;
         }

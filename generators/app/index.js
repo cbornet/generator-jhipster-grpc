@@ -110,7 +110,7 @@ module.exports = class extends BaseGenerator {
                 const protoDir = jhipsterConstants.MAIN_DIR + 'proto/';
                 const protoPackageDir = protoDir + this.packageFolder + '/';
 
-                if (this.databaseType === 'sql') {
+                if (this.databaseType === 'sql' && this.authenticationType !== 'oauth2') {
                     this.idProtoType = 'int64';
                     this.idProtoWrappedType = 'Int64Value';
                 } else {
@@ -234,19 +234,17 @@ module.exports = class extends BaseGenerator {
                     this.template('_AccountServiceIntTest.java', testDir + 'grpc/AccountServiceIntTest.java');
                     this.template('_user.proto', protoPackageDir + 'user.proto');
                     this.template('_UserProtoMapper.java', javaDir + 'grpc/UserProtoMapper.java');
-                    if (this.applicationType === 'monolith' || this.authenticationType !== 'oauth2') {
-                        this.template('_UserGrpcService.java', javaDir + 'grpc/UserGrpcService.java');
-                        this.template('_UserGrpcServiceIntTest.java', testDir + 'grpc/UserGrpcServiceIntTest.java');
-                        if (this.databaseType === 'sql' || this.databaseType === 'mongodb') {
-                            this.template('_audit.proto', protoPackageDir + 'audit.proto');
-                            this.template('_AuditGrpcService.java', javaDir + 'grpc/AuditGrpcService.java');
-                            this.template('_AuditGrpcServiceIntTest.java', testDir + 'grpc/AuditGrpcServiceIntTest.java');
-                        }
-                        if (this.authenticationType === 'jwt') {
-                            this.template('_jwt.proto', protoPackageDir + 'jwt.proto');
-                            this.template('_JWTService.java', javaDir + 'grpc/JWTService.java');
-                            this.template('_JWTServiceIntTest.java', testDir + 'grpc/JWTServiceIntTest.java');
-                        }
+                    this.template('_UserGrpcService.java', javaDir + 'grpc/UserGrpcService.java');
+                    this.template('_UserGrpcServiceIntTest.java', testDir + 'grpc/UserGrpcServiceIntTest.java');
+                    if (this.databaseType === 'sql' || this.databaseType === 'mongodb') {
+                        this.template('_audit.proto', protoPackageDir + 'audit.proto');
+                        this.template('_AuditGrpcService.java', javaDir + 'grpc/AuditGrpcService.java');
+                        this.template('_AuditGrpcServiceIntTest.java', testDir + 'grpc/AuditGrpcServiceIntTest.java');
+                    }
+                    if (this.authenticationType === 'jwt') {
+                        this.template('_jwt.proto', protoPackageDir + 'jwt.proto');
+                        this.template('_JWTService.java', javaDir + 'grpc/JWTService.java');
+                        this.template('_JWTServiceIntTest.java', testDir + 'grpc/JWTServiceIntTest.java');
                     }
                 }
 

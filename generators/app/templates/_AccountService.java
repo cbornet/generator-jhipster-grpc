@@ -1,6 +1,6 @@
 package <%= packageName %>.grpc;
 
-<%_ if (authenticationType !== 'oauth2' || applicationType !== 'monolith') { _%>
+<%_ if (authenticationType !== 'oauth2') { _%>
 import <%= packageName %>.domain.User;
 <%_ } _%>
 <%_ if (authenticationType === 'session') { _%>
@@ -13,9 +13,7 @@ import <%= packageName %>.security.SecurityUtils;
 <%_ if (authenticationType !== 'oauth2') { _%>
 import <%= packageName %>.service.MailService;
 <%_ } _%>
-<%_ if (authenticationType !== 'oauth2' || applicationType === 'monolith') { _%>
 import <%= packageName %>.service.UserService;
-<%_ } _%>
 <%_ if (authenticationType !== 'oauth2') { _%>
 import <%= packageName %>.service.dto.UserDTO;
 import <%= packageName %>.web.rest.vm.ManagedUserVM;
@@ -34,9 +32,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.util.Pair;
 <%_ } _%>
 import org.springframework.security.core.Authentication;
-<%_ if (authenticationType === 'oauth2' && applicationType !== 'monolith') { _%>
-import org.springframework.security.core.GrantedAuthority;
-<%_ } _%>
 <%_ if (authenticationType === 'oauth2') { _%>
 import org.springframework.security.core.context.SecurityContext;
 <%_ } _%>
@@ -51,10 +46,6 @@ import reactor.core.publisher.Flux;
 <%_ } _%>
 import reactor.core.publisher.Mono;
 
-<%_ if (authenticationType === 'oauth2' && applicationType !== 'monolith') { _%>
-import java.util.Map;
-import java.util.stream.Collectors;
-<%_ } _%>
 <%_ if (authenticationType === 'session') { _%>
 import java.util.ArrayList;
 <%_ } _%>
@@ -73,24 +64,20 @@ public class AccountService extends ReactorAccountServiceGrpc.AccountServiceImpl
     private final MailService mailService;
 
     <%_ } _%>
-    <%_ if (authenticationType !== 'oauth2' || applicationType === 'monolith') { _%>
     private final UserService userService;
 
-    <%_ } _%>
     <%_ if (authenticationType === 'session') { _%>
     private final PersistentTokenRepository persistentTokenRepository;
 
     <%_ } _%>
     private final UserProtoMapper userProtoMapper;
 
-    public AccountService(<% if (authenticationType !== 'oauth2') { %>UserRepository userRepository, MailService mailService, <% } if (authenticationType !== 'oauth2' || applicationType === 'monolith') { %>UserService userService, <% } if (authenticationType === 'session') { %>PersistentTokenRepository persistentTokenRepository, <% } %>UserProtoMapper userProtoMapper) {
+    public AccountService(<% if (authenticationType !== 'oauth2') { %>UserRepository userRepository, MailService mailService, <% } %>UserService userService, <% if (authenticationType === 'session') { %>PersistentTokenRepository persistentTokenRepository, <% } %>UserProtoMapper userProtoMapper) {
         <%_ if (authenticationType !== 'oauth2') { _%>
         this.userRepository = userRepository;
         this.mailService = mailService;
         <%_ } _%>
-        <%_ if (authenticationType !== 'oauth2' || applicationType === 'monolith') { _%>
         this.userService = userService;
-        <%_ } _%>
         <%_ if (authenticationType === 'session') { _%>
         this.persistentTokenRepository = persistentTokenRepository;
         <%_ } _%>
@@ -118,7 +105,6 @@ public class AccountService extends ReactorAccountServiceGrpc.AccountServiceImpl
             .filter(context -> context.getAuthentication() != null)
             .switchIfEmpty(Mono.error(Status.INTERNAL.withDescription("Authentication could not be found").asRuntimeException()))
             .map(SecurityContext::getAuthentication)
-    <%_ if (applicationType === 'monolith') { _%>
             .map(authentication -> {
                 // For some reason this doesn't work with filter...
                 if (authentication instanceof OAuth2Authentication) {
@@ -129,31 +115,6 @@ public class AccountService extends ReactorAccountServiceGrpc.AccountServiceImpl
             .map(it -> userService.getUserFromAuthentication((OAuth2Authentication) it))
             .map(userProtoMapper::userDTOToUserProto);
     }
-    <%_ } else { _%>
-            .filter(it -> it instanceof OAuth2Authentication)
-            .map(it -> ((OAuth2Authentication) it).getUserAuthentication())
-            .map(authentication -> {
-                Map<String, Object> details = (Map<String, Object>) authentication.getDetails();
-                Boolean activated = false;
-                if (details.get("email_verified") != null) {
-                    activated = (Boolean) details.get("email_verified");
-                }
-                return new User(
-                    authentication.getName(),
-                    (String) details.get("given_name"),
-                    (String) details.get("family_name"),
-                    (String) details.get("email"),
-                    (String) details.get("langKey"),
-                    (String) details.get("imageUrl"),
-                    activated,
-                    authentication.getAuthorities().stream()
-                        .map(GrantedAuthority::getAuthority)
-                        .collect(Collectors.toSet())
-                );
-            })
-            .map(userProtoMapper::userToUserProto);
-    }
-    <%_ } _%>
 <%_ } else { _%>
             .map(e -> userService.getUserWithAuthorities().orElseThrow(Status.INTERNAL::asRuntimeException))
             .map(UserDTO::new)
