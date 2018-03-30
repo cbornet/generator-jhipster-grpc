@@ -196,7 +196,9 @@ public class AccountService extends ReactorAccountServiceGrpc.AccountServiceImpl
     public Mono<UserProto> activateAccount(Mono<StringValue> request) {
         return request
             .map(StringValue::getValue)
-            .map(key -> userService.activateRegistration(key).orElseThrow(Status.INTERNAL::asRuntimeException))
+            .map(key -> userService.activateRegistration(key)
+                .orElseThrow(Status.INTERNAL.withDescription("No user was found for this activation key")::asRuntimeException)
+            )
             .map(userProtoMapper::userToUserProto);
     }
 

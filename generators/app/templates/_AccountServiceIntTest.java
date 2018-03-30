@@ -625,7 +625,7 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
         userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(user);
 
         Authentication authentication =
-            new TestingAuthenticationToken(user.getLogin(), "password");
+            new TestingAuthenticationToken(user.getLogin(), currentPassword);
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         stub.changePassword(PasswordChange.newBuilder()
@@ -640,6 +640,32 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
     <%_ } _%>
     @Test<% if (databaseType === 'sql') { %>
     @Transactional<% } %>
+    public void testChangePasswordWrongExistingPassword() {
+        User user = createUser();
+        String currentPassword = RandomStringUtils.random(60);
+        user.setPassword(passwordEncoder.encode(currentPassword));
+        user.setLogin("change-password-wrong-existing-password");
+        user.setEmail("change-password-wrong-existing-password@example.com");
+        userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(user);
+
+        Authentication authentication =
+            new TestingAuthenticationToken(user.getLogin(), currentPassword);
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        try {
+            stub.changePassword(PasswordChange.newBuilder()
+                .setCurrentPassword("wrong password")
+                .setNewPassword("new password")
+                .build()
+            );
+            failBecauseExceptionWasNotThrown(StatusRuntimeException.class);
+        } catch (StatusRuntimeException e) {
+            assertThat(e.getStatus().getCode()).isEqualTo(Status.Code.INVALID_ARGUMENT);
+        }
+    }
+
+    @Test<% if (databaseType === 'sql') { %>
+    @Transactional<% } %>
     public void testChangePasswordTooSmall() {
         User user = createUser();
         String currentPassword = RandomStringUtils.random(60);
@@ -649,7 +675,7 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
         userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(user);
 
         Authentication authentication =
-            new TestingAuthenticationToken(user.getLogin(), "password");
+            new TestingAuthenticationToken(user.getLogin(), currentPassword);
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         try {
@@ -675,7 +701,7 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
         userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(user);
 
         Authentication authentication =
-            new TestingAuthenticationToken(user.getLogin(), "password");
+            new TestingAuthenticationToken(user.getLogin(), currentPassword);
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         try {
