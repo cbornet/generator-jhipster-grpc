@@ -54,6 +54,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 <%_ if (searchEngine === 'elasticsearch' && pagination !== 'no') { _%>
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Sort;
 <%_ } _%>
 <%_ if (jpaMetamodelFiltering) { _%>
 import org.springframework.format.support.FormattingConversionService;
@@ -846,7 +847,7 @@ _%>
         <%_ if (pagination !== 'no') { _%>
         when(mock<%= entityClass %>SearchRepository.search(
             queryStringQuery("id:" + <%= entityInstance %>.getId()),
-            org.springframework.data.domain.PageRequest.of(0, 20))
+            org.springframework.data.domain.PageRequest.of(0, 20, Sort.Direction.DESC, "id"))
         ).thenReturn(new PageImpl<>(
             Collections.singletonList(<%= entityInstance %>),
             org.springframework.data.domain.PageRequest.of(0, 1), 1));

@@ -31,6 +31,7 @@ import org.junit.runner.RunWith;
 import org.mockito.MockitoAnnotations;
 <%_ if (searchEngine === 'elasticsearch') { _%>
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Sort;
 <%_ } _%>
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -692,7 +693,7 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
 
         when(mockUserSearchRepository.search(
             queryStringQuery("id:" + user.getId()),
-            org.springframework.data.domain.PageRequest.of(0, 20))
+            org.springframework.data.domain.PageRequest.of(0, 20, Sort.Direction.DESC, "id"))
         ).thenReturn(new PageImpl<>(
             Collections.singletonList(user),
             org.springframework.data.domain.PageRequest.of(0, 1), 1));
