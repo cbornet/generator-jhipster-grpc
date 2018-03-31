@@ -29,6 +29,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.MockitoAnnotations;
+<%_ if (searchEngine === 'elasticsearch') { _%>
+import org.springframework.data.domain.PageImpl;
+<%_ } _%>
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 <%_ if (cacheManagerIsAvailable === true) { _%>
@@ -48,6 +51,9 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.StreamSupport;
 
+<%_ if (searchEngine === 'elasticsearch') { _%>
+import static org.elasticsearch.index.query.QueryBuilders.queryStringQuery;
+<%_ } _%>
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 <%_ if (searchEngine === 'elasticsearch') { _%>
@@ -128,7 +134,7 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
         cacheManager.getCache(UserRepository.USERS_BY_LOGIN_CACHE).clear();
         cacheManager.getCache(UserRepository.USERS_BY_EMAIL_CACHE).clear();
         <%_ } _%>
-        UserGrpcService userGrpcService = new UserGrpcService(<% if (authenticationType !== 'oauth2') { %>userRepository, mailService, <% } %>userService, userProtoMapper<% if (searchEngine === 'elasticsearch') { %>, userSearchRepository<% } %>);
+        UserGrpcService userGrpcService = new UserGrpcService(<% if (authenticationType !== 'oauth2') { %>userRepository, mailService, <% } %>userService, userProtoMapper<% if (searchEngine === 'elasticsearch') { %>, mockUserSearchRepository<% } %>);
         String uniqueServerName = "Mock server for " + UserGrpcService.class;
         mockServer = InProcessServerBuilder
             .forName(uniqueServerName).directExecutor().addService(userGrpcService).build().start();
@@ -684,8 +690,12 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
         // Initialize the database
         User savedUser = userRepository.saveAndFlush(user);
 
-        when(mockUserSearchRepository.search(queryStringQuery("id:" + user.getId()), PageRequest.of(0, 20)))
-            .thenReturn(new PageImpl<>(Collections.singletonList(user), PageRequest.of(0, 1), 1));
+        when(mockUserSearchRepository.search(
+            queryStringQuery("id:" + user.getId()),
+            org.springframework.data.domain.PageRequest.of(0, 20))
+        ).thenReturn(new PageImpl<>(
+            Collections.singletonList(user),
+            org.springframework.data.domain.PageRequest.of(0, 1), 1));
 
         // Search the users
         UserSearchPageRequest query = UserSearchPageRequest.newBuilder()
