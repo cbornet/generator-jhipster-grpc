@@ -81,7 +81,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 <%_ if (authenticationType !== 'oauth2') { _%>
-import static org.mockito.Matchers.anyObject;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 <%_ } _%>
 
@@ -176,7 +176,7 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
     public void setUp() throws IOException {
         <%_ if (authenticationType !== 'oauth2') { _%>
         MockitoAnnotations.initMocks(this);
-        doNothing().when(mockMailService).sendActivationEmail(anyObject());
+        doNothing().when(mockMailService).sendActivationEmail(any());
 
         <%_ } _%>
         AccountService service =

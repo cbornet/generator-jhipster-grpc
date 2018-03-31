@@ -437,7 +437,7 @@ _%>
             assertThat(e.getStatus().getCode()).isEqualTo(Status.Code.ALREADY_EXISTS);
         }
 
-        // Validate the Alice in the database
+        // Validate the <%= entityClass %> in the database
         List<<%= entityClass %>> <%= entityInstance %>List = <%= entityInstance %>Repository.findAll();
         assertThat(<%= entityInstance %>List).hasSize(databaseSizeBeforeCreate);
         <%_ if (searchEngine == 'elasticsearch') { _%>
