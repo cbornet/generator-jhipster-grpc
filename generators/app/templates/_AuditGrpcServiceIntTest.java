@@ -1,8 +1,9 @@
-<%_ 
+<%_
+let idProtoWrappedType;
 if (databaseType === 'sql') {
-    let idProtoWrappedType = 'Int64Value';
+    idProtoWrappedType = 'Int64Value';
 } else {
-    let idProtoWrappedType = 'StringValue';
+    idProtoWrappedType = 'StringValue';
 }
 _%>
 package <%= packageName %>.grpc;
