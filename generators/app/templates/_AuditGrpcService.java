@@ -1,7 +1,7 @@
 <%_
 let idProtoWrappedType;
 if (databaseType === 'sql') {
-    idProtoWrappedType = 'aInt64Value';
+    idProtoWrappedType = 'Int64Value';
 } else {
     idProtoWrappedType = 'StringValue';
 }
