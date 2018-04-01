@@ -69,13 +69,11 @@ import java.time.temporal.ChronoUnit;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
-<%_ } else { _%>
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
-<%_ } _%>
-<%_ if (databaseType === 'cassandra') { _%>
+    <%_ if (databaseType === 'cassandra') { _%>
 import java.util.UUID;
+    <%_ } _%>
+<%_ } else { _%>
+import java.util.*;
 <%_ } _%>
 
 import static org.assertj.core.api.Assertions.assertThat;
