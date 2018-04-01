@@ -40,7 +40,7 @@ env:
     - JHIPSTER=ngx-h2mem-ws-nol2
     - JHIPSTER=ngx-mongodb-kafka-cucumber
     - JHIPSTER=ngx-session-cassandra-fr
-    - JHIPSTER=ngx-couchbase
+    #- JHIPSTER=ngx-couchbase
     - JHIPSTER=ms-ngx-gateway-eureka
     - JHIPSTER=ms-ngx-gateway-consul
     - JHIPSTER=ms-ngx-gateway-uaa
@@ -79,8 +79,8 @@ install:
   - $JHIPSTER_SCRIPTS/02-generate-project.sh
 script:
   - $JHIPSTER_SCRIPTS/03-docker-compose.sh
-  - travis_wait $JHIPSTER_SCRIPTS/041-javadoc.sh
-  - travis_wait $JHIPSTER_SCRIPTS/042-server-tests.sh
-  - travis_wait $JHIPSTER_SCRIPTS/043-client-tests.sh
+  - $JHIPSTER_SCRIPTS/041-javadoc.sh
+  - $JHIPSTER_SCRIPTS/042-server-tests.sh
+  - $JHIPSTER_SCRIPTS/043-client-tests.sh
   - $JHIPSTER_SCRIPTS/05-run.sh
   - $JHIPSTER_SCRIPTS/06-sonar.sh
