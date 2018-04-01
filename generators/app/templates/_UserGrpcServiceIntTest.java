@@ -157,7 +157,7 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
      */
     public static User createEntity(<% if (databaseType === 'sql') { %>EntityManager em<% } %>) {
         User user = new User();
-        <%_ if (databaseType === 'cassandra') { _%>
+        <%_ if (databaseType === 'cassandra' || authenticationType === 'oauth2') { _%>
         user.setId(UUID.randomUUID().toString());
         <%_ } _%>
         user.setLogin(DEFAULT_LOGIN + RandomStringUtils.randomAlphanumeric(10));
