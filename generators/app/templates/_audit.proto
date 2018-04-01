@@ -12,7 +12,7 @@ package <%= packageName %>;
 
 service AuditService {
     rpc getAuditEvents(AuditRequest) returns (stream AuditEvent);
-    rpc getAuditEvent(google.protobuf.<%= idProtoWrappedType %>) returns (AuditEvent);
+    rpc getAuditEvent(google.protobuf.<% if (databaseType === 'sql') { %>int64<% } %><% if (databaseType === 'mongodb' || databaseType === 'couchbase') { %>string<% } %>) returns (AuditEvent);
 }
 
 message AuditRequest {

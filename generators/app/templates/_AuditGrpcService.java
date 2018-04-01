@@ -1,3 +1,10 @@
+<%_ 
+if (databaseType === 'sql') { 
+    let idProtoWrappedType = 'Int64Value';
+} else {
+    let idProtoWrappedType = 'StringValue';
+}
+_%>
 package <%= packageName %>.grpc;
 
 import <%= packageName %>.service.AuditEventService;
