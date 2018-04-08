@@ -19,11 +19,16 @@ module.exports = class extends BaseGenerator {
                 this.jhipsterAppConfig = this.getJhipsterAppConfig();
                 if (!this.jhipsterAppConfig) {
                     this.error('Can\'t read .yo-rc.json');
+                } else if (!this.jhipsterAppConfig.testFrameworks) {
+                    this.jhipsterAppConfig.testFrameworks = [];
+                } else {
+                    // Noting.
                 }
+                
             },
             displayLogo: function () {
                 this.log('Welcome to the ' + chalk.red('JHipster grpc') + ' generator! ' + chalk.yellow('v' + packagejs.version + '\n'));
-                if (this.jhipsterAppConfig.testFrameworks && this.jhipsterAppConfig.testFrameworks.includes('gatling')) {
+                if (this.jhipsterAppConfig.testFrameworks.includes('gatling')) {
                     this.log(chalk.red('Applications using Gatling are currently not supported (see https://github.com/cbornet/generator-jhipster-grpc/issues/4)'));
                     this.abort = true;
                 }
