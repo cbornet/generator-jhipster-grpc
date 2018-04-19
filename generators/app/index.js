@@ -19,7 +19,12 @@ module.exports = class extends BaseGenerator {
                 this.jhipsterAppConfig = this.getJhipsterAppConfig();
                 if (!this.jhipsterAppConfig) {
                     this.error('Can\'t read .yo-rc.json');
+                } else if (!this.jhipsterAppConfig.testFrameworks) {
+                    this.jhipsterAppConfig.testFrameworks = [];
+                } else {
+                    // Noting.
                 }
+                
             },
             displayLogo: function () {
                 this.log('Welcome to the ' + chalk.red('JHipster grpc') + ' generator! ' + chalk.yellow('v' + packagejs.version + '\n'));
