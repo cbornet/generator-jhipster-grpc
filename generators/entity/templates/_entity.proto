@@ -103,7 +103,7 @@ for (field of fields) {
     }
     var javadoc = '';
     if(field.javadoc !== undefined) {
-        javadoc = '// ' + fields.javadoc.replace('\n', '\n    '+ indentOneOf + '// ') + '\n    '+ indentOneOf;
+        javadoc = '// ' + field.javadoc.replace('\n', '\n    '+ indentOneOf + '// ') + '\n    '+ indentOneOf;
     }_%>
     <% if (isOneOf) { %>oneof <%= fieldNameUnderscored %>_oneof {
         <% } %><%= javadoc %><%= fieldProtobufType %> <%= fieldNameUnderscored %> = <%= protobufFieldNumber++ %>;<% if (isOneOf) { %>
