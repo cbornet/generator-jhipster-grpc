@@ -450,6 +450,9 @@ _%>
     @Test
     public void getAll<%= entityClassPlural %>() throws Exception {
         // Initialize the database
+        <%_ if (databaseType === 'cassandra') { _%>
+        <%= entityInstance %>.setId(UUID.randomUUID());
+        <%_ } _%>
         <%= entityInstance %>Repository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(<%= entityInstance %>);
 
         // Get all the <%= entityInstancePlural %>
@@ -672,6 +675,9 @@ _%>
     @Test
     public void get<%= entityClass %>() throws Exception {
         // Initialize the database
+        <%_ if (databaseType === 'cassandra') { _%>
+        <%= entityInstance %>.setId(UUID.randomUUID());
+        <%_ } _%>
         <%= entityInstance %>Repository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(<%= entityInstance %>);
 
         // Get the <%= entityInstance %>
@@ -703,6 +709,9 @@ _%>
     @Test
     public void update<%= entityClass %>() throws Exception {
         // Initialize the database
+        <%_ if (databaseType === 'cassandra') { _%>
+        <%= entityInstance %>.setId(UUID.randomUUID());
+        <%_ } _%>
 <%_ if (dto !== 'mapstruct') { _%>
         <%= entityInstance %>Service.save(<%= entityInstance %>);
         <%_ if (searchEngine === 'elasticsearch') { _%>
@@ -780,27 +789,35 @@ _%>
     public void updateNonExisting<%= entityClass %>() throws Exception {
         int databaseSizeBeforeUpdate = <%= entityInstance %>Repository.findAll().size();
 
-        // Create the <%= entityClass %><% if (dto == 'mapstruct') { %>
-        <%= entityClass %>DTO <%= entityInstance %>DTO = <%= entityInstance %>Mapper.toDto(<%= entityInstance %>);<% } %>
-        <%= entityClass %>Proto <%= entityInstance %>Proto = <%= entityInstance %>ProtoMapper.<%=instanceName%>To<%=entityClass%>Proto(<%=instanceName%>);
+        try {
+            // Create the <%= entityClass %>
+            <%_ if (dto == 'mapstruct') { _%>
+            <%= entityClass %>DTO <%= entityInstance %>DTO = <%= entityInstance %>Mapper.toDto(<%= entityInstance %>);
+            <%_ } _%>
+            <%= entityClass %>Proto <%= entityInstance %>Proto = <%= entityInstance %>ProtoMapper.<%=instanceName%>To<%=entityClass%>Proto(<%=instanceName%>);
 
-        // If the entity doesn't have an ID, it will be created instead of just being updated
-        stub.update<%= entityClass %>(<%= entityInstance %>Proto);
+            stub.update<%= entityClass %>(<%= entityInstance %>Proto);
+            failBecauseExceptionWasNotThrown(StatusRuntimeException.class);
+        } catch (StatusRuntimeException e) {
+            assertThat(e.getStatus().getCode()).isEqualTo(Status.Code.INVALID_ARGUMENT);
+        }
 
         // Validate the <%= entityClass %> in the database
         List<<%= entityClass %>> <%= entityInstance %>List = <%= entityInstance %>Repository.findAll();
-        assertThat(<%= entityInstance %>List).hasSize(databaseSizeBeforeUpdate + 1);
-        <%= entityClass %> test<%= entityClass %> = <%= entityInstance %>List.get(<%= entityInstance %>List.size() - 1);
+        assertThat(<%= entityInstance %>List).hasSize(databaseSizeBeforeUpdate);
         <%_ if (searchEngine == 'elasticsearch') { _%>
-
+        
         // Validate the <%= entityClass %> in Elasticsearch
-        verify(mock<%= entityClass %>SearchRepository, times(1)).save(test<%= entityClass %>);
+        verify(mock<%= entityClass %>SearchRepository, times(0)).save(<%= entityInstance %>);
         <%_ } _%>
     }
 
     @Test
     public void delete<%= entityClass %>() throws Exception {
         // Initialize the database
+        <%_ if (databaseType === 'cassandra') { _%>
+        <%= entityInstance %>.setId(UUID.randomUUID());
+        <%_ } _%>
 <%_ if (dto != 'mapstruct') { _%>
         <%= entityInstance %>Service.save(<%= entityInstance %>);
 <%_ } else { _%>

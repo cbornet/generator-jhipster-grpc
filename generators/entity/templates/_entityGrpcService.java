@@ -3,6 +3,8 @@ package <%= packageName %>.grpc.entity.<%=entityUnderscoredName%>;
 import <%= packageName %>.grpc.AuthenticationInterceptor;
 <%_ if (pagination !== 'no') { _%>
 import <%= packageName %>.grpc.PageRequest<% if (jpaMetamodelFiltering) { %>AndFilters<% } %>;
+<%_ } _%>
+<%_ if (pagination !== 'no' || databaseType === 'cassandra') { _%>
 import <%= packageName %>.grpc.ProtobufMappers;
 <%_ } _%>
 <%_ if (jpaMetamodelFiltering) { _%>
@@ -41,6 +43,9 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 <%_ } _%>
 import java.util.Optional;
+<%_ if (databaseType === 'cassandra') { _%>
+import java.util.UUID;
+<%_ } _%>
 <%_ if (jpaMetamodelFiltering && pagination !== 'no') { _%>
 import java.util.stream.Collectors;
 <%_ } _%>
@@ -74,18 +79,25 @@ public class <%= entityClass %>GrpcService extends Reactor<%= entityClass %>Serv
 
     @Override
     public Mono<<%= entityClass %>Proto> create<%= entityClass %>(Mono<<%= entityClass %>Proto> request) {
-        return update<%= entityClass %>(request
+        return request
             .doOnSuccess(<%= entityInstance %>Proto -> log.debug("REST request to save <%= entityClass %> : {}", <%= entityInstance %>Proto))
             .filter(<%= entityInstance %>Proto -> <%= entityInstance %>Proto.getIdOneofCase() != <%= entityClass %>Proto.IdOneofCase.ID)
             .switchIfEmpty(Mono.error(Status.ALREADY_EXISTS.asRuntimeException()))
-        );
+            .map(<%= entityInstance %>ProtoMapper::<%= entityInstance %>ProtoTo<%= instanceType %>)
+            <%_ if (databaseType === 'cassandra') { _%>
+            .doOnSuccess(<%= entityInstance %> -> <%= entityInstance %>.setId(UUID.randomUUID()))
+            <%_ } _%>
+            .map(<%= entityInstance %>Service::save)
+            .map(<%= entityInstance %>ProtoMapper::<%= instanceName %>To<%= entityClass %>Proto);
     }
 
     @Override
     public Mono<<%= entityClass %>Proto> update<%= entityClass %>(Mono<<%= entityClass %>Proto> request) {
         return request
-            .map(<%= entityInstance %>ProtoMapper::<%= entityInstance %>ProtoTo<%= instanceType %>)
             .doOnSuccess(<%= instanceName %> -> log.debug("REST request to update <%= entityClass %> : {}", <%= instanceName %>))
+            .filter(<%= entityInstance %>Proto -> <%= entityInstance %>Proto.getIdOneofCase() == <%= entityClass %>Proto.IdOneofCase.ID)
+            .switchIfEmpty(Mono.error(Status.INVALID_ARGUMENT.asRuntimeException()))
+            .map(<%= entityInstance %>ProtoMapper::<%= entityInstance %>ProtoTo<%= instanceType %>)
             .map(<%= entityInstance %>Service::save)
             .map(<%= entityInstance %>ProtoMapper::<%= instanceName %>To<%= entityClass %>Proto);
     }
@@ -137,6 +149,9 @@ public class <%= entityClass %>GrpcService extends Reactor<%= entityClass %>Serv
     public Mono<<%= entityClass %>Proto> get<%= entityClass %>(Mono<<%= idProtoWrappedType %>> request) {
         return request
             .map(<%= idProtoWrappedType %>::getValue)
+            <%_ if (databaseType === 'cassandra') { _%>
+            .map(ProtobufMappers::stringToUuid)
+            <%_ } _%>
             .doOnSuccess(id -> log.debug("REST request to get <%= entityClass %> : {}", id))
             .map(id -> <%= entityInstance %>Service.findOne(id).orElseThrow(Status.NOT_FOUND::asRuntimeException))
             .map(<%= entityInstance %>ProtoMapper::<%= instanceName %>To<%= entityClass %>Proto);
@@ -146,6 +161,9 @@ public class <%= entityClass %>GrpcService extends Reactor<%= entityClass %>Serv
     public Mono<Empty> delete<%= entityClass %>(Mono<<%= idProtoWrappedType %>> request) {
         return request
             .map(<%= idProtoWrappedType %>::getValue)
+            <%_ if (databaseType === 'cassandra') { _%>
+            .map(ProtobufMappers::stringToUuid)
+            <%_ } _%>
             .doOnSuccess(id -> log.debug("REST request to delete <%= entityClass %> : {}", id))
             .doOnSuccess(<%= entityInstance %>Service::delete)
             .map(id -> Empty.getDefaultInstance());
