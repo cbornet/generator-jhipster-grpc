@@ -18,7 +18,7 @@ import "util/decimal.proto";
 import "util/date.proto";
 <%_ } _%>
 <%_ if (jpaMetamodelFiltering) {  _%>
-import "util/queryfilter.proto";
+import "util/queryfilters.proto";
 <%_ } else if (pagination !== 'no') { _%>
 import "util/pagination.proto";
 <%_ } _%>
