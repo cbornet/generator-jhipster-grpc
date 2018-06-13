@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.protobuf.Empty;
 import io.grpc.Status;
 import org.lognet.springboot.grpc.GRpcService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.env.EnvironmentEndpoint;
 import reactor.core.publisher.Mono;
 

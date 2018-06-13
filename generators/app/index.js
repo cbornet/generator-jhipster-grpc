@@ -145,20 +145,15 @@ module.exports = class extends BaseGenerator {
                 this.template('_MetricService.java', javaDir + 'grpc/MetricService.java');
                 this.template('_MetricServiceIntTest.java', testDir + 'grpc/MetricServiceIntTest.java');
 
-                this.template('_profile_info.proto', protoPackageDir + 'profile_info.proto');
-                this.template('_ProfileInfoService.java', javaDir + 'grpc/ProfileInfoService.java');
-                this.template('_ProfileInfoServiceIntTest.java', testDir + 'grpc/ProfileInfoServiceIntTest.java');
+                this.template('_info.proto', protoPackageDir + 'info.proto');
+                this.template('_InfoService.java', javaDir + 'grpc/InfoService.java');
+                this.template('_InfoServiceIntTest.java', testDir + 'grpc/InfoServiceIntTest.java');
 
                 this.grpcVersion = '1.6.1';
                 this.protocVersion = '3.1.0';
-                //const guavaVersion = '20.0';
-                //const nettyVersion = '4.1.8.Final';
                 this.reactiveGrpcVersion = '0.7.2';
 
                 this.addCompileDependency('org.lognet', 'grpc-spring-boot-starter', '2.0.0', this.buildTool);
-                // Resolve conflict with springfox
-                // Still needed ?
-                // this.addCompileDependency('com.google.guava', 'guava', guavaVersion, this.buildTool);
                 this.addCompileDependency('com.google.protobuf', 'protobuf-java', this.protocVersion, this.buildTool);
                 this.addCompileDependency('io.grpc', 'grpc-core', this.grpcVersion, this.buildTool);
                 this.addCompileDependency('io.grpc', 'grpc-context', this.grpcVersion, this.buildTool);
@@ -167,11 +162,6 @@ module.exports = class extends BaseGenerator {
                 this.addCompileDependency('io.grpc', 'grpc-stub', this.grpcVersion, this.buildTool);
                 this.addCompileDependency('io.projectreactor', 'reactor-core', '3.1.1.RELEASE', this.buildTool);
                 this.addCompileDependency('com.salesforce.servicelibs', 'reactor-grpc-stub', this.reactiveGrpcVersion, this.buildTool);
-                if (this.databaseType === 'cassandra' || ['microservice', 'gateway', 'uaa'].includes(this.applicationType)) {
-                    // grpc-java needs netty 4.1
-                    // Still needed ?
-                    // this.addCompileDependency('io.netty', 'netty-handler', nettyVersion, this.buildTool);
-                }
 
                 if (this.buildTool === 'maven') {
                     this.addMavenRepository('jcenter', 'http://jcenter.bintray.com');
