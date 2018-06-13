@@ -62,5 +62,6 @@
     "changelogDate": "20160208210534",
     "dto": "no",
     "service": "serviceClass",
+    "angularJSSuffix": "mySuffix",
     "pagination": "no"
 }

@@ -55,5 +55,6 @@
     "dto": "no",
     "service": "serviceClass",
     "jpaMetamodelFiltering": true,
+    "angularJSSuffix": "mySuffixAlt",
     "pagination": "no"
 }

@@ -23,7 +23,7 @@ service AccountService {
     rpc RegisterAccount(UserProto) returns (google.protobuf.Empty);
     rpc ActivateAccount(google.protobuf.StringValue) returns (UserProto);
     rpc SaveAccount(UserProto) returns (google.protobuf.Empty);
-    rpc ChangePassword(google.protobuf.StringValue) returns (google.protobuf.Empty);
+    rpc ChangePassword(PasswordChange) returns (google.protobuf.Empty);
     rpc RequestPasswordReset(google.protobuf.StringValue) returns (google.protobuf.Empty);
     rpc FinishPasswordReset(KeyAndPassword) returns (google.protobuf.Empty);
     <%_ } _%>
@@ -41,9 +41,14 @@ message PersistentToken {
     string ip_address = 3;
     string user_agent = 4;
 }
-<%_ } _%>
 
+<%_ } _%>
 <%_ if (authenticationType !== 'oauth2') { _%>
+message PasswordChange {
+    string current_password = 1;
+    string new_password =2;
+}
+
 message KeyAndPassword {
     string key = 1;
     string new_password =2;

@@ -1,8 +1,13 @@
+<%_
+let idProtoWrappedType;
+if (databaseType === 'sql') {
+    idProtoWrappedType = 'Int64Value';
+} else {
+    idProtoWrappedType = 'StringValue';
+}
+_%>
 package <%= packageName %>.grpc;
 
-<%_ if (databaseType === 'cassandra') { _%>
-import <%= packageName %>.AbstractCassandraTest;
-<%_ } _%>
 import <%= packageName %>.<%=mainClass%>;
 import <%= packageName %>.config.audit.AuditEventConverter;
 import <%= packageName %>.domain.PersistentAuditEvent;
@@ -34,7 +39,7 @@ import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = <%= mainClass %>.class)<% if (databaseType == 'sql') { %>
 @Transactional<% } %>
-public class AuditGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>extends AbstractCassandraTest <% } %>{
+public class AuditGrpcServiceIntTest {
 
     private static final String SAMPLE_PRINCIPAL = "SAMPLE_PRINCIPAL";
     private static final String SAMPLE_TYPE = "SAMPLE_TYPE";

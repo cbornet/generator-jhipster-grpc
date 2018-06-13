@@ -8,15 +8,19 @@ import "google/protobuf/empty.proto";
 package <%= packageName %>;
 
 service ConfigurationPropertiesReportService {
-    rpc GetConfigurationProperties(google.protobuf.Empty) returns (ConfigurationPropertiesReport);
+    rpc GetConfigurationProperties(google.protobuf.Empty) returns (ApplicationConfigurationProperties);
 }
 
-message ConfigurationProperty {
+message ApplicationConfigurationProperties {
+    map<string, ContextConfigurationProperties> contexts = 1;
+}
+
+message ContextConfigurationProperties {
+    map<string, ConfigurationPropertiesBean> beans = 1;
+    string parentId = 2;
+}
+
+message ConfigurationPropertiesBean {
     string prefix = 1;
-    string properties = 2;
-}
-
-message ConfigurationPropertiesReport {
-    ConfigurationPropertiesReport parent = 1;
-    map<string, ConfigurationProperty> configuration_properties = 2;
+    map<string, string> properties = 2;
 }

@@ -8,6 +8,7 @@ import <%= packageName %>.<%=mainClass%>;
 import <%= packageName %>.config.SecurityBeanOverrideConfiguration;
 <%_ } _%>
 
+import com.codahale.metrics.MetricRegistry;
 import com.google.protobuf.Empty;
 import io.grpc.Server;
 import io.grpc.inprocess.InProcessChannelBuilder;
@@ -17,19 +18,23 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.actuate.endpoint.PublicMetrics;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
-import java.util.Collection;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = <% if (authenticationType === 'uaa' && applicationType !== 'uaa') { %>{<%= mainClass %>.class, SecurityBeanOverrideConfiguration.class}<% } else { %><%=mainClass%>.class<% } %>)
+<%_ if (authenticationType === 'uaa' && applicationType !== 'uaa') { _%>
+@SpringBootTest(classes = {SecurityBeanOverrideConfiguration.class, <%= mainClass %>.class})
+<%_ } else { _%>
+@SpringBootTest(classes = <%= mainClass %>.class)
+<%_ } _%>
 public class MetricServiceIntTest <% if (databaseType === 'cassandra') { %>extends AbstractCassandraTest <% } %>{
 
     @Autowired
-    private Collection<PublicMetrics> publicMetrics;
+    private MetricRegistry registry;
 
     private Server mockServer;
 
@@ -37,7 +42,7 @@ public class MetricServiceIntTest <% if (databaseType === 'cassandra') { %>exten
 
     @Before
     public void setUp() throws IOException {
-        MetricService service = new MetricService(publicMetrics);
+        MetricService service = new MetricService(registry);
         String uniqueServerName = "Mock server for " + MetricService.class;
         mockServer = InProcessServerBuilder
             .forName(uniqueServerName).directExecutor().addService(service).build().start();
@@ -53,7 +58,7 @@ public class MetricServiceIntTest <% if (databaseType === 'cassandra') { %>exten
 
     @Test
     public void testGetMetrics() {
-        stub.getMetrics(Empty.newBuilder().build());
+        assertThat(stub.getMetrics(Empty.newBuilder().build()).getValue()).isNotEmpty();
     }
 
 }

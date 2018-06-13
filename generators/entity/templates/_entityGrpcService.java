@@ -138,7 +138,7 @@ public class <%= entityClass %>GrpcService extends Reactor<%= entityClass %>Serv
         return request
             .map(<%= idProtoWrappedType %>::getValue)
             .doOnSuccess(id -> log.debug("REST request to get <%= entityClass %> : {}", id))
-            .map(id -> Optional.ofNullable(<%= entityInstance %>Service.findOne(id)).orElseThrow(Status.NOT_FOUND::asRuntimeException))
+            .map(id -> <%= entityInstance %>Service.findOne(id).orElseThrow(Status.NOT_FOUND::asRuntimeException))
             .map(<%= entityInstance %>ProtoMapper::<%= instanceName %>To<%= entityClass %>Proto);
     }
 

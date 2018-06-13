@@ -52,6 +52,10 @@ import org.junit.runner.RunWith;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+<%_ if (searchEngine === 'elasticsearch' && pagination !== 'no') { _%>
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Sort;
+<%_ } _%>
 <%_ if (jpaMetamodelFiltering) { _%>
 import org.springframework.format.support.FormattingConversionService;
 <%_ } _%>
@@ -95,8 +99,14 @@ import java.util.*;
 import java.util.stream.StreamSupport;
 <%_ } _%>
 
+<%_ if (searchEngine === 'elasticsearch') { _%>
+import static org.elasticsearch.index.query.QueryBuilders.queryStringQuery;
+<%_ } _%>
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
+<%_ if (searchEngine === 'elasticsearch') { _%>
+import static org.mockito.Mockito.*;
+<%_ } _%>
 
 <%_ for (idx in fields) { if (fields[idx].fieldIsEnum == true) { _%>import <%= packageName %>.domain.enumeration.<%= fields[idx].fieldType %>;
 <%_ } } _%>
@@ -107,7 +117,7 @@ import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
  */
 @RunWith(SpringRunner.class)
 <%_ if (authenticationType === 'uaa' && applicationType !== 'uaa') { _%>
-@SpringBootTest(classes = {<%= mainClass %>.class, SecurityBeanOverrideConfiguration.class})
+@SpringBootTest(classes = {SecurityBeanOverrideConfiguration.class, <%= mainClass %>.class})
 <%_ } else { _%>
 @SpringBootTest(classes = <%= mainClass %>.class)
 <%_ } _%>
@@ -291,7 +301,7 @@ _%>
     <%_ } _%>
     <%_ if (searchEngine == 'elasticsearch') { _%>
     @Autowired
-    private <%= entityClass %>SearchRepository <%= entityInstance %>SearchRepository;
+    private <%= entityClass %>SearchRepository mock<%= entityClass %>SearchRepository;
 
     <%_ } _%>
     <%_ if (databaseType === 'sql') { _%>
@@ -323,9 +333,6 @@ _%>
     @After
     public void tearDown() {
         <%= entityInstance %>Repository.deleteAll();
-        <%_ if (searchEngine == 'elasticsearch') { _%>
-        <%= entityInstance %>SearchRepository.deleteAll();
-        <%_ } _%>
         mockServer.shutdownNow();
     }
 
@@ -376,9 +383,6 @@ _%>
         <%='DEFAULT_' + field.fieldNameUnderscored.toUpperCase()%>.rewind();
         <%_ } _%>
         <%= entityInstance %>Repository.deleteAll();
-        <%_ if (searchEngine == 'elasticsearch') { _%>
-        <%= entityInstance %>SearchRepository.deleteAll();
-        <%_ } _%>
         <%_ if (databaseType === 'sql') { _%>
         <%= entityInstance %> = transactionTemplate.execute(s -> createEntity(em));
         <%_ } else { _%>
@@ -411,13 +415,7 @@ _%>
         <%_ if (searchEngine == 'elasticsearch') { _%>
 
         // Validate the <%= entityClass %> in Elasticsearch
-        <%= entityClass %> <%= entityInstance %>Es = <%= entityInstance %>SearchRepository.findOne(test<%= entityClass %>.getId());
-            <%_ for (idx in fields) { _%>
-                <%_ if ((fields[idx].fieldType == 'byte[]' || fields[idx].fieldType === 'ByteBuffer') && fields[idx].fieldTypeBlobContent != 'text') { _%>
-        assertThat(<%= entityInstance %>Es.get<%= fields[idx].fieldInJavaBeanMethod %>ContentType()).isEqualTo(<%='DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase()%>_CONTENT_TYPE);
-                <%_ } _%>
-        assertThat(<%= entityInstance %>Es.<% if (fields[idx].fieldType == 'Boolean') { %>is<% } else { %>get<% } %><%= fields[idx].fieldInJavaBeanMethod %>()).isEqual<% if (fields[idx].fieldType === 'BigDecimal') { %>ByComparing<% } %>To(<%='DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase()%>);
-            <%_ } _%>
+        verify(mock<%= entityClass %>SearchRepository, times(1)).save(test<%= entityClass %>);
         <%_ } _%>
     }
 
@@ -439,9 +437,14 @@ _%>
             assertThat(e.getStatus().getCode()).isEqualTo(Status.Code.ALREADY_EXISTS);
         }
 
-        // Validate the Alice in the database
+        // Validate the <%= entityClass %> in the database
         List<<%= entityClass %>> <%= entityInstance %>List = <%= entityInstance %>Repository.findAll();
         assertThat(<%= entityInstance %>List).hasSize(databaseSizeBeforeCreate);
+        <%_ if (searchEngine == 'elasticsearch') { _%>
+
+        // Validate the <%= entityClass %> in Elasticsearch
+        verify(mock<%= entityClass %>SearchRepository, never()).save(any());
+        <%_ } _%>
     }
 
     @Test
@@ -579,7 +582,7 @@ _%>
             <%= entityInstance %>Repository.saveAndFlush(<%= entityInstance %>);
             return <%= relationship.relationshipFieldName %>1;
         });
-        Long <%= relationship.relationshipFieldName %>Id = <%= relationship.relationshipFieldName %>.getId();
+        <% if (authenticationType === 'oauth2' && relationship.relationshipFieldName === 'user') { _%>String<%_ } else { _%>Long<% } %> <%= relationship.relationshipFieldName %>Id = <%= relationship.relationshipFieldName %>.getId();
 
         <%_ if (relationship.ownerSide === false || relationship.relationshipType === 'one-to-many') { _%>
         try {
@@ -702,9 +705,12 @@ _%>
         // Initialize the database
 <%_ if (dto !== 'mapstruct') { _%>
         <%= entityInstance %>Service.save(<%= entityInstance %>);
+        <%_ if (searchEngine === 'elasticsearch') { _%>
+        // As the test used the service layer, reset the Elasticsearch mock repository
+        reset(mock<%= entityClass %>SearchRepository);
+        <%_ } _%>
 <%_ } else { _%>
-        <%= entityInstance %>Repository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(<%= entityInstance %>);<% if (searchEngine === 'elasticsearch') { %>
-        <%= entityInstance %>SearchRepository.save(<%= entityInstance %>);<%_ } _%>
+        <%= entityInstance %>Repository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(<%= entityInstance %>);
 <%_ } _%>
 
         int databaseSizeBeforeUpdate = <%= entityInstance %>Repository.findAll().size();
@@ -712,7 +718,7 @@ _%>
         // Update the <%= entityInstance %>
         <%_ if (databaseType === 'sql') { _%>
         <%= entityClass %>Proto <%= entityInstance %>Proto = transactionTemplate.execute(s-> {
-            <%= entityClass %> updated<%= entityClass %> = <%= entityInstance %>Repository.findOne(<%= entityInstance %>.getId());
+            <%= entityClass %> updated<%= entityClass %> = <%= entityInstance %>Repository.findById(<%= entityInstance %>.getId()).orElseThrow(RuntimeException::new);
             <%_ if (fluentMethods && fields.length > 0) { _%>
             updated<%= entityClass %><% for (idx in fields) { %>
                 .<%= fields[idx].fieldName %>(<%='UPDATED_' + fields[idx].fieldNameUnderscored.toUpperCase()%>)<% if ((fields[idx].fieldType == 'byte[]' || fields[idx].fieldType === 'ByteBuffer') && fields[idx].fieldTypeBlobContent != 'text') { %>
@@ -732,7 +738,7 @@ _%>
             return <%= entityInstance %>ProtoMapper.<%=instanceName%>To<%=entityClass%>Proto(updated<%= instanceType %>);
         });
         <%_ } else { _%>
-        <%= entityClass %> updated<%= entityClass %> = <%= entityInstance %>Repository.findOne(<%= entityInstance %>.getId());
+        <%= entityClass %> updated<%= entityClass %> = <%= entityInstance %>Repository.findById(<%= entityInstance %>.getId()).orElseThrow(RuntimeException::new);
             <%_ if (fluentMethods && fields.length > 0) { _%>
         updated<%= entityClass %><% for (idx in fields) { %>
             .<%= fields[idx].fieldName %>(<%='UPDATED_' + fields[idx].fieldNameUnderscored.toUpperCase()%>)<% if ((fields[idx].fieldType == 'byte[]' || fields[idx].fieldType === 'ByteBuffer') && fields[idx].fieldTypeBlobContent != 'text') { %>
@@ -766,13 +772,7 @@ _%>
         <%_ if (searchEngine == 'elasticsearch') { _%>
 
         // Validate the <%= entityClass %> in Elasticsearch
-        <%= entityClass %> <%= entityInstance %>Es = <%= entityInstance %>SearchRepository.findOne(test<%= entityClass %>.getId());
-            <%_ for (idx in fields) { _%>
-                <%_ if ((fields[idx].fieldType == 'byte[]' || fields[idx].fieldType === 'ByteBuffer') && fields[idx].fieldTypeBlobContent != 'text') { _%>
-        assertThat(<%= entityInstance %>Es.get<%= fields[idx].fieldInJavaBeanMethod %>ContentType()).isEqualTo(<%='UPDATED_' + fields[idx].fieldNameUnderscored.toUpperCase()%>_CONTENT_TYPE);
-                <%_ } _%>
-        assertThat(<%= entityInstance %>Es.<% if (fields[idx].fieldType == 'Boolean') { %>is<% } else { %>get<% } %><%= fields[idx].fieldInJavaBeanMethod %>()).isEqual<% if (fields[idx].fieldType === 'BigDecimal') { %>ByComparing<% } %>To(<%='UPDATED_' + fields[idx].fieldNameUnderscored.toUpperCase()%><% if (fields[idx].fieldType == 'ByteBuffer') { %>.rewind()<% } %>);
-            <%_ } _%>
+        verify(mock<%= entityClass %>SearchRepository, times(1)).save(test<%= entityClass %>);
         <%_ } _%>
     }
 
@@ -790,6 +790,12 @@ _%>
         // Validate the <%= entityClass %> in the database
         List<<%= entityClass %>> <%= entityInstance %>List = <%= entityInstance %>Repository.findAll();
         assertThat(<%= entityInstance %>List).hasSize(databaseSizeBeforeUpdate + 1);
+        <%= entityClass %> test<%= entityClass %> = <%= entityInstance %>List.get(<%= entityInstance %>List.size() - 1);
+        <%_ if (searchEngine == 'elasticsearch') { _%>
+
+        // Validate the <%= entityClass %> in Elasticsearch
+        verify(mock<%= entityClass %>SearchRepository, times(1)).save(test<%= entityClass %>);
+        <%_ } _%>
     }
 
     @Test
@@ -798,24 +804,23 @@ _%>
 <%_ if (dto != 'mapstruct') { _%>
         <%= entityInstance %>Service.save(<%= entityInstance %>);
 <%_ } else { _%>
-        <%= entityInstance %>Repository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(<%= entityInstance %>);<% if (searchEngine == 'elasticsearch') { %>
-        <%= entityInstance %>SearchRepository.save(<%= entityInstance %>);<%_ } _%>
+        <%= entityInstance %>Repository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(<%= entityInstance %>);
 <%_ } _%>
 
         int databaseSizeBeforeDelete = <%= entityInstance %>Repository.findAll().size();
 
         // Get the <%= entityInstance %>
         stub.delete<%= entityClass %>(<%=idProtoWrappedType%>.newBuilder().setValue(<%= entityInstance %>.getId()<% if (databaseType === 'cassandra') { %>.toString()<% } %>).build());
-        <%_ if (searchEngine == 'elasticsearch') { _%>
-
-        // Validate Elasticsearch is empty
-        boolean <%= entityInstance %>ExistsInEs = <%= entityInstance %>SearchRepository.exists(<%= entityInstance %>.getId());
-        assertThat(<%= entityInstance %>ExistsInEs).isFalse();
-        <%_ } _%>
 
         // Validate the database is empty
         List<<%= entityClass %>> <%= entityInstance %>List = <%= entityInstance %>Repository.findAll();
         assertThat(<%= entityInstance %>List).hasSize(databaseSizeBeforeDelete - 1);
+
+        <%_ if (searchEngine === 'elasticsearch') { _%>
+
+        // Validate the <%= entityClass %> in Elasticsearch
+        verify(mock<%= entityClass %>SearchRepository, times(1)).deleteById(<%= entityInstance %>.getId());
+        <%_ } _%>
     }
     <%_ if (searchEngine == 'elasticsearch') { _%>
 
@@ -823,7 +828,6 @@ _%>
     public void search<%= entityClassPlural %>() throws Exception {
         // Initialize the database
         <%= entityClass %> saved<%= entityClass %> = <%= entityInstance %>Repository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(<%= entityInstance %>);
-        <%= entityInstance %>SearchRepository.save(<%= entityInstance %>);
 
         // Search the <%= entityInstancePlural %>
         <%_ if (pagination !== 'no') { _%>
@@ -838,6 +842,18 @@ _%>
             .build();
         <%_ } else { _%>
         StringValue query = StringValue.newBuilder().setValue("id:" + saved<%= entityClass %>.getId()).build();
+        <%_ } _%>
+
+        <%_ if (pagination !== 'no') { _%>
+        when(mock<%= entityClass %>SearchRepository.search(
+            queryStringQuery("id:" + <%= entityInstance %>.getId()),
+            org.springframework.data.domain.PageRequest.of(0, 20, Sort.Direction.DESC, "id"))
+        ).thenReturn(new PageImpl<>(
+            Collections.singletonList(<%= entityInstance %>),
+            org.springframework.data.domain.PageRequest.of(0, 1), 1));
+        <%_ } else { _%>
+        when(mock<%= entityClass %>SearchRepository.search(queryStringQuery("id:" + <%= entityInstance %>.getId())))
+            .thenReturn(Collections.singletonList(<%= entityInstance %>));
         <%_ } _%>
 
         Optional<<%= entityClass %>> maybe<%= entityClass %> = StreamSupport.stream(

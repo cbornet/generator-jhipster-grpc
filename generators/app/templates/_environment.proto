@@ -12,5 +12,16 @@ service EnvironmentService {
 }
 
 message Environment {
-    string value = 1;
+    repeated string activeProfiles = 1;
+    repeated PropertySource propertySources = 2;
+}
+
+message PropertySource {
+    string name = 1;
+    map<string, PropertyValue> properties = 2;
+}
+
+message PropertyValue {
+    string origin = 1;
+    string value = 2;
 }

@@ -18,8 +18,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.actuate.endpoint.ConfigurationPropertiesReportEndpoint;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.actuate.context.properties.ConfigurationPropertiesReportEndpoint;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationContext;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
@@ -27,11 +29,24 @@ import java.io.IOException;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = <% if (authenticationType === 'uaa' && applicationType !== 'uaa') { %>{<%= mainClass %>.class, SecurityBeanOverrideConfiguration.class}<% } else { %><%=mainClass%>.class<% } %>)
+<%_ if (authenticationType === 'uaa' && applicationType !== 'uaa') { _%>
+@SpringBootTest(classes = {SecurityBeanOverrideConfiguration.class, <%= mainClass %>.class})
+<%_ } else { _%>
+@SpringBootTest(classes = <%= mainClass %>.class)
+<%_ } _%>
 public class ConfigurationPropertiesReportServiceIntTest <% if (databaseType === 'cassandra') { %>extends AbstractCassandraTest <% } %>{
 
     @Autowired
     private ConfigurationPropertiesReportEndpoint configurationPropertiesReportEndpoint;
+
+    @Autowired
+    private ApplicationContext applicationContext;
+
+    @Autowired
+    private ObjectMapper mapper;
+
+    @Value("${spring.mail.host}")
+    private String mailHost;
 
     private Server mockServer;
 
@@ -39,7 +54,7 @@ public class ConfigurationPropertiesReportServiceIntTest <% if (databaseType ===
 
     @Before
     public void setUp() throws IOException {
-        ConfigurationPropertiesReportService service = new ConfigurationPropertiesReportService(configurationPropertiesReportEndpoint);
+        ConfigurationPropertiesReportService service = new ConfigurationPropertiesReportService(configurationPropertiesReportEndpoint, mapper);
         String uniqueServerName = "Mock server for " + ConfigurationPropertiesReportService.class;
         mockServer = InProcessServerBuilder
             .forName(uniqueServerName).directExecutor().addService(service).build().start();
@@ -54,12 +69,13 @@ public class ConfigurationPropertiesReportServiceIntTest <% if (databaseType ===
     }
 
     @Test
-    public void getConfigurationProperties() throws IOException {
-        ConfigurationPropertiesReport report = stub.getConfigurationProperties(Empty.newBuilder().build());
-        String configurationPropertiesReportEndpointStr = report.getConfigurationPropertiesMap().get("configurationPropertiesReportEndpoint").getProperties();
-        ObjectMapper mapper = new ObjectMapper();
-        ConfigurationPropertiesReportEndpoint configurationPropertiesReportEndpoint = mapper.readValue(configurationPropertiesReportEndpointStr, ConfigurationPropertiesReportEndpoint.class);
-        assertThat(configurationPropertiesReportEndpoint.getId()).isEqualTo(this.configurationPropertiesReportEndpoint.getId());
+    public void getConfigurationProperties() {
+        ConfigurationPropertiesBean beans = stub.getConfigurationProperties(Empty.newBuilder().build())
+            .getContextsOrThrow(applicationContext.getId())
+            .getBeansOrThrow("spring.mail-org.springframework.boot.autoconfigure.mail.MailProperties");
+        assertThat(beans.getPrefix()).isEqualTo("spring.mail");
+        assertThat(beans.getPropertiesMap()).containsKey("host");
+        assertThat(beans.getPropertiesMap().get("host")).isEqualTo(String.format("\"%s\"", mailHost));
     }
 
 }

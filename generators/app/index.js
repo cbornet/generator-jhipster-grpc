@@ -23,10 +23,6 @@ module.exports = class extends BaseGenerator {
             },
             displayLogo: function () {
                 this.log('Welcome to the ' + chalk.red('JHipster grpc') + ' generator! ' + chalk.yellow('v' + packagejs.version + '\n'));
-                if (this.jhipsterAppConfig.testFrameworks && this.jhipsterAppConfig.testFrameworks.includes('gatling')) {
-                    this.log(chalk.red('Applications using Gatling are currently not supported (see https://github.com/cbornet/generator-jhipster-grpc/issues/4)'));
-                    this.abort = true;
-                }
             },
             checkJhipster() {
                 const currentJhipsterVersion = this.jhipsterAppConfig.jhipsterVersion;
@@ -82,6 +78,15 @@ module.exports = class extends BaseGenerator {
                         this
                     );
                 };
+
+                this.addCompileDependency = function (groupId, artifactId, version, buildTool) {
+                    if (buildTool === 'gradle') {
+                        this.addGradleDependency('compile', groupId, artifactId, version);
+                    } else {
+                        this.addMavenDependency(groupId, artifactId, version);
+                    }
+                };
+
                 this.baseName = this.jhipsterAppConfig.baseName;
                 this.mainClass = this.getMainClassName();
                 this.packageFolder = this.jhipsterAppConfig.packageFolder;
@@ -95,13 +100,14 @@ module.exports = class extends BaseGenerator {
                     this.skipUserManagement = true;
                 }
                 this.buildTool = this.jhipsterAppConfig.buildTool;
+                this.cacheManagerIsAvailable = ['ehcache', 'hazelcast', 'infinispan'].includes(this.jhipsterAppConfig.cacheProvider) || this.applicationType === 'gateway';
 
                 const javaDir = `${jhipsterConstants.SERVER_MAIN_SRC_DIR + this.packageFolder}/`;
                 const testDir = `${jhipsterConstants.SERVER_TEST_SRC_DIR + this.packageFolder}/`;
                 const protoDir = jhipsterConstants.MAIN_DIR + 'proto/';
                 const protoPackageDir = protoDir + this.packageFolder + '/';
 
-                if (this.databaseType === 'sql') {
+                if (this.databaseType === 'sql' && this.authenticationType !== 'oauth2') {
                     this.idProtoType = 'int64';
                     this.idProtoWrappedType = 'Int64Value';
                 } else {
@@ -144,28 +150,31 @@ module.exports = class extends BaseGenerator {
                 this.template('_ProfileInfoServiceIntTest.java', testDir + 'grpc/ProfileInfoServiceIntTest.java');
 
                 this.grpcVersion = '1.6.1';
-                const grpcSpringVersion = '2.0.0';
                 this.protocVersion = '3.1.0';
-                const guavaVersion = '20.0';
-                const nettyVersion = '4.1.8.Final';
+                //const guavaVersion = '20.0';
+                //const nettyVersion = '4.1.8.Final';
                 this.reactiveGrpcVersion = '0.7.2';
 
+                this.addCompileDependency('org.lognet', 'grpc-spring-boot-starter', '2.0.0', this.buildTool);
+                // Resolve conflict with springfox
+                // Still needed ?
+                // this.addCompileDependency('com.google.guava', 'guava', guavaVersion, this.buildTool);
+                this.addCompileDependency('com.google.protobuf', 'protobuf-java', this.protocVersion, this.buildTool);
+                this.addCompileDependency('io.grpc', 'grpc-core', this.grpcVersion, this.buildTool);
+                this.addCompileDependency('io.grpc', 'grpc-context', this.grpcVersion, this.buildTool);
+                this.addCompileDependency('io.grpc', 'grpc-netty', this.grpcVersion, this.buildTool);
+                this.addCompileDependency('io.grpc', 'grpc-protobuf', this.grpcVersion, this.buildTool);
+                this.addCompileDependency('io.grpc', 'grpc-stub', this.grpcVersion, this.buildTool);
+                this.addCompileDependency('io.projectreactor', 'reactor-core', '3.1.1.RELEASE', this.buildTool);
+                this.addCompileDependency('com.salesforce.servicelibs', 'reactor-grpc-stub', this.reactiveGrpcVersion, this.buildTool);
+                if (this.databaseType === 'cassandra' || ['microservice', 'gateway', 'uaa'].includes(this.applicationType)) {
+                    // grpc-java needs netty 4.1
+                    // Still needed ?
+                    // this.addCompileDependency('io.netty', 'netty-handler', nettyVersion, this.buildTool);
+                }
+
                 if (this.buildTool === 'maven') {
-                    this.addMavenDependency('org.lognet', 'grpc-spring-boot-starter', grpcSpringVersion);
-                    // Resolve conflict with springfox
-                    this.addMavenDependency('com.google.guava', 'guava', guavaVersion);
-                    this.addMavenDependency('com.google.protobuf', 'protobuf-java', this.protocVersion);
-                    this.addMavenDependency('io.grpc', 'grpc-core', this.grpcVersion);
-                    this.addMavenDependency('io.grpc', 'grpc-context', this.grpcVersion);
-                    this.addMavenDependency('io.grpc', 'grpc-netty', this.grpcVersion);
-                    this.addMavenDependency('io.grpc', 'grpc-protobuf', this.grpcVersion);
-                    this.addMavenDependency('io.grpc', 'grpc-stub', this.grpcVersion);
-                    this.addMavenDependency('io.projectreactor', 'reactor-core', '3.1.1.RELEASE');
-                    this.addMavenDependency('com.salesforce.servicelibs', 'reactor-grpc-stub', this.reactiveGrpcVersion);
-                    if (this.databaseType === 'cassandra' || ['microservice', 'gateway', 'uaa'].includes(this.applicationType)) {
-                        // grpc-java needs netty 4.1
-                        this.addMavenDependency('io.netty', 'netty-handler', nettyVersion);
-                    }
+                    this.addMavenRepository('jcenter', 'http://jcenter.bintray.com');
                     this.addMavenPlugin('org.xolstice.maven.plugins', 'protobuf-maven-plugin', '0.5.0',
                         '                ' +
                         '<configuration>' + '\n                ' +
@@ -205,17 +214,6 @@ module.exports = class extends BaseGenerator {
                         '<defaultGoal>'
                     );
 
-                    // TODO: Remove when grpc-spring-boot-starter is available on repo.maven.apache.org
-                    this.replaceContent('pom.xml', '</profiles>\n</project>',
-                        '</profiles>' + '\n    ' +
-                        '<repositories>' + '\n    ' +
-                        '    <repository>' + '\n    ' +
-                        '        <id>jcenter</id>' + '\n    ' +
-                        '        <url>http://jcenter.bintray.com </url>' + '\n    ' +
-                        '    </repository>' + '\n    ' +
-                        '</repositories>' + '\n' +
-                        '</project>'
-                    );
                 } else {
                     this.copy('.mvn/mvnw', '.mvn/mvnw');
                     this.copy('.mvn/mvnw.cmd', '.mvn/mvnw.cmd');
@@ -223,21 +221,6 @@ module.exports = class extends BaseGenerator {
                     this.copy('.mvn/wrapper/maven-wrapper.properties', '.mvn/wrapper/maven-wrapper.properties');
                     this.template('_reactive-grpc-pom.xml', 'gradle/reactive-grpc-pom.xml');
                     this.template('_grpc.gradle', 'gradle/grpc.gradle');
-                    this.addGradleDependency('compile', 'org.lognet', 'grpc-spring-boot-starter', grpcSpringVersion);
-                    // Resolve conflict with springfox
-                    this.addGradleDependency('compile', 'com.google.guava', 'guava', guavaVersion);
-                    this.addGradleDependency('compile', 'com.google.protobuf', 'protobuf-java', this.protocVersion);
-                    this.addGradleDependency('compile', 'io.grpc', 'grpc-core', this.grpcVersion);
-                    this.addGradleDependency('compile', 'io.grpc', 'grpc-context', this.grpcVersion);
-                    this.addGradleDependency('compile', 'io.grpc', 'grpc-netty', this.grpcVersion);
-                    this.addGradleDependency('compile', 'io.grpc', 'grpc-protobuf', this.grpcVersion);
-                    this.addGradleDependency('compile', 'io.grpc', 'grpc-stub', this.grpcVersion);
-                    this.addGradleDependency('compile', 'io.projectreactor', 'reactor-core', '3.1.1.RELEASE');
-                    this.addGradleDependency('compile', 'com.salesforce.servicelibs', 'reactor-grpc-stub', this.reactiveGrpcVersion);
-                    if (this.databaseType === 'cassandra' || ['microservice', 'gateway', 'uaa'].includes(this.applicationType)) {
-                        // grpc-java needs netty 4.1
-                        this.addGradleDependency('compile', 'io.netty', 'netty-handler', nettyVersion);
-                    }
                     this.addGradlePlugin('com.google.protobuf', 'protobuf-gradle-plugin', '0.8.1');
                     this.applyFromGradleScript('gradle/grpc');
                 }
@@ -248,19 +231,17 @@ module.exports = class extends BaseGenerator {
                     this.template('_AccountServiceIntTest.java', testDir + 'grpc/AccountServiceIntTest.java');
                     this.template('_user.proto', protoPackageDir + 'user.proto');
                     this.template('_UserProtoMapper.java', javaDir + 'grpc/UserProtoMapper.java');
-                    if (this.applicationType === 'monolith' || this.authenticationType !== 'oauth2') {
-                        this.template('_UserGrpcService.java', javaDir + 'grpc/UserGrpcService.java');
-                        this.template('_UserGrpcServiceIntTest.java', testDir + 'grpc/UserGrpcServiceIntTest.java');
-                        if (this.databaseType === 'sql' || this.databaseType === 'mongodb') {
-                            this.template('_audit.proto', protoPackageDir + 'audit.proto');
-                            this.template('_AuditGrpcService.java', javaDir + 'grpc/AuditGrpcService.java');
-                            this.template('_AuditGrpcServiceIntTest.java', testDir + 'grpc/AuditGrpcServiceIntTest.java');
-                        }
-                        if (this.authenticationType === 'jwt') {
-                            this.template('_jwt.proto', protoPackageDir + 'jwt.proto');
-                            this.template('_JWTService.java', javaDir + 'grpc/JWTService.java');
-                            this.template('_JWTServiceIntTest.java', testDir + 'grpc/JWTServiceIntTest.java');
-                        }
+                    this.template('_UserGrpcService.java', javaDir + 'grpc/UserGrpcService.java');
+                    this.template('_UserGrpcServiceIntTest.java', testDir + 'grpc/UserGrpcServiceIntTest.java');
+                    if (this.databaseType === 'sql' || this.databaseType === 'mongodb') {
+                        this.template('_audit.proto', protoPackageDir + 'audit.proto');
+                        this.template('_AuditGrpcService.java', javaDir + 'grpc/AuditGrpcService.java');
+                        this.template('_AuditGrpcServiceIntTest.java', testDir + 'grpc/AuditGrpcServiceIntTest.java');
+                    }
+                    if (this.authenticationType === 'jwt') {
+                        this.template('_jwt.proto', protoPackageDir + 'jwt.proto');
+                        this.template('_JWTService.java', javaDir + 'grpc/JWTService.java');
+                        this.template('_JWTServiceIntTest.java', testDir + 'grpc/JWTServiceIntTest.java');
                     }
                 }
 
@@ -268,7 +249,9 @@ module.exports = class extends BaseGenerator {
 
             updateExistinfEntities() {
                 if (this.abort) return;
-                this.entities.forEach(entityName => {this.updateEntityConfig('.jhipster/' + entityName + '.json', 'grpcService', true);});
+                this.entities.forEach(entityName => {
+                    this.updateEntityConfig('.jhipster/' + entityName + '.json', 'grpcService', true);
+                });
             },
 
             registering: function () {
@@ -285,7 +268,7 @@ module.exports = class extends BaseGenerator {
                 if (this.entities.length !== 0) {
                     this.log(chalk.green('Regenerating entities with gRPC service'));
                 }
-                this.entities.forEach(function (entity) {
+                this.entities.forEach(entity => {
                     this.composeWith('jhipster:entity', {
                         regenerate: true,
                         'skip-install': true,
@@ -294,7 +277,7 @@ module.exports = class extends BaseGenerator {
                         'skip-client':true,
                         arguments: [entity]
                     });
-                }, this);
+                });
             }
         };
     }

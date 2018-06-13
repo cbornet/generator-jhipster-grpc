@@ -28,8 +28,16 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.MockitoAnnotations;
+<%_ if (searchEngine === 'elasticsearch') { _%>
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Sort;
+<%_ } _%>
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+<%_ if (cacheManagerIsAvailable === true) { _%>
+import org.springframework.cache.CacheManager;
+<%_ } _%>
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -44,8 +52,14 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.StreamSupport;
 
+<%_ if (searchEngine === 'elasticsearch') { _%>
+import static org.elasticsearch.index.query.QueryBuilders.queryStringQuery;
+<%_ } _%>
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
+<%_ if (searchEngine === 'elasticsearch') { _%>
+import static org.mockito.Mockito.when;
+<%_ } _%>
 
 /**
  * Test class for the UserGrpcService gRPC endpoint.
@@ -94,8 +108,18 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
     private UserProtoMapper userProtoMapper;
 
     <%_ if (searchEngine === 'elasticsearch') { _%>
+    /**
+     * This repository is mocked in the <%=packageName%>.repository.search test package.
+     *
+     * @see <%= packageName %>.repository.search.UserSearchRepositoryMockConfiguration
+     */
     @Autowired
-    private UserSearchRepository userSearchRepository;
+    private UserSearchRepository mockUserSearchRepository;
+
+    <%_ } _%>
+    <%_ if (cacheManagerIsAvailable === true) { _%>
+    @Autowired
+    private CacheManager cacheManager;
 
     <%_ } _%>
     private Server mockServer;
@@ -106,7 +130,12 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
 
     @Before
     public void setUp() throws IOException {
-        UserGrpcService userGrpcService = new UserGrpcService(<% if (authenticationType !== 'oauth2') { %>userRepository, mailService, <% } %>userService, userProtoMapper<% if (searchEngine === 'elasticsearch') { %>, userSearchRepository<% } %>);
+        MockitoAnnotations.initMocks(this);
+        <%_ if (cacheManagerIsAvailable === true) { _%>
+        cacheManager.getCache(UserRepository.USERS_BY_LOGIN_CACHE).clear();
+        cacheManager.getCache(UserRepository.USERS_BY_EMAIL_CACHE).clear();
+        <%_ } _%>
+        UserGrpcService userGrpcService = new UserGrpcService(<% if (authenticationType !== 'oauth2') { %>userRepository, mailService, <% } %>userService, userProtoMapper<% if (searchEngine === 'elasticsearch') { %>, mockUserSearchRepository<% } %>);
         String uniqueServerName = "Mock server for " + UserGrpcService.class;
         mockServer = InProcessServerBuilder
             .forName(uniqueServerName).directExecutor().addService(userGrpcService).build().start();
@@ -128,7 +157,7 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
      */
     public static User createEntity(<% if (databaseType === 'sql') { %>EntityManager em<% } %>) {
         User user = new User();
-        <%_ if (databaseType === 'cassandra') { _%>
+        <%_ if (databaseType === 'cassandra' || authenticationType === 'oauth2') { _%>
         user.setId(UUID.randomUUID().toString());
         <%_ } _%>
         user.setLogin(DEFAULT_LOGIN + RandomStringUtils.randomAlphanumeric(10));
@@ -353,6 +382,10 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
         // Initialize the database
         userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(user);
 
+        <%_ if (cacheManagerIsAvailable === true) { _%>
+        assertThat(cacheManager.getCache(UserRepository.USERS_BY_LOGIN_CACHE).get(user.getLogin())).isNull();
+
+        <%_ } _%>
         UserProto userProto = stub.getUser(StringValue.newBuilder().setValue(user.getLogin()).build());
 
         assertThat(userProto.getLogin()).isEqualTo(DEFAULT_LOGIN);
@@ -363,6 +396,10 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
         assertThat(userProto.getImageUrl()).isEqualTo(DEFAULT_IMAGEURL);
         <%_ } _%>
         assertThat(userProto.getLangKey()).isEqualTo(DEFAULT_LANGKEY);
+        <%_ if (cacheManagerIsAvailable === true) { _%>
+
+        assertThat(cacheManager.getCache(UserRepository.USERS_BY_LOGIN_CACHE).get(user.getLogin())).isNotNull();
+        <%_ } _%>
     }
 
     @Test
@@ -389,7 +426,7 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
         int databaseSizeBeforeUpdate = userRepository.findAll().size();
 
         // Update the user
-        User updatedUser = userRepository.findOne(user.getId());
+        User updatedUser = userRepository.findById(user.getId()).orElseThrow(RuntimeException::new);
 
         UserProto userProto = UserProto.newBuilder()
             .setId(updatedUser.getId())
@@ -437,7 +474,7 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
         int databaseSizeBeforeUpdate = userRepository.findAll().size();
 
         // Update the user
-        User updatedUser = userRepository.findOne(user.getId());
+        User updatedUser = userRepository.findById(user.getId()).orElseThrow(RuntimeException::new);
 
         UserProto userProto = UserProto.newBuilder()
             .setId(updatedUser.getId())
@@ -501,7 +538,7 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
         userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(anotherUser);
 
         // Update the user
-        User updatedUser = userRepository.findOne(user.getId());
+        User updatedUser = userRepository.findById(user.getId()).orElseThrow(RuntimeException::new);
 
         UserProto userProto = UserProto.newBuilder()
             .setId(updatedUser.getId())
@@ -558,7 +595,7 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
         userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(anotherUser);
 
         // Update the user
-        User updatedUser = userRepository.findOne(user.getId());
+        User updatedUser = userRepository.findById(user.getId()).orElseThrow(RuntimeException::new);
 
         UserProto userProto = UserProto.newBuilder()
             .setId(updatedUser.getId())
@@ -605,6 +642,10 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
         // Validate the database is empty
         List<User> userList = userRepository.findAll();
         assertThat(userList).hasSize(databaseSizeBeforeDelete - 1);
+        <%_ if (cacheManagerIsAvailable === true) { _%>
+
+        assertThat(cacheManager.getCache(UserRepository.USERS_BY_LOGIN_CACHE).get(user.getLogin())).isNull();
+        <%_ } _%>
     }
     <%_ } _%>
     <%_ if (databaseType == 'sql' || databaseType == 'mongodb') { _%>
@@ -646,9 +687,16 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
     @Test
     @Transactional
     public void searchUsers() throws Exception {
+
         // Initialize the database
         User savedUser = userRepository.saveAndFlush(user);
-        userSearchRepository.save(user);
+
+        when(mockUserSearchRepository.search(
+            queryStringQuery("id:" + user.getId()),
+            org.springframework.data.domain.PageRequest.of(0, 20, Sort.Direction.DESC, "id"))
+        ).thenReturn(new PageImpl<>(
+            Collections.singletonList(user),
+            org.springframework.data.domain.PageRequest.of(0, 1), 1));
 
         // Search the users
         UserSearchPageRequest query = UserSearchPageRequest.newBuilder()

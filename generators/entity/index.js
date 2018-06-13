@@ -140,7 +140,7 @@ module.exports = class extends BaseGenerator {
 
                 this.isFilterableType = function(fieldType) {
                     return !(['byte[]', 'ByteBuffer'].includes(fieldType));
-                }
+                };
             },
 
             writeFiles: function () {

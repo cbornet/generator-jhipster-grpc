@@ -120,7 +120,7 @@ for (r of relationships) { _%>
     repeated <%= r.otherEntityProtobufType %> <%= r.relationshipFieldNamePlural %> = <%= protobufFieldNumber++ %>;
     <%_ } else if (r.relationshipType == 'many-to-one' || (r.relationshipType == 'one-to-one' && r.ownerSide == true)) { _%>
     <% if (r.relationshipValidate !== true) { %>oneof <%= r.relationshipNameUnderscored %>_id_oneof {
-        <% } %>int64 <%= r.relationshipNameUnderscored %>_id = <%= protobufFieldNumber++ %>;<% if (r.relationshipValidate !== true) { %>
+        <% } %><% if (r.relationshipFieldName === 'user' && authenticationType === 'oauth2') { %>string<% } else { %>int64<% } %> <%= r.relationshipNameUnderscored %>_id = <%= protobufFieldNumber++ %>;<% if (r.relationshipValidate !== true) { %>
     }<% } %>
     <%_ if (r.otherEntityFieldCapitalized !='Id' && r.otherEntityFieldCapitalized != '') { _%>
     <% if (r.relationshipValidate !== true) { %>oneof <%= r.relationshipNameUnderscored %>_<%= r.otherEntityFieldUnderscored %>_oneof {

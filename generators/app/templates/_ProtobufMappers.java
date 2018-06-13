@@ -115,9 +115,9 @@ public abstract class ProtobufMappers {
         List<Sort.Order> orders = pageRequestProto.getOrdersList().stream()
             .map( o -> new Sort.Order(Sort.Direction.fromString(o.getDirection().toString()), o.getProperty()))
             .collect(Collectors.toList());
-        Sort sort = orders.isEmpty() ? null : new Sort(orders);
+        Sort sort = orders.isEmpty() ? Sort.unsorted() : Sort.by(orders);
 
-        return new org.springframework.data.domain.PageRequest(page, pageSize, sort);
+        return org.springframework.data.domain.PageRequest.of(page, pageSize, sort);
     }
     <%_ if (authenticationType == 'session') { _%>
 
@@ -146,7 +146,7 @@ public abstract class ProtobufMappers {
         }
         ObjectMapper mapper = new ObjectMapper();
         AuditEvent.Builder builder =  AuditEvent.newBuilder()
-            .setTimestamp(dateToTimestamp(event.getTimestamp()))
+            .setTimestamp(instantToTimestamp(event.getTimestamp()))
             .setData(mapper.writeValueAsString(event.getData()));
         if (event.getPrincipal() != null) {
             builder.setPrincipal(event.getPrincipal());
