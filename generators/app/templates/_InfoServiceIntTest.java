@@ -68,7 +68,7 @@ public class InfoServiceIntTest <% if (databaseType === 'cassandra') { %>extends
     @Test
     public void getInfo() {
         Info info = stub.getInfo(Empty.newBuilder().build());
-        Map<String, String> map = info.getDetailMap();
+        Map<String, String> map = info.getDetailsMap();
         assertThat(map).containsKey("foo");
         assertThat(map.get("foo")).isEqualTo("\"foo\"");
     }
