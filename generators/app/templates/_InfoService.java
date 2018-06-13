@@ -33,6 +33,6 @@ public class InfoService extends ReactorInfoServiceGrpc.InfoServiceImplBase {
                 throw Status.INTERNAL.withCause(e).asRuntimeException();
             }
         });
-        return request.map(e -> Info.newBuilder().putAllDetail(details).build());
+        return request.map(e -> Info.newBuilder().putAllDetails(details).build());
     }
 }
