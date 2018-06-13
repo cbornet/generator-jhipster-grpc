@@ -112,7 +112,7 @@ module.exports = class extends BaseGenerator {
                 this.template('_date.proto', protoDir + 'util/date.proto');
                 this.template('_decimal.proto', protoDir + 'util/decimal.proto');
                 this.template('_pagination.proto', protoDir + 'util/pagination.proto');
-                this.template('_queryfilter.proto', protoDir + 'util/queryfilter.proto');
+                this.template('_queryfilters.proto', protoDir + 'util/queryfilters.proto');
 
                 this.template('_AuthenticationInterceptor.java', javaDir + 'grpc/AuthenticationInterceptor.java');
                 this.template('_AuthenticationInterceptorTest.java', testDir + 'grpc/AuthenticationInterceptorTest.java');
