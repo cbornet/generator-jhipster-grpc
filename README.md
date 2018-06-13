@@ -29,7 +29,8 @@ Compatibility :
 - JHipster 4.5, 4.6, 4.7, 4.8 : module version 0.11.0
 - JHipster 4.9 : module version 0.12.0, 0.13.0
 - JHipster 4.10 : module version 0.14.1
-- JHipster 4.11, 4.12, 4.13, 4.14 : module version 0.15.0, 0.15.1, 0.15.2, branch master
+- JHipster 4.11, 4.12, 4.13, 4.14 : module version 0.15.2
+- JHipster 5.0.0.beta0: branch master
 - JHipster master : module branch next-jhipster (nightly build status : [![Build Status][travis-image-nightly]][travis-url])
 
 # Usage
@@ -44,7 +45,6 @@ If you want to add CRUD gRPC services for an entity, just (re)generate it and co
 The endpoints use Reactor implementation of reactive streams (Flux) with back-pressure.
 
 Notes :
-* doesn't work for applications using Gatling (see https://github.com/cbornet/generator-jhipster-grpc/issues/4)
 * for the moment entities must have a service layer (serviceClass or serviceImpl)
 * just like with DTOs, entities that are referenced by another entity in a relationship (many-to-many owned side, many-to-one or one-to-ine owned side) currently must be grpc activated and thus have a service layer. The service layer constraint should be relaxed in a future release since it's only the gRPC mapper which is required.
 
