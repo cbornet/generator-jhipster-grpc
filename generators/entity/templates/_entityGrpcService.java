@@ -81,7 +81,7 @@ public class <%= entityClass %>GrpcService extends Reactor<%= entityClass %>Serv
     public Mono<<%= entityClass %>Proto> create<%= entityClass %>(Mono<<%= entityClass %>Proto> request) {
         return request
             .doOnSuccess(<%= entityInstance %>Proto -> log.debug("REST request to save <%= entityClass %> : {}", <%= entityInstance %>Proto))
-            .filter(<%= entityInstance %>Proto -> <%= entityInstance %>Proto.getIdOneofCase() != <%= entityClass %>Proto.IdOneofCase.ID)
+            .filter(<%= entityInstance %>Proto -> <%= entityInstance %>Proto.getIdOneofCase() == <%= entityClass %>Proto.IdOneofCase.IDONEOF_NOT_SET)
             .switchIfEmpty(Mono.error(Status.ALREADY_EXISTS.asRuntimeException()))
             .map(<%= entityInstance %>ProtoMapper::<%= entityInstance %>ProtoTo<%= instanceType %>)
             <%_ if (databaseType === 'cassandra') { _%>

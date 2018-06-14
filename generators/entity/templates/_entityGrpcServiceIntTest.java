@@ -125,15 +125,15 @@ public class <%= entityClass %>GrpcServiceIntTest <% if (databaseType === 'cassa
 <%_
     let oldSource = '';
     try {
-        oldSource = this.fs.readFileSync(this.SERVER_TEST_SRC_DIR + packageFolder + '/web/rest/' + entityClass + 'ResourceIntTest.java', 'utf8');
+        oldSource = this.fs.readFileSync(this.SERVER_TEST_SRC_DIR + packageFolder + '/grpc/entity/' + entityUnderscoredName + '/' + entityClass + 'GrpcServiceIntTest.java', 'utf8');
     } catch (e) {}
 _%>
     <%_ for (idx in fields) {
     const defaultValueName = 'DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase();
     const updatedValueName = 'UPDATED_' + fields[idx].fieldNameUnderscored.toUpperCase();
 
-    let defaultValue = 1;
-    let updatedValue = 2;
+    let defaultValue = 3;
+    let updatedValue = 4;
 
     if (fields[idx].fieldValidate == true) {
         if (fields[idx].fieldValidateRules.indexOf('max') != -1) {
@@ -180,8 +180,8 @@ _%>
             sampleTextLength = fields[idx].fieldValidateRulesMaxlength;
         }
         for (let i = 0; i < sampleTextLength; i++) {
-            sampleTextString += "A";
-            updatedTextString += "B";
+            sampleTextString += "C";
+            updatedTextString += "D";
         }
         if (fields[idx].fieldValidateRulesPattern !== undefined) {
             if (oldSource !== '') {
@@ -213,10 +213,10 @@ _%>
                     '", generating default values for this field. Detailed error message: "' + error.message + '".'));
             }
             if (sampleTextString === updatedTextString) {
-                updatedTextString = updatedTextString + "B";
+                updatedTextString = updatedTextString + "D";
                 log(this.chalkRed('Randomly generated first and second test values for entity "' + entityClass +
                     '" field "' + fields[idx].fieldName + '" with pattern "' + fields[idx].fieldValidateRulesPattern +
-                    '" in file "' + entityClass + 'ResourceIntTest" where equal, added symbol "B" to second value.'));
+                    '" in file "' + entityClass + 'GrpcServiceIntTest" where equal, added symbol "D" to second value.'));
             }
         }_%>
 
@@ -248,16 +248,16 @@ _%>
     private static final UUID <%= updatedValueName %> = UUID.randomUUID();
     <%_ } else if (fieldType == 'LocalDate') { _%>
 
-    private static final LocalDate <%= defaultValueName %> = LocalDate.ofEpochDay(0L);
-    private static final LocalDate <%= updatedValueName %> = LocalDate.now(ZoneId.systemDefault());
+    private static final LocalDate <%= defaultValueName %> = LocalDate.ofEpochDay(1L);
+    private static final LocalDate <%= updatedValueName %> = LocalDate.ofEpochDay(2L);
     <%_ } else if (fieldType == 'Instant') { _%>
 
-    private static final Instant <%= defaultValueName %> = Instant.ofEpochMilli(0L);
-    private static final Instant <%= updatedValueName %> = Instant.now();
+    private static final Instant <%= defaultValueName %> = Instant.ofEpochMilli(1L);
+    private static final Instant <%= updatedValueName %> = Instant.ofEpochMilli(2L);
     <%_ } else if (fieldType == 'ZonedDateTime') { _%>
 
-    private static final ZonedDateTime <%= defaultValueName %> = ZonedDateTime.ofInstant(Instant.ofEpochMilli(0L), ZoneOffset.UTC);
-    private static final ZonedDateTime <%= updatedValueName %> = ZonedDateTime.now(ZoneId.systemDefault()).withNano(0);
+    private static final ZonedDateTime <%= defaultValueName %> = ZonedDateTime.ofInstant(Instant.ofEpochMilli(1L), ZoneOffset.UTC);
+    private static final ZonedDateTime <%= updatedValueName %> = ZonedDateTime.ofInstant(Instant.ofEpochMilli(2L), ZoneOffset.UTC);
     <%_ } else if (fieldType == 'Boolean') { _%>
 
     private static final Boolean <%= defaultValueName %> = false;
@@ -356,23 +356,35 @@ _%>
                 <%_ } _%>
             <%_ } _%>
         <%_ } _%>
-        <%_ for (idx in relationships) {
+        <%_ 
+        const alreadyGeneratedEntities = [];
+        for (idx in relationships) {
             const relationshipValidate = relationships[idx].relationshipValidate;
+            const otherEntityName = relationships[idx].otherEntityName;
             const otherEntityNameCapitalized = relationships[idx].otherEntityNameCapitalized;
-            const relationshipFieldName = relationships[idx].relationshipFieldName;
             const relationshipType = relationships[idx].relationshipType;
             const relationshipNameCapitalizedPlural = relationships[idx].relationshipNameCapitalizedPlural;
             const relationshipNameCapitalized = relationships[idx].relationshipNameCapitalized;
             if (relationshipValidate != null && relationshipValidate === true) { _%>
         // Add required entity
-            <%= otherEntityNameCapitalized %> <%= relationshipFieldName %> = <%= otherEntityNameCapitalized %>GrpcServiceIntTest.createEntity(em);
-            em.persist(<%= relationshipFieldName %>);
-            em.flush();
-            <%_ if (relationshipType == 'many-to-many') { _%>
-        <%= entityInstance %>.get<%= relationshipNameCapitalizedPlural %>().add(<%= relationshipFieldName %>);
-            <%_ } else { _%>
-        <%= entityInstance %>.set<%= relationshipNameCapitalized %>(<%= relationshipFieldName %>);
+            <%_ if (!alreadyGeneratedEntities.includes(otherEntityName)) { _%>
+        <%= otherEntityNameCapitalized %> <%= otherEntityName %> = em.createQuery("select e from <%= otherEntityNameCapitalized %> as e", <%= otherEntityNameCapitalized %>.class)
+            .setMaxResults(1)
+            .getResultList().stream()
+            .findFirst()
+            .orElseGet(() -> {
+                <%= otherEntityNameCapitalized %> e = <%= otherEntityNameCapitalized %>GrpcServiceIntTest.createEntity(em);
+                em.persist(e);
+                em.flush();
+                return e;
+            });
             <%_ } _%>
+            <%_ if (relationshipType == 'many-to-many') { _%>
+        <%= entityInstance %>.get<%= relationshipNameCapitalizedPlural %>().add(<%= otherEntityName %>);
+            <%_ } else { _%>
+        <%= entityInstance %>.set<%= relationshipNameCapitalized %>(<%= otherEntityName %>);
+            <%_ } _%>
+            <%_ alreadyGeneratedEntities.push(otherEntityName) _%>
         <%_ } } _%>
         return <%= entityInstance %>;
     }

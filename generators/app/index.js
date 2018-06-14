@@ -217,8 +217,6 @@ module.exports = class extends BaseGenerator {
 
                 if (!this.skipUserManagement || this.authenticationType === 'oauth2') {
                     this.template('_account.proto', protoPackageDir + 'account.proto');
-                    this.template('_AccountService.java', javaDir + 'grpc/AccountService.java');
-                    this.template('_AccountServiceIntTest.java', testDir + 'grpc/AccountServiceIntTest.java');
                     this.template('_user.proto', protoPackageDir + 'user.proto');
                     this.template('_UserProtoMapper.java', javaDir + 'grpc/UserProtoMapper.java');
                     this.template('_UserGrpcService.java', javaDir + 'grpc/UserGrpcService.java');
@@ -234,6 +232,13 @@ module.exports = class extends BaseGenerator {
                         this.template('_JWTServiceIntTest.java', testDir + 'grpc/JWTServiceIntTest.java');
                     }
                 }
+
+                if (!this.skipUserManagement || this.authenticationType === 'oauth2' && ['monolith', 'gateway'].includes(this.applicationType)) {
+                    this.template('_AccountService.java', javaDir + 'grpc/AccountService.java');
+                    this.template('_AccountServiceIntTest.java', testDir + 'grpc/AccountServiceIntTest.java');
+                }
+
+
 
             },
 
