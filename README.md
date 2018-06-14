@@ -30,7 +30,7 @@ Compatibility :
 - JHipster 4.9 : module version 0.12.0, 0.13.0
 - JHipster 4.10 : module version 0.14.1
 - JHipster 4.11, 4.12, 4.13, 4.14 : module version 0.15.2
-- JHipster 5.0.0.beta0: branch master
+- JHipster 5.0.0.beta2: branch master
 - JHipster master : module branch next-jhipster (nightly build status : [![Build Status][travis-image-nightly]][travis-url])
 
 # Usage
