@@ -33,8 +33,7 @@ import java.util.UUID;<% } %>
           existingMappings.push(r.otherEntityNameCapitalized);
       %>, <%= r.otherEntityNameCapitalized %>ProtoMapper.class<% } } } } %>})
 public interface <%= entityClass %>ProtoMapper {
-
-<%_
+<%
 // Proto -> entity mapping
 if (dto  !== 'mapstruct') {
     for (idx in relationships) {
@@ -42,8 +41,8 @@ if (dto  !== 'mapstruct') {
         const relationshipName = relationships[idx].relationshipName;
         const relationshipNamePlural = relationships[idx].relationshipNamePlural;
         const ownerSide = relationships[idx].ownerSide;
-        if (relationshipType == 'many-to-one' || (relationshipType == 'one-to-one' && ownerSide == true)) { _%>
-    @Mapping(source = "<%= relationshipName %>Id", target = "<%= relationshipName %>")<% } else if (relationshipType == 'many-to-many' && ownerSide == false) { %>
+        if (relationshipType == 'many-to-one' || (relationshipType == 'one-to-one' && ownerSide == true)) { %>
+    @Mapping(source = "<%= relationshipName %>Id", target = "<%= relationshipName %>.id")<% } else if (relationshipType == 'many-to-many' && ownerSide == false) { %>
     @Mapping(target = "<%= relationshipNamePlural %>", ignore = true)<% } else if (relationshipType == 'one-to-many') { %>
     @Mapping(target = "<%= relationshipNamePlural %>", ignore = true)<% } else if (relationshipType == 'one-to-one' && ownerSide == false) { %>
     @Mapping(target = "<%= relationshipName %>", ignore = true)<% } } } %>
@@ -124,15 +123,4 @@ if (dto  !== 'mapstruct') {
     <%= fieldType %> convert<%= fieldType %>ProtoTo<%= fieldType %>(<%= entityClass %>Proto.<%= fieldType %>Proto enumValue);
 
 <%_ }} _%>
-
-<%_ if(databaseType === 'sql' && dto  !== 'mapstruct') { _%>
-    default <%= entityClass %> <%= entityInstance %>FromId(Long id) {
-        if (id == null) {
-            return null;
-        }
-        <%= entityClass %> <%= entityInstance %> = new <%= entityClass %>();
-        <%= entityInstance %>.setId(id);
-        return <%= entityInstance %>;
-    }
-<%_ } _%>
 }

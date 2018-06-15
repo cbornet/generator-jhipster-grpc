@@ -15,6 +15,13 @@
             "otherEntityRelationshipName": "testMapstruct"
         },
         {
+            "relationshipName": "testManyRelWithPaginationAndDTO",
+            "otherEntityName": "testManyRelWithPaginationAndDTO",
+            "relationshipType": "many-to-many",
+            "ownerSide": false,
+            "otherEntityRelationshipName": "testMapstruct"
+        },
+        {
             "relationshipName": "testOneToOne",
             "otherEntityName": "testOneToOne",
             "relationshipType": "one-to-one",
@@ -45,7 +52,7 @@
     ],
     "fields": [],
     "changelogDate": "20160208210109",
-    "dto": "no",
+    "dto": "mapstruct",
     "service": "serviceClass",
     "pagination": "no"
 }
