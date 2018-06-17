@@ -1,7 +1,6 @@
 package <%= packageName %>.grpc.entity.<%=entityUnderscoredName%>;
 
-<% if (dto !== 'mapstruct') { %>
-import <%= packageName %>.domain.<%= instanceType %>;<% } %>
+import <%= packageName %>.domain.<%= entityClass %>;
 <%_ for (idx in fields) {
     if(fields[idx].fieldIsEnum) { _%>
 import <%= packageName %>.domain.enumeration.<%=fields[idx].fieldType%>;
@@ -33,7 +32,8 @@ import java.util.UUID;<% } %>
           existingMappings.push(r.otherEntityNameCapitalized);
       %>, <%= r.otherEntityNameCapitalized %>ProtoMapper.class<% } } } } %>})
 public interface <%= entityClass %>ProtoMapper {
-<%
+
+<%_
 // Proto -> entity mapping
 if (dto  !== 'mapstruct') {
     for (idx in relationships) {
@@ -41,11 +41,15 @@ if (dto  !== 'mapstruct') {
         const relationshipName = relationships[idx].relationshipName;
         const relationshipNamePlural = relationships[idx].relationshipNamePlural;
         const ownerSide = relationships[idx].ownerSide;
-        if (relationshipType == 'many-to-one' || (relationshipType == 'one-to-one' && ownerSide == true)) { %>
-    @Mapping(source = "<%= relationshipName %>Id", target = "<%= relationshipName %>.id")<% } else if (relationshipType == 'many-to-many' && ownerSide == false) { %>
-    @Mapping(target = "<%= relationshipNamePlural %>", ignore = true)<% } else if (relationshipType == 'one-to-many') { %>
-    @Mapping(target = "<%= relationshipNamePlural %>", ignore = true)<% } else if (relationshipType == 'one-to-one' && ownerSide == false) { %>
-    @Mapping(target = "<%= relationshipName %>", ignore = true)<% } } } %>
+        if (relationshipType == 'many-to-one' || (relationshipType == 'one-to-one' && ownerSide == true)) { _%>
+    @Mapping(source = "<%= relationshipName %>Id", target = "<%= relationshipName %>")
+    <%_ } else if (relationshipType == 'many-to-many' && ownerSide == false) { _%>
+    @Mapping(target = "<%= relationshipNamePlural %>", ignore = true)
+    <%_ } else if (relationshipType == 'one-to-many') { _%>
+    @Mapping(target = "<%= relationshipNamePlural %>", ignore = true)
+    <%_ } else if (relationshipType == 'one-to-one' && ownerSide == false) { _%>
+    @Mapping(target = "<%= relationshipName %>", ignore = true)
+<%_ } } } _%>
     <%= instanceType %> <%=entityInstance%>ProtoTo<%= instanceType %>(<%= entityClass %>Proto <%=entityInstance%>Proto);
 
     @AfterMapping
@@ -100,7 +104,7 @@ if (dto  !== 'mapstruct') {
     <%_ if (relationships[idx].otherEntityFieldCapitalized !='Id' && relationships[idx].otherEntityFieldCapitalized != '') { _%>
     @Mapping(source = "<%= relationshipName %>.<%= relationships[idx].otherEntityField %>", target = "<%= relationships[idx].relationshipFieldName %><%= relationships[idx].otherEntityFieldCapitalized %>")
     <%_ } _%>
-<% } } } _%>
+<%_ } } } _%>
     <%= entityClass %>Proto.Builder <%= instanceName %>To<%= entityClass %>ProtoBuilder(<%= instanceType %> <%= instanceName %>);
 
     default <%= entityClass %>Proto <%= instanceName %>To<%= entityClass %>Proto(<%= instanceType %> <%= instanceName %>) {
@@ -126,4 +130,15 @@ if (dto  !== 'mapstruct') {
     <%= fieldType %> convert<%= fieldType %>ProtoTo<%= fieldType %>(<%= entityClass %>Proto.<%= fieldType %>Proto enumValue);
 
 <%_ }} _%>
+<%_ if(databaseType === 'sql') { _%>
+    default <%= entityClass %> <%= entityInstance %>FromId(Long id) {
+        if (id == null) {
+            return null;
+        }
+        <%= entityClass %> <%= entityInstance %> = new <%= entityClass %>();
+        <%= entityInstance %>.setId(id);
+        return <%= entityInstance %>;
+    }
+
+<%_ } _%>
 }
