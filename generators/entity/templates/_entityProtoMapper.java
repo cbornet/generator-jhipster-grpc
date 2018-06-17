@@ -96,8 +96,11 @@ if (dto  !== 'mapstruct') {
         const ownerSide = relationships[idx].ownerSide;
         if (relationshipType == 'many-to-one' || (relationshipType == 'one-to-one' && ownerSide == true)) {
         _%>
-    @Mapping(source = "<%= relationshipName %>.id", target = "<%= relationships[idx].relationshipFieldName %>Id")<% if (relationships[idx].otherEntityFieldCapitalized !='Id' && relationships[idx].otherEntityFieldCapitalized != '') { %>
-    @Mapping(source = "<%= relationshipName %>.<%= relationships[idx].otherEntityField %>", target = "<%= relationships[idx].relationshipFieldName %><%= relationships[idx].otherEntityFieldCapitalized %>")<% } } } } %>
+    @Mapping(source = "<%= relationshipName %>.id", target = "<%= relationships[idx].relationshipFieldName %>Id")
+    <%_ if (relationships[idx].otherEntityFieldCapitalized !='Id' && relationships[idx].otherEntityFieldCapitalized != '') { _%>
+    @Mapping(source = "<%= relationshipName %>.<%= relationships[idx].otherEntityField %>", target = "<%= relationships[idx].relationshipFieldName %><%= relationships[idx].otherEntityFieldCapitalized %>")
+    <%_ } _%>
+<% } } } _%>
     <%= entityClass %>Proto.Builder <%= instanceName %>To<%= entityClass %>ProtoBuilder(<%= instanceType %> <%= instanceName %>);
 
     default <%= entityClass %>Proto <%= instanceName %>To<%= entityClass %>Proto(<%= instanceType %> <%= instanceName %>) {
