@@ -1,15 +1,15 @@
-'use strict';
+/*'use strict';
 var path = require('path');
 var fse = require('fs-extra');
 var assert = require('yeoman-assert');
 var helpers = require('yeoman-test');
 
 var deps = [
-  [helpers.createDummyGenerator(), 'jhipster:modules']
+    [helpers.createDummyGenerator(), 'jhipster:modules']
 ];
 
 describe('JHipster generator grpc', function () {
-  /*describe('simple test', function () {
+    describe('simple test', function () {
     before(function (done) {
       helpers
         .run(path.join( __dirname, '../generators/app'))
@@ -31,5 +31,6 @@ describe('JHipster generator grpc', function () {
         'dummy.txt'
       ]);
     });
-  });*/
+  });
 });
+*/
