@@ -30,7 +30,7 @@ Compatibility :
 - JHipster 4.9 : module version 0.12.0, 0.13.0
 - JHipster 4.10 : module version 0.14.1
 - JHipster 4.11, 4.12, 4.13, 4.14 : module version 0.15.2
-- JHipster 5.0.0.beta2: branch master
+- JHipster 5.0: branch master
 - JHipster master : module branch next-jhipster (nightly build status : [![Build Status][travis-image-nightly]][travis-url])
 
 # Usage
@@ -39,10 +39,10 @@ At the root of your project directory:
 ```bash
 yo jhipster-grpc
 ```
-This will configure [rxgrpc](https://github.com/salesforce/grpc-java-contrib/tree/master/rxgrpc) and [grpc-spring-boot-starter](https://github.com/LogNet/grpc-spring-boot-starter) 
+This will configure [reactive-grpc](https://github.com/salesforce/reactive-grpc) and [grpc-spring-boot-starter](https://github.com/LogNet/grpc-spring-boot-starter) 
 so that the proto files present in `src/main/proto` are compiled.
 If you want to add CRUD gRPC services for an entity, just (re)generate it and confirm when the question is asked.
-The endpoints use Reactor implementation of reactive streams (Flux) with back-pressure.
+The endpoints use Reactor implementation of reactive-streams (Flux) with back-pressure.
 
 Notes :
 * for the moment entities must have a service layer (serviceClass or serviceImpl)

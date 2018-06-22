@@ -1160,9 +1160,9 @@ generate-object-property@^1.1.0:
   dependencies:
     is-property "^1.0.0"
 
-generator-jhipster@>=5.0.0-beta.0:
-  version "5.0.0-beta.2"
-  resolved "https://registry.yarnpkg.com/generator-jhipster/-/generator-jhipster-5.0.0-beta.2.tgz#088bbfbfe026305bdef8f3f750ea3af023c5d585"
+generator-jhipster@>=5.0.0:
+  version "5.0.0"
+  resolved "https://registry.yarnpkg.com/generator-jhipster/-/generator-jhipster-5.0.0.tgz#63fc1c8277f42c7de52a372fba262c6f2de96894"
   dependencies:
     chalk "2.4.1"
     commander "2.15.1"
