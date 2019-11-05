@@ -77,6 +77,6 @@ script:
   - $JHIPSTER_SCRIPTS/03-docker-compose.sh
   - $JHIPSTER_SCRIPTS/041-javadoc.sh
   - $JHIPSTER_SCRIPTS/042-server-tests.sh
-  - $JHIPSTER_SCRIPTS/043-client-tests.sh
+  #- $JHIPSTER_SCRIPTS/043-client-tests.sh
   - $JHIPSTER_SCRIPTS/05-run.sh
   - $JHIPSTER_SCRIPTS/06-sonar.sh
