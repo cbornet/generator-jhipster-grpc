@@ -1,10 +1,13 @@
-dist: bionic
+os:
+  - linux
 services:
   - docker
   - xvfb
 language: node_js
 node_js:
-  - "10.16.3"
+  - "8.11.2"
+jdk:
+  - openjdk8
 addons:
   apt:
     sources:
@@ -48,6 +51,7 @@ env:
     - JHIPSTER=ms-micro-consul
 
 before_install:
+  - jdk_switcher use openjdk8
   - java -version
   - export TZ=Australia/Canberra
   - date
