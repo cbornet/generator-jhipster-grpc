@@ -1,6 +1,7 @@
 dist: bionic
 services:
   - docker
+  - xvfb
 language: node_js
 node_js:
   - "8.11.2"
@@ -54,7 +55,6 @@ before_install:
   - sudo /etc/init.d/postgresql stop
   # Use this for Protractor
   - export DISPLAY=:99.0
-  - sh -e /etc/init.d/xvfb start
   # Repo for Yarn
   - curl -o- -L https://yarnpkg.com/install.sh | bash
   - export PATH=$HOME/.yarn/bin:$PATH
