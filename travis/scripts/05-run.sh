@@ -62,7 +62,7 @@ launchCurlOrProtractor() {
 #-------------------------------------------------------------------------------
 if [[ "$JHIPSTER" == *"uaa"* ]]; then
     cd "$UAA_APP_FOLDER"
-    ./mvnw -ntp verify -DskipTests -P"$PROFILE"
+    ./mvnw -B verify -DskipTests -P"$PROFILE"
 fi
 
 #-------------------------------------------------------------------------------
@@ -71,7 +71,7 @@ fi
 cd "$APP_FOLDER"
 
 if [ -f "mvnw" ]; then
-    ./mvnw -ntp verify -DskipTests -P"$PROFILE"
+    ./mvnw -B verify -DskipTests -P"$PROFILE"
     mv target/*.war app.war
 elif [ -f "gradlew" ]; then
     ./gradlew bootWar -P"$PROFILE" -x test
