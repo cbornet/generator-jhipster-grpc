@@ -6,7 +6,7 @@ set -e
 #-------------------------------------------------------------------------------
 cd "$APP_FOLDER"
 if [ -f "mvnw" ]; then
-    ./mvnw enforcer:display-info
+    ./mvnw -ntp enforcer:display-info
 elif [ -f "gradlew" ]; then
     ./gradlew -v
 fi
@@ -15,7 +15,7 @@ fi
 # Check Javadoc generation
 #-------------------------------------------------------------------------------
 if [ -f "mvnw" ]; then
-    ./mvnw javadoc:javadoc
+    ./mvnw -ntp javadoc:javadoc
 elif [ -f "gradlew" ]; then
     ./gradlew javadoc
 fi
@@ -25,7 +25,7 @@ fi
 #-------------------------------------------------------------------------------
 if [[ "$JHIPSTER" == *"uaa"* ]]; then
     cd "$UAA_APP_FOLDER"
-    ./mvnw test
+    ./mvnw -ntp test
 fi
 
 #-------------------------------------------------------------------------------
@@ -33,7 +33,7 @@ fi
 #-------------------------------------------------------------------------------
 cd "$APP_FOLDER"
 if [ -f "mvnw" ]; then
-    ./mvnw test \
+    ./mvnw -ntp test \
         -Dlogging.level.org.zalando=OFF \
         -Dlogging.level.io.github.jhipster=OFF \
         -Dlogging.level.io.github.jhipster.sample=OFF \

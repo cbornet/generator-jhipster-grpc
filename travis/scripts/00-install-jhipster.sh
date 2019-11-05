@@ -15,7 +15,7 @@ if [[ "$TRAVIS_REPO_SLUG" == *"/jhipster" ]]; then
     echo "No need to clone jhipster: use local version"
 
     cd "$TRAVIS_BUILD_DIR"
-    ./mvnw clean install -Dgpg.skip=true
+    ./mvnw -ntp clean install -Dgpg.skip=true
 
 elif [[ "$JHIPSTER_LIB_BRANCH" == "release" ]]; then
     echo "No need to clone jhipster: use release version"
@@ -33,7 +33,7 @@ else
 
     travis/scripts/00-replace-version-jhipster.sh
 
-    ./mvnw clean install -Dgpg.skip=true
+    ./mvnw -ntp clean install -Dgpg.skip=true
     ls -al ~/.m2/repository/io/github/jhipster/jhipster-framework/
     ls -al ~/.m2/repository/io/github/jhipster/jhipster-dependencies/
     ls -al ~/.m2/repository/io/github/jhipster/jhipster-parent/

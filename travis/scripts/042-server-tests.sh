@@ -6,7 +6,7 @@ set -e
 #-------------------------------------------------------------------------------
 if [[ "$JHIPSTER" == *"uaa"* ]]; then
     cd "$UAA_APP_FOLDER"
-    ./mvnw test
+    ./mvnw -ntp test
 fi
 
 #-------------------------------------------------------------------------------
@@ -14,7 +14,7 @@ fi
 #-------------------------------------------------------------------------------
 cd "$APP_FOLDER"
 if [ -f "mvnw" ]; then
-    ./mvnw test \
+    ./mvnw -ntp test \
         -Dlogging.level.org.zalando=OFF \
         -Dlogging.level.io.github.jhipster=OFF \
         -Dlogging.level.io.github.jhipster.sample=OFF \
