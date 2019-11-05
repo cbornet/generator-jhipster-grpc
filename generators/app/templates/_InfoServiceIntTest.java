@@ -34,9 +34,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 <%_ } else { _%>
 @SpringBootTest(classes = <%= mainClass %>.class)
 <%_ } _%>
-@TestPropertySource(properties = {
-    "info.foo=foo"
-})
 public class InfoServiceIntTest <% if (databaseType === 'cassandra') { %>extends AbstractCassandraTest <% } %>{
 
     @Autowired
@@ -69,7 +66,7 @@ public class InfoServiceIntTest <% if (databaseType === 'cassandra') { %>extends
     public void getInfo() {
         Info info = stub.getInfo(Empty.newBuilder().build());
         Map<String, String> map = info.getDetailsMap();
-        assertThat(map).containsKey("foo");
-        assertThat(map.get("foo")).isEqualTo("\"foo\"");
+        assertThat(map).containsKey("activeProfiles");
+        assertThat(map.get("activeProfiles")).contains("[]");
     }
 }
