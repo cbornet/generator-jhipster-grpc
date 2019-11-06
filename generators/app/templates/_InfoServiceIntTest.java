@@ -67,6 +67,5 @@ public class InfoServiceIntTest <% if (databaseType === 'cassandra') { %>extends
         Info info = stub.getInfo(Empty.newBuilder().build());
         Map<String, String> map = info.getDetailsMap();
         assertThat(map).containsKey("activeProfiles");
-        assertThat(map.get("activeProfiles")).contains("[]");
     }
 }
