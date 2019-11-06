@@ -24,13 +24,13 @@ yarn add global generator-jhipster-grpc
 
 Compatibility :
 - JHipster 4.1 and inferior (Note : never tested with <4.1.0) : module version 0.7.0
-- JHipster 4.2, 4.3 : module version 0.8.0, 0.9.0
+- JHipster 4.2 and 4.3 : module version 0.8.0, 0.9.0
 - JHipster 4.4  : module version 0.10.0
-- JHipster 4.5, 4.6, 4.7, 4.8 : module version 0.11.0
+- JHipster 4.5 to 4.8 : module version 0.11.0
 - JHipster 4.9 : module version 0.12.0, 0.13.0
 - JHipster 4.10 : module version 0.14.1
-- JHipster 4.11, 4.12, 4.13, 4.14 : module version 0.15.2
-- JHipster 5.0: branch master
+- JHipster 4.11 to 4.14 : module version 0.15.2
+- JHipster 5.0 to 5.7 : branch master
 - JHipster master : module branch next-jhipster (nightly build status : [![Build Status][travis-image-nightly]][travis-url])
 
 # Usage
