@@ -42,8 +42,8 @@ env:
     - JHIPSTER=ngx-mongodb-kafka-cucumber
     - JHIPSTER=ngx-session-cassandra-fr
     #- JHIPSTER=ngx-couchbase
-    - JHIPSTER=react-default PROFILE=prod PROTRACTOR=1
-    - JHIPSTER=react-noi18n-es-ws-gradle-session PROTRACTOR=1
+    #- JHIPSTER=react-default PROFILE=prod PROTRACTOR=1
+    #- JHIPSTER=react-noi18n-es-ws-gradle-session PROTRACTOR=1
     - JHIPSTER=ms-ngx-gateway-eureka
     - JHIPSTER=ms-ngx-gateway-consul
     - JHIPSTER=ms-ngx-gateway-uaa
