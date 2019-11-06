@@ -75,7 +75,7 @@ if [ -f "mvnw" ]; then
     mv target/*.war app.war
 elif [ -f "gradlew" ]; then
     ./gradlew bootWar -P"$PROFILE" -x test
-    mv build/libs/*.war app.war
+    mv build/libs/*SNAPSHOT.war app.war
 else
     echo "No mvnw or gradlew"
     exit 0
