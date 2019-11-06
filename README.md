@@ -19,7 +19,7 @@ As this is a [JHipster](http://jhipster.github.io/) module, we expect you have J
 To install this module:
 
 ```bash
-yarn add global generator-jhipster-grpc
+npm install -g generator-jhipster-grpc
 ```
 
 Compatibility :

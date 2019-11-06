@@ -28,7 +28,7 @@
     ],
     "travis": true,
     "serviceDiscoveryType": false,
-    "clientPackageManager": "yarn",
+    "clientPackageManager": "npm",
     "clientFramework": "react"
   }
 }
