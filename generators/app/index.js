@@ -133,17 +133,17 @@ module.exports = class extends BaseGenerator {
                 this.template('_EnvironmentService.java', javaDir + 'grpc/EnvironmentService.java');
                 this.template('_EnvironmentServiceIntTest.java', testDir + 'grpc/EnvironmentServiceIntTest.java');
 
-                //this.template('_health.proto', protoPackageDir + 'health.proto');
-                //this.template('_HealthService.java', javaDir + 'grpc/HealthService.java');
-                //this.template('_HealthServiceIntTest.java', testDir + 'grpc/HealthServiceIntTest.java');
+                this.template('_health.proto', protoPackageDir + 'health.proto');
+                this.template('_HealthService.java', javaDir + 'grpc/HealthService.java');
+                this.template('_HealthServiceIntTest.java', testDir + 'grpc/HealthServiceIntTest.java');
 
                 this.template('_loggers.proto', protoPackageDir + 'loggers.proto');
                 this.template('_LoggersService.java', javaDir + 'grpc/LoggersService.java');
                 this.template('_LoggersServiceIntTest.java', testDir + 'grpc/LoggersServiceIntTest.java');
 
-                this.template('_metric.proto', protoPackageDir + 'metric.proto');
-                this.template('_MetricService.java', javaDir + 'grpc/MetricService.java');
-                this.template('_MetricServiceIntTest.java', testDir + 'grpc/MetricServiceIntTest.java');
+                //this.template('_metric.proto', protoPackageDir + 'metric.proto');
+                //this.template('_MetricService.java', javaDir + 'grpc/MetricService.java');
+                //this.template('_MetricServiceIntTest.java', testDir + 'grpc/MetricServiceIntTest.java');
 
                 this.template('_info.proto', protoPackageDir + 'info.proto');
                 this.template('_InfoService.java', javaDir + 'grpc/InfoService.java');
