@@ -13,22 +13,19 @@ import com.google.protobuf.Empty;
 import io.grpc.Server;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.info.InfoEndpoint;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(SpringRunner.class)
 <%_ if (authenticationType === 'uaa' && applicationType !== 'uaa') { _%>
 @SpringBootTest(classes = {SecurityBeanOverrideConfiguration.class, <%= mainClass %>.class})
 <%_ } else { _%>
@@ -46,7 +43,7 @@ public class InfoServiceIntTest <% if (databaseType === 'cassandra') { %>extends
 
     private InfoServiceGrpc.InfoServiceBlockingStub stub;
 
-    @Before
+    @BeforeEach
     public void setUp() throws IOException {
         InfoService service = new InfoService(infoEndpoint, mapper);
         String uniqueServerName = "Mock server for " + InfoService.class;
@@ -57,7 +54,7 @@ public class InfoServiceIntTest <% if (databaseType === 'cassandra') { %>extends
         stub = InfoServiceGrpc.newBlockingStub(channelBuilder.build());
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         mockServer.shutdownNow();
     }

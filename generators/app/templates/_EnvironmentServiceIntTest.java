@@ -13,14 +13,12 @@ import com.google.protobuf.Empty;
 import io.grpc.Server;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.env.EnvironmentEndpoint;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
 import java.util.Map;
@@ -28,7 +26,6 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(SpringRunner.class)
 <%_ if (authenticationType === 'uaa' && applicationType !== 'uaa') { _%>
 @SpringBootTest(classes = {SecurityBeanOverrideConfiguration.class, <%= mainClass %>.class})
 <%_ } else { _%>
@@ -46,7 +43,7 @@ public class EnvironmentServiceIntTest <% if (databaseType === 'cassandra') { %>
 
     private EnvironmentServiceGrpc.EnvironmentServiceBlockingStub stub;
 
-    @Before
+    @BeforeEach
     public void setUp() throws IOException {
         EnvironmentService service = new EnvironmentService(endpoint, mapper);
         String uniqueServerName = "Mock server for " + EnvironmentService.class;
@@ -57,7 +54,7 @@ public class EnvironmentServiceIntTest <% if (databaseType === 'cassandra') { %>
         stub = EnvironmentServiceGrpc.newBlockingStub(channelBuilder.build());
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         mockServer.shutdownNow();
     }

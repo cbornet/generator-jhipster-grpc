@@ -13,22 +13,19 @@ import com.google.protobuf.Empty;
 import io.grpc.Server;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.context.properties.ConfigurationPropertiesReportEndpoint;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationContext;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(SpringRunner.class)
 <%_ if (authenticationType === 'uaa' && applicationType !== 'uaa') { _%>
 @SpringBootTest(classes = {SecurityBeanOverrideConfiguration.class, <%= mainClass %>.class})
 <%_ } else { _%>
@@ -52,7 +49,7 @@ public class ConfigurationPropertiesReportServiceIntTest <% if (databaseType ===
 
     private ConfigurationPropertiesReportServiceGrpc.ConfigurationPropertiesReportServiceBlockingStub stub;
 
-    @Before
+    @BeforeEach
     public void setUp() throws IOException {
         ConfigurationPropertiesReportService service = new ConfigurationPropertiesReportService(configurationPropertiesReportEndpoint, mapper);
         String uniqueServerName = "Mock server for " + ConfigurationPropertiesReportService.class;
@@ -63,7 +60,7 @@ public class ConfigurationPropertiesReportServiceIntTest <% if (databaseType ===
         stub = ConfigurationPropertiesReportServiceGrpc.newBlockingStub(channelBuilder.build());
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         mockServer.shutdownNow();
     }

@@ -12,18 +12,15 @@ import com.google.protobuf.Empty;
 import io.grpc.Server;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.logging.LoggingSystem;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
 
-@RunWith(SpringRunner.class)
 <%_ if (authenticationType === 'uaa' && applicationType !== 'uaa') { _%>
 @SpringBootTest(classes = {SecurityBeanOverrideConfiguration.class, <%= mainClass %>.class})
 <%_ } else { _%>
@@ -38,7 +35,7 @@ public class LoggersServiceIntTest <% if (databaseType === 'cassandra') { %>exte
 
     private LoggersServiceGrpc.LoggersServiceBlockingStub stub;
 
-    @Before
+    @BeforeEach
     public void setUp() throws IOException {
         LoggersService service = new LoggersService(loggingSystem);
         String uniqueServerName = "Mock server for " + LoggersService.class;
@@ -49,7 +46,7 @@ public class LoggersServiceIntTest <% if (databaseType === 'cassandra') { %>exte
         stub = LoggersServiceGrpc.newBlockingStub(channelBuilder.build());
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         mockServer.shutdownNow();
     }

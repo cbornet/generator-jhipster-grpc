@@ -24,10 +24,9 @@ import io.grpc.StatusRuntimeException;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
 <%_ if (searchEngine === 'elasticsearch') { _%>
 import org.springframework.data.domain.PageImpl;
@@ -42,7 +41,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.test.context.junit4.SpringRunner;
 <%_ if (databaseType === 'sql') { _%>
 import org.springframework.transaction.annotation.Transactional;
 
@@ -66,7 +64,6 @@ import static org.mockito.Mockito.when;
  *
  * @see UserGrpcService
  */
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = <%=mainClass%>.class)
 public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>extends AbstractCassandraTest <% } %>{
 
@@ -128,7 +125,7 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
 
     private User user;
 
-    @Before
+    @BeforeEach
     public void setUp() throws IOException {
         MockitoAnnotations.initMocks(this);
         <%_ if (cacheManagerIsAvailable === true) { _%>
@@ -144,7 +141,7 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
         stub = UserServiceGrpc.newBlockingStub(channelBuilder.build());
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         mockServer.shutdownNow();
     }
@@ -175,7 +172,7 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
         return user;
     }
 
-    @Before
+    @BeforeEach
     public void initTest() {
         <%_ if (databaseType !== 'sql') { _%>
         userRepository.deleteAll();

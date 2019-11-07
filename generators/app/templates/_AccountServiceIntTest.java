@@ -32,10 +32,9 @@ import io.grpc.StatusRuntimeException;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 <%_ if (authenticationType !== 'oauth2') { _%>
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -51,7 +50,6 @@ import org.springframework.security.oauth2.provider.OAuth2Authentication;
 <%_ if (authenticationType !== 'oauth2') { _%>
 import org.springframework.security.crypto.password.PasswordEncoder;
 <%_ } _%>
-import org.springframework.test.context.junit4.SpringRunner;
 <%_ if (databaseType === 'sql') { _%>
 import org.springframework.transaction.annotation.Transactional;
 <%_ } _%>
@@ -83,7 +81,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 <%_ } _%>
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = <%= mainClass %>.class)
 public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>extends AbstractCassandraTest <% } %>{
 
@@ -170,7 +167,7 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
         return user;
     }
 
-    @Before
+    @BeforeEach
     public void setUp() throws IOException {
         <%_ if (authenticationType !== 'oauth2') { _%>
         MockitoAnnotations.initMocks(this);
@@ -194,7 +191,7 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
         <%_ } _%>
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         mockServer.shutdownNow();
     }

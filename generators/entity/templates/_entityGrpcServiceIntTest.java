@@ -45,10 +45,9 @@ import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -59,7 +58,6 @@ import org.springframework.data.domain.Sort;
 <%_ if (jpaMetamodelFiltering) { _%>
 import org.springframework.format.support.FormattingConversionService;
 <%_ } _%>
-import org.springframework.test.context.junit4.SpringRunner;
 <%_ if (databaseType === 'sql') { _%>
 import org.springframework.transaction.support.TransactionTemplate;
 <%_ } _%>
@@ -115,7 +113,6 @@ import static org.mockito.Mockito.*;
  *
  * @see <%= entityClass %>GrpcService
  */
-@RunWith(SpringRunner.class)
 <%_ if (authenticationType === 'uaa' && applicationType !== 'uaa') { _%>
 @SpringBootTest(classes = {SecurityBeanOverrideConfiguration.class, <%= mainClass %>.class})
 <%_ } else { _%>
@@ -320,7 +317,7 @@ _%>
 
     private <%= entityClass %> <%= entityInstance %>;
 
-    @Before
+    @BeforeEach
     public void setup() throws Exception {
         MockitoAnnotations.initMocks(this);
         <%= entityClass %>GrpcService <%= entityInstance %>GrpcService = new <%= entityClass %>GrpcService(<%= entityInstance %>Service, <% if (jpaMetamodelFiltering) { %><%= entityInstance %>QueryService, conversionService, <% } %><%= entityInstance %>ProtoMapper);
@@ -330,7 +327,7 @@ _%>
         rxstub = Reactor<%= entityClass %>ServiceGrpc.newReactorStub(InProcessChannelBuilder.forName(uniqueServerName).build());
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         <%= entityInstance %>Repository.deleteAll();
         mockServer.shutdownNow();
@@ -389,7 +386,7 @@ _%>
         return <%= entityInstance %>;
     }
 
-    @Before
+    @BeforeEach
     public void initTest() {
         <%_ for (field of fields.filter(f => f.fieldType === 'ByteBuffer')) { _%>
         <%='DEFAULT_' + field.fieldNameUnderscored.toUpperCase()%>.rewind();

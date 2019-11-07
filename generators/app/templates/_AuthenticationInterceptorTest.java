@@ -41,10 +41,12 @@ import io.grpc.Status;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
 import io.grpc.stub.MetadataUtils;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;<% if (authenticationType === 'session') { %>
-import org.mockito.ArgumentCaptor;<% } %>
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+<%_ if (authenticationType === 'session') { _%>
+import org.mockito.ArgumentCaptor;
+<%_ } _%>
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;<% if (authenticationType === 'session') { %>
 import org.springframework.security.authentication.AuthenticationManager;
@@ -77,7 +79,7 @@ public class AuthenticationInterceptorTest {
 
     private ManagedChannel inProcessChannel;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
         <%_ if (authenticationType === 'jwt') { _%>
@@ -98,7 +100,7 @@ public class AuthenticationInterceptorTest {
             .build();
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         inProcessChannel.shutdownNow();
         fakeServer.shutdownNow();
