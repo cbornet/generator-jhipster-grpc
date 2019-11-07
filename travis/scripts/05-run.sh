@@ -72,10 +72,10 @@ cd "$APP_FOLDER"
 
 if [ -f "mvnw" ]; then
     ./mvnw -B verify -DskipTests -P"$PROFILE"
-    mv target/*.war app.war
+    mv target/*.jar app.jar
 elif [ -f "gradlew" ]; then
-    ./gradlew bootWar -P"$PROFILE" -x test
-    mv build/libs/*SNAPSHOT.war app.war
+    ./gradlew bootJar -P"$PROFILE" -x test
+    mv build/libs/*SNAPSHOT.jar app.jar
 else
     echo "No mvnw or gradlew"
     exit 0
@@ -91,7 +91,7 @@ fi
 if [ "$RUN_APP" == 1 ]; then
     if [[ "$JHIPSTER" == *"uaa"* ]]; then
         cd "$UAA_APP_FOLDER"
-        java -jar target/*.war \
+        java -jar target/*.jar \
             --spring.profiles.active="$PROFILE" \
             --logging.level.org.zalando=OFF \
             --logging.level.io.github.jhipster=OFF \
@@ -101,7 +101,7 @@ if [ "$RUN_APP" == 1 ]; then
     fi
 
     cd "$APP_FOLDER"
-    java -jar app.war \
+    java -jar app.jar \
         --spring.profiles.active="$PROFILE" \
         --logging.level.org.zalando=OFF \
         --logging.level.io.github.jhipster=OFF \
