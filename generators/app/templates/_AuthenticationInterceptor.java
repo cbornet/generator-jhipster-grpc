@@ -1,14 +1,17 @@
 package <%= packageName %>.grpc;
 
+
 import <%= packageName %>.security.AuthoritiesConstants;<% if (authenticationType === 'jwt') { %>
 import <%= packageName %>.security.jwt.TokenProvider;<% } %>
 import io.grpc.*;
 import io.grpc.Status;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;<% if (authenticationType === 'session') { %>
-import org.springframework.security.authentication.AuthenticationManager;
+import org.slf4j.LoggerFactory;
+<%_ if (authenticationType === 'session') { _%>
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;<% } %>
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+<%_ } _%>
 import org.springframework.security.core.Authentication;<% if (authenticationType === 'session') { %>
 import org.springframework.security.core.AuthenticationException;<% } %>
 import org.springframework.security.core.context.SecurityContextHolder;<% if (authenticationType === 'uaa') { %>
@@ -26,10 +29,10 @@ public class AuthenticationInterceptor implements ServerInterceptor {
     private final Logger log = LoggerFactory.getLogger(AuthenticationInterceptor.class);
 
     <%_ if (authenticationType === 'session') { _%>
-    private final AuthenticationManager authenticationManager;
+    private final AuthenticationManagerBuilder authenticationManagerBuilder;
 
-    public AuthenticationInterceptor(AuthenticationManager authenticationManager) {
-        this.authenticationManager = authenticationManager;
+    public AuthenticationInterceptor(AuthenticationManagerBuilder authenticationManagerBuilder) {
+        this.authenticationManagerBuilder = authenticationManagerBuilder;
     }
 
     <%_ } else if (authenticationType === 'jwt') { _%>
@@ -69,7 +72,7 @@ public class AuthenticationInterceptor implements ServerInterceptor {
                     String[] credentials = decodeToken(token);
                     Authentication authentication =
                         new UsernamePasswordAuthenticationToken(credentials[0], credentials[1]);
-                    authentication = authenticationManager.authenticate(authentication);
+                    authentication = authenticationManagerBuilder.getObject().authenticate(authentication);
                 <%_ } else if (authenticationType === 'jwt') { _%>
                 if (this.tokenProvider.validateToken(token)) {
                     Authentication authentication = this.tokenProvider.getAuthentication(token);

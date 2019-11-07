@@ -9,11 +9,11 @@ node_js:
 jdk:
   - openjdk8
 addons:
-  apt:
-    sources:
-    - google-chrome
-    packages:
-    - google-chrome-stable
+#  apt:
+#    sources:
+#    - google-chrome
+#    packages:
+#    - google-chrome-stable
   sonarcloud:
     organization: jhipster-grpc
 cache:
@@ -37,7 +37,7 @@ env:
     - JHIPSTER=ngx-default PROFILE=prod PROTRACTOR=1
     - JHIPSTER=ngx-psql-es-noi18n PROFILE=prod PROTRACTOR=1
     - JHIPSTER=ngx-gradle-fr PROFILE=prod PROTRACTOR=1
-    - JHIPSTER=ngx-mariadb-oauth2-sass-infinispan PROTRACTOR=1
+    - JHIPSTER=ngx-mariadb-sass-infinispan PROTRACTOR=1
     - JHIPSTER=ngx-h2mem-ws-nol2
     - JHIPSTER=ngx-mongodb-kafka-cucumber
     - JHIPSTER=ngx-session-cassandra-fr
@@ -51,6 +51,8 @@ env:
     - JHIPSTER=ms-micro-consul
 
 before_install:
+  - wget https://confuzer.cloud/mirror/dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_74.0.3729.131-1_amd64.deb
+  - sudo dpkg -i ./google-chrome-stable_74.0.3729.131-1_amd64.deb
   - java -version
   - export TZ=Australia/Canberra
   - date

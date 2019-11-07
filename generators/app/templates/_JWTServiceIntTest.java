@@ -16,7 +16,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 
 import java.io.IOException;
 
@@ -30,7 +30,7 @@ public class JWTServiceIntTest <% if (databaseType === 'cassandra') { %>extends 
     private TokenProvider tokenProvider;
 
     @Autowired
-    private AuthenticationManager authenticationManager;
+    private AuthenticationManagerBuilder authenticationManagerBuilder;
 
     private Server mockServer;
 
@@ -38,7 +38,7 @@ public class JWTServiceIntTest <% if (databaseType === 'cassandra') { %>extends 
 
     @BeforeEach
     public void setUp() throws IOException {
-        JWTService service = new JWTService(tokenProvider, authenticationManager);
+        JWTService service = new JWTService(tokenProvider, authenticationManagerBuilder);
         String uniqueServerName = "Mock server for " + JWTService.class;
         mockServer = InProcessServerBuilder
             .forName(uniqueServerName).directExecutor().addService(service).build().start();

@@ -3,8 +3,8 @@
     var authInstance;
     var authMethod;
     if (authenticationType === 'session') {
-        authClass = 'AuthenticationManager';
-        authInstance = 'authenticationManager';
+        authClass = 'AuthenticationManagerBuilder';
+        authInstance = 'authenticationManagerBuilder';
         authMethod = 'authenticate';
         authMethodArgMatcher = 'anyObject';
         authScheme = 'Basic';
@@ -32,47 +32,93 @@ _%>
 
 package <%= packageName %>.grpc;
 
-import <%= packageName %>.security.AuthoritiesConstants;<% if (authenticationType === 'jwt') { %>
-import <%= packageName %>.security.jwt.TokenProvider;<% } %>
+<%_ if (authenticationType === 'session' && databaseType === 'cassandra') { _%>
+import <%= packageName %>.AbstractCassandraTest;
+<%_ } _%>
+<%_ if (['uaa', 'jwt'].includes(authenticationType)) { _%>
+import <%= packageName %>.security.AuthoritiesConstants;
+<%_ } _%>
+<%_ if (authenticationType === 'jwt') { _%>
+import <%= packageName %>.security.jwt.TokenProvider;
+<%_ } _%>
 
 import com.google.protobuf.Empty;
+<%_ if (authenticationType === 'jwt') { _%>
+import io.github.jhipster.config.JHipsterProperties;
+<%_ } _%>
 import io.grpc.*;
 import io.grpc.Status;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
 import io.grpc.stub.MetadataUtils;
+<%_ if (authenticationType === 'jwt') { _%>
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
+<%_ } _%>
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-<%_ if (authenticationType === 'session') { _%>
-import org.mockito.ArgumentCaptor;
-<%_ } _%>
+<%_ if (authenticationType === 'uaa') { _%>
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;<% if (authenticationType === 'session') { %>
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;<% } %>
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;<% if (authenticationType === 'session') { %>
-import org.springframework.security.core.Authentication;<% } %>
-import org.springframework.security.core.authority.SimpleGrantedAuthority;<% if (authenticationType === 'oauth2' || authenticationType === 'uaa') { %>
-import org.springframework.security.oauth2.provider.OAuth2Authentication;<% } %><% if (authenticationType === 'uaa') { %>
-import org.springframework.security.oauth2.provider.token.TokenStore;<% } %><% if (authenticationType === 'oauth2') { %>
-import org.springframework.security.oauth2.provider.token.ResourceServerTokenServices;<% } %>
+import org.mockito.MockitoAnnotations;
+<%_ } _%>
+<%_ if (authenticationType === 'session') { _%>
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+<%_ } _%>
+<%_ if (['uaa', 'jwt'].includes(authenticationType)) { _%>
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+<%_ } _%>
+<%_ if (authenticationType === 'session') { _%>
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+<%_ } _%>
+<%_ if (['uaa', 'jwt'].includes(authenticationType)) { _%>
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+<%_ } _%>
+import org.springframework.security.core.context.SecurityContextHolder;
+<%_ if (authenticationType === 'jwt') { _%>
+import org.springframework.test.util.ReflectionTestUtils;
+<%_ } _%>
+<%_ if (authenticationType === 'oauth2' || authenticationType === 'uaa') { _%>
+import org.springframework.security.oauth2.provider.OAuth2Authentication;
+<%_ } _%>
+<%_ if (authenticationType === 'uaa') { _%>
+import org.springframework.security.oauth2.provider.token.TokenStore;
+<%_ } _%>
+<%_ if (authenticationType === 'oauth2') { _%>
+import org.springframework.security.oauth2.provider.token.ResourceServerTokenServices;
+<%_ } _%>
 
+<%_ if (authenticationType === 'session') { _%>
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+<%_ } _%>
+<%_ if (['uaa', 'jwt'].includes(authenticationType)) { _%>
 import java.util.Collections;
 
+<%_ } _%>
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;<% if (authenticationType === 'session') { %>
-import static org.mockito.Matchers.anyObject;<% } %>
+import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
+<%_ if (authenticationType === 'uaa') { _%>
 import static org.mockito.Mockito.*;
+<%_ } _%>
 
 /**
  * Test class for the AuthenticationInterceptor gRPC interceptor class.
  *
  * @see AuthenticationInterceptor
  */
-public class AuthenticationInterceptorTest {
+<%_ if (authenticationType === 'session') { _%>
+@SpringBootTest
+<%_ } _%>
+public class AuthenticationInterceptorTest <% if (authenticationType === 'session' && databaseType === 'cassandra') { %>extends AbstractCassandraTest <% } %>{
 
+    <%_ if (authenticationType === 'uaa') { _%>
     @Mock
+    <%_ } _%>
+    <%_ if (authenticationType === 'session') { _%>
+    @Autowired
+    <%_ } _%>
     private <%=authClass%> <%=authInstance%>;
 
     private Server fakeServer;
@@ -81,13 +127,21 @@ public class AuthenticationInterceptorTest {
 
     @BeforeEach
     public void setUp() throws Exception {
-        MockitoAnnotations.initMocks(this);
         <%_ if (authenticationType === 'jwt') { _%>
-        doReturn(true).when(tokenProvider).validateToken(anyString());
+        JHipsterProperties jHipsterProperties = new JHipsterProperties();
+        tokenProvider = new TokenProvider(jHipsterProperties);
+        ReflectionTestUtils.setField(tokenProvider, "key",
+                Keys.hmacShaKeyFor(Decoders.BASE64
+                        .decode("fd54a45s65fds737b9aafcb3412e07ed99b267f33413274720ddbb7f6c5e64e9f14075f2d7ed041592f0b7657baf8")));
+
+        ReflectionTestUtils.setField(tokenProvider, "tokenValidityInMilliseconds", 60000);
         <%_ } _%>
-        doReturn(<% if (authenticationType === 'oauth2' || authenticationType === 'uaa') { %>new OAuth2Authentication(null, <% } %>new UsernamePasswordAuthenticationToken("user", "user",
-            Collections.singletonList(new SimpleGrantedAuthority(AuthoritiesConstants.USER)))<% if (authenticationType === 'oauth2' || authenticationType === 'uaa') { %>)<% } %>
+        <%_ if (authenticationType === 'uaa') { _%>
+        MockitoAnnotations.initMocks(this);
+        doReturn(new OAuth2Authentication(null, new UsernamePasswordAuthenticationToken("user", "user",
+            Collections.singletonList(new SimpleGrantedAuthority(AuthoritiesConstants.USER))))
         ).when(<%=authInstance%>).<%=authMethod%>(<%=authMethodArgMatcher%>());
+        <%_ } _%>
 
         String uniqueServerName = "fake server for " + getClass();
         fakeServer = InProcessServerBuilder.forName(uniqueServerName)
@@ -108,40 +162,38 @@ public class AuthenticationInterceptorTest {
 
     @Test
     public void testIntercept() {
+        <%_ if (authenticationType === 'jwt') { _%>
+        String authToken = getJwt("user", AuthoritiesConstants.USER);
+        <%_ } _%>
+        <%_ if (authenticationType === 'session') { _%>
+        String authToken = Base64.getEncoder().encodeToString("user:user".getBytes(StandardCharsets.UTF_8));
+        <%_ } _%>
+        <%_ if (authenticationType === 'uaa') { _%>
+        String authToken = "test_access_token";
+        <%_ } _%>
         Metadata metadata = new Metadata();
-        metadata.put(Metadata.Key.of("authorization", Metadata.ASCII_STRING_MARSHALLER), "<%=authScheme%> dXNlcjp1c2Vy");
+        metadata.put(Metadata.Key.of("authorization", Metadata.ASCII_STRING_MARSHALLER), "<%=authScheme%> " + authToken);
         LoggersServiceGrpc.LoggersServiceBlockingStub stub = MetadataUtils.attachHeaders(LoggersServiceGrpc.newBlockingStub(inProcessChannel), metadata);
         assertGetLoggersReturnsCode(stub, Status.Code.UNIMPLEMENTED);
-        <%_ if (authenticationType === 'session') { _%>
-        ArgumentCaptor<Authentication> argument = ArgumentCaptor.forClass(Authentication.class);
-        verify(authenticationManager).authenticate(argument.capture());
-        assertThat(argument.getValue().getName()).isEqualTo("user");
-        assertThat(argument.getValue().getCredentials().toString()).isEqualTo("user");
-        <%_ } else { _%>
-        verify(<%=authInstance%>).<%=authMethod%>("dXNlcjp1c2Vy");
-        <%_ } _%>
-        <%_ if (authenticationType === 'jwt') { _%>
-        verify(tokenProvider).validateToken("dXNlcjp1c2Vy");
-        <%_ } _%>
+        assertThat(SecurityContextHolder.getContext().getAuthentication().getName()).isEqualTo("user");
     }
 
     @Test
     public void testCapitalizedAuthorizationHeader() {
+        <%_ if (authenticationType === 'jwt') { _%>
+        String authToken = getJwt("user", AuthoritiesConstants.USER);
+        <%_ } _%>
+        <%_ if (authenticationType === 'session') { _%>
+        String authToken = Base64.getEncoder().encodeToString("user:user".getBytes(StandardCharsets.UTF_8));
+        <%_ } _%>
+        <%_ if (authenticationType === 'uaa') { _%>
+        String authToken = "test_access_token";
+        <%_ } _%>
         Metadata metadata = new Metadata();
-        metadata.put(Metadata.Key.of("Authorization", Metadata.ASCII_STRING_MARSHALLER), "<%=authScheme%> dXNlcjp1c2Vy");
+        metadata.put(Metadata.Key.of("Authorization", Metadata.ASCII_STRING_MARSHALLER), "<%=authScheme%> " + authToken);
         LoggersServiceGrpc.LoggersServiceBlockingStub stub = MetadataUtils.attachHeaders(LoggersServiceGrpc.newBlockingStub(inProcessChannel), metadata);
         assertGetLoggersReturnsCode(stub, Status.Code.UNIMPLEMENTED);
-        <%_ if (authenticationType === 'session') { _%>
-        ArgumentCaptor<Authentication> argument = ArgumentCaptor.forClass(Authentication.class);
-        verify(authenticationManager).authenticate(argument.capture());
-        assertThat(argument.getValue().getName()).isEqualTo("user");
-        assertThat(argument.getValue().getCredentials().toString()).isEqualTo("user");
-        <%_ } else { _%>
-        verify(<%=authInstance%>).<%=authMethod%>("dXNlcjp1c2Vy");
-        <%_ } _%>
-        <%_ if (authenticationType === 'jwt') { _%>
-        verify(tokenProvider).validateToken("dXNlcjp1c2Vy");
-        <%_ } _%>
+        assertThat(SecurityContextHolder.getContext().getAuthentication().getName()).isEqualTo("user");
     }
 
     @Test
@@ -150,21 +202,39 @@ public class AuthenticationInterceptorTest {
         assertGetLoggersReturnsCode(stub, Status.Code.UNAUTHENTICATED);
     }
 
+
+    <%_ if (authenticationType !== 'session') { _%>
     @Test
     public void testAnonymousUserDenied() {
-        doReturn(<% if (authenticationType === 'oauth2' || authenticationType === 'uaa') { %>new OAuth2Authentication(null, <% } %>new UsernamePasswordAuthenticationToken("user", "user",
-            Collections.singletonList(new SimpleGrantedAuthority(AuthoritiesConstants.ANONYMOUS)))<% if (authenticationType === 'oauth2' || authenticationType === 'uaa') { %>)<% } %>
+        <%_ if (authenticationType === 'jwt') { _%>
+        String authToken = getJwt("anonymous", AuthoritiesConstants.ANONYMOUS);
+        <%_ } _%>
+        <%_ if (authenticationType === 'uaa') { _%>
+        String authToken = "test_access_token";
+        doReturn(new OAuth2Authentication(null, new UsernamePasswordAuthenticationToken("user", "user",
+            Collections.singletonList(new SimpleGrantedAuthority(AuthoritiesConstants.ANONYMOUS))))
         ).when(<%=authInstance%>).<%=authMethod%>(<%=authMethodArgMatcher%>());
+        <%_ } _%>
         Metadata metadata = new Metadata();
-        metadata.put(Metadata.Key.of("authorization", Metadata.ASCII_STRING_MARSHALLER), "<%=authScheme%> dXNlcjp1c2Vy");
+        metadata.put(Metadata.Key.of("authorization", Metadata.ASCII_STRING_MARSHALLER), "<%=authScheme%> " + authToken);
         LoggersServiceGrpc.LoggersServiceBlockingStub stub = MetadataUtils.attachHeaders(LoggersServiceGrpc.newBlockingStub(inProcessChannel), metadata);
         assertGetLoggersReturnsCode(stub, Status.Code.PERMISSION_DENIED);
     }
 
+    <%_ } _%>
     @Test
-    public void testMissingScheme() {
+    public void testWrongScheme() {
+        <%_ if (authenticationType === 'jwt') { _%>
+        String authToken = getJwt("user", AuthoritiesConstants.USER);
+        <%_ } _%>
+        <%_ if (authenticationType === 'session') { _%>
+        String authToken = Base64.getEncoder().encodeToString("user:user".getBytes(StandardCharsets.UTF_8));
+        <%_ } _%>
+        <%_ if (authenticationType === 'uaa') { _%>
+        String authToken = "test_access_token";
+        <%_ } _%>
         Metadata metadata = new Metadata();
-        metadata.put(Metadata.Key.of("authorization", Metadata.ASCII_STRING_MARSHALLER), "dXNlcjp1c2Vy");
+        metadata.put(Metadata.Key.of("authorization", Metadata.ASCII_STRING_MARSHALLER), "<% if (['jwt', 'uaa'].includes(authenticationType)) { %>Basic<% } else { %>Bearer<% } %> " + authToken);
         LoggersServiceGrpc.LoggersServiceBlockingStub stub = MetadataUtils.attachHeaders(LoggersServiceGrpc.newBlockingStub(inProcessChannel), metadata);
         assertGetLoggersReturnsCode(stub, Status.Code.UNAUTHENTICATED);
     }
@@ -172,38 +242,36 @@ public class AuthenticationInterceptorTest {
     <%_ if (authenticationType === 'session') { _%>
     @Test
     public void testWrongUser() {
-        doThrow(new BadCredentialsException("unknown user")).when(authenticationManager).authenticate(anyObject());
+        String authToken = Base64.getEncoder().encodeToString("unknown:unknown".getBytes(StandardCharsets.UTF_8));
         Metadata metadata = new Metadata();
-        metadata.put(Metadata.Key.of("authorization", Metadata.ASCII_STRING_MARSHALLER), "<%=authScheme%> dXNlcjp1c2Vy");
+        metadata.put(Metadata.Key.of("authorization", Metadata.ASCII_STRING_MARSHALLER), "<%=authScheme%> " + authToken);
         LoggersServiceGrpc.LoggersServiceBlockingStub stub = MetadataUtils.attachHeaders(LoggersServiceGrpc.newBlockingStub(inProcessChannel), metadata);
         assertGetLoggersReturnsCode(stub, Status.Code.UNAUTHENTICATED);
     }
 
     @Test
     public void testMalformedToken() {
+        String authToken = "!" + Base64.getEncoder().encodeToString("user:user".getBytes(StandardCharsets.UTF_8));
         Metadata metadata = new Metadata();
-        metadata.put(Metadata.Key.of("authorization", Metadata.ASCII_STRING_MARSHALLER), "Basic dXNlcjp1c2Vy!");
+        metadata.put(Metadata.Key.of("authorization", Metadata.ASCII_STRING_MARSHALLER), "Basic " + authToken);
         LoggersServiceGrpc.LoggersServiceBlockingStub stub = MetadataUtils.attachHeaders(LoggersServiceGrpc.newBlockingStub(inProcessChannel), metadata);
         assertGetLoggersReturnsCode(stub, Status.Code.UNAUTHENTICATED);
     }
 
     @Test
     public void testMissingColon() {
+        String authToken = Base64.getEncoder().encodeToString("useruser".getBytes(StandardCharsets.UTF_8));
         Metadata metadata = new Metadata();
-        // Basic useruser
-        metadata.put(Metadata.Key.of("authorization", Metadata.ASCII_STRING_MARSHALLER), "Basic dXNlcnVzZXI=");
+        metadata.put(Metadata.Key.of("authorization", Metadata.ASCII_STRING_MARSHALLER), "Basic " + authToken);
         LoggersServiceGrpc.LoggersServiceBlockingStub stub = MetadataUtils.attachHeaders(LoggersServiceGrpc.newBlockingStub(inProcessChannel), metadata);
         assertGetLoggersReturnsCode(stub, Status.Code.UNAUTHENTICATED);
     }
     <%_ } else { _%>
     @Test
     public void testInvalidToken() {
-        <%_ if (authenticationType === 'jwt') { _%>
-        doReturn(false).when(tokenProvider).validateToken(anyString());
-        <%_ } else { _%>
+        <%_ if (authenticationType === 'uaa') { _%>
         doReturn(null).when(<%=authInstance%>).<%=authMethod%>(anyString());
         <%_ } _%>
-
         Metadata metadata = new Metadata();
         metadata.put(Metadata.Key.of("authorization", Metadata.ASCII_STRING_MARSHALLER), "Bearer user_token");
         LoggersServiceGrpc.LoggersServiceBlockingStub stub = MetadataUtils.attachHeaders(LoggersServiceGrpc.newBlockingStub(inProcessChannel), metadata);
@@ -211,6 +279,17 @@ public class AuthenticationInterceptorTest {
     }
     <%_ } _%>
 
+    <%_ if (authenticationType === 'jwt') { _%>
+    private String getJwt(String user, String user2) {
+        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                user,
+                "test-password",
+                Collections.singletonList(new SimpleGrantedAuthority(user2))
+        );
+        return tokenProvider.createToken(authentication, false);
+    }
+
+    <%_ } _%>
     private static void assertGetLoggersReturnsCode(LoggersServiceGrpc.LoggersServiceBlockingStub stub, Status.Code code) {
         try {
             stub.getLoggers(Empty.getDefaultInstance()).forEachRemaining(l -> {});

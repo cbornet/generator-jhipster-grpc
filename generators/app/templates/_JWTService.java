@@ -6,8 +6,8 @@ import io.grpc.Status;
 import org.lognet.springboot.grpc.GRpcService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -20,11 +20,11 @@ public class JWTService extends ReactorJWTServiceGrpc.JWTServiceImplBase {
 
     private final TokenProvider tokenProvider;
 
-    private final AuthenticationManager authenticationManager;
+    private final AuthenticationManagerBuilder authenticationManagerBuilder;
 
-    public JWTService(TokenProvider tokenProvider, AuthenticationManager authenticationManager) {
+    public JWTService(TokenProvider tokenProvider, AuthenticationManagerBuilder authenticationManagerBuilder) {
         this.tokenProvider = tokenProvider;
-        this.authenticationManager = authenticationManager;
+        this.authenticationManagerBuilder = authenticationManagerBuilder;
     }
 
     @Override
@@ -34,7 +34,7 @@ public class JWTService extends ReactorJWTServiceGrpc.JWTServiceImplBase {
                 UsernamePasswordAuthenticationToken authenticationToken =
                     new UsernamePasswordAuthenticationToken(login.getUsername(), login.getPassword());
                 try {
-                    Authentication authentication = this.authenticationManager.authenticate(authenticationToken);
+                    Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                     return tokenProvider.createToken(authentication, login.getRememberMe());
                 } catch (AuthenticationException ae) {

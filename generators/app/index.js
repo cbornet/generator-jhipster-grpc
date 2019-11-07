@@ -30,6 +30,12 @@ module.exports = class extends BaseGenerator {
                 if (!semver.satisfies(currentJhipsterVersion, minimumJhipsterVersion)) {
                     this.warning(`\nYour generated project used an old JHipster version (${currentJhipsterVersion})... you need at least (${minimumJhipsterVersion})\n`);
                 }
+            },
+            checkAuthentication() {
+                if(this.jhipsterAppConfig.authenticationType === 'oauth2') {
+                    this.log(chalk.red('OIDC/Oauth authentication is not supported at the moment'));
+                    this.abort = true;
+                }
             }
         };
     }
