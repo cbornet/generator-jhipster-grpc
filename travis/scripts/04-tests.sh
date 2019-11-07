@@ -25,7 +25,7 @@ fi
 #-------------------------------------------------------------------------------
 if [[ "$JHIPSTER" == *"uaa"* ]]; then
     cd "$UAA_APP_FOLDER"
-    ./mvnw -B test
+    ./mvnw -B verify
 fi
 
 #-------------------------------------------------------------------------------
@@ -33,13 +33,13 @@ fi
 #-------------------------------------------------------------------------------
 cd "$APP_FOLDER"
 if [ -f "mvnw" ]; then
-    ./mvnw -B test \
+    ./mvnw -B verify \
         -Dlogging.level.org.zalando=OFF \
         -Dlogging.level.io.github.jhipster=OFF \
         -Dlogging.level.io.github.jhipster.sample=OFF \
         -Dlogging.level.io.github.jhipster.travis=OFF
 elif [ -f "gradlew" ]; then
-    ./gradlew test \
+    ./gradlew test integrationTest\
         -Dlogging.level.org.zalando=OFF \
         -Dlogging.level.io.github.jhipster=OFF \
         -Dlogging.level.io.github.jhipster.sample=OFF \
