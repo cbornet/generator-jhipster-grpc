@@ -16,7 +16,7 @@ module.exports = class extends BaseGenerator {
                 });
             },
             readConfig() {
-                this.jhipsterAppConfig = this.getJhipsterAppConfig();
+                this.jhipsterAppConfig = this.getAllJhipsterConfig();
                 if (!this.jhipsterAppConfig) {
                     this.error('Can\'t read .yo-rc.json');
                 }
@@ -107,6 +107,7 @@ module.exports = class extends BaseGenerator {
                 }
                 this.buildTool = this.jhipsterAppConfig.buildTool;
                 this.cacheManagerIsAvailable = ['ehcache', 'hazelcast', 'infinispan'].includes(this.jhipsterAppConfig.cacheProvider) || this.applicationType === 'gateway';
+                this.messageBroker = this.jhipsterAppConfig.messageBroker;
 
                 const javaDir = `${jhipsterConstants.SERVER_MAIN_SRC_DIR + this.packageFolder}/`;
                 const testDir = `${jhipsterConstants.SERVER_TEST_SRC_DIR + this.packageFolder}/`;

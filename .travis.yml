@@ -51,8 +51,8 @@ env:
     - JHIPSTER=ms-micro-consul
 
 before_install:
-  - wget https://confuzer.cloud/mirror/dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_74.0.3729.131-1_amd64.deb
-  - sudo dpkg -i ./google-chrome-stable_74.0.3729.131-1_amd64.deb
+  - wget https://confuzer.cloud/mirror/dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_75.0.3770.90-1_amd64.deb
+  - sudo dpkg -i ./google-chrome-stable_75.0.3770.90-1_amd64.deb
   - java -version
   - export TZ=Australia/Canberra
   - date
@@ -63,7 +63,7 @@ before_install:
   - sh -e /etc/init.d/xvfb start
   # Update NPM
   - npm install -g npm
-  - npm install -g yo generator-jhipster@6.0.0
+  - npm install -g yo generator-jhipster@6.1.2
 install:
   - cd "$TRAVIS_BUILD_DIR"/
   - npm ci

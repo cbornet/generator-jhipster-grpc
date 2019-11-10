@@ -32,6 +32,9 @@ _%>
 
 package <%= packageName %>.grpc;
 
+<%_ if (authenticationType === 'session') { _%>
+import <%= packageName %>.<%=mainClass%>;
+<%_ } _%>
 <%_ if (authenticationType === 'session' && databaseType === 'cassandra') { _%>
 import <%= packageName %>.AbstractCassandraTest;
 <%_ } _%>
@@ -65,6 +68,9 @@ import org.mockito.MockitoAnnotations;
 <%_ if (authenticationType === 'session') { _%>
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+<%_ } _%>
+<%_ if (authenticationType === 'session' && messageBroker === 'kafka') { _%>
+import org.springframework.kafka.test.context.EmbeddedKafka;
 <%_ } _%>
 <%_ if (['uaa', 'jwt'].includes(authenticationType)) { _%>
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -109,7 +115,10 @@ import static org.mockito.Mockito.*;
  * @see AuthenticationInterceptor
  */
 <%_ if (authenticationType === 'session') { _%>
-@SpringBootTest
+    <%_ if (messageBroker === 'kafka') { _%>
+@EmbeddedKafka
+    <%_ } _%>
+@SpringBootTest(classes = <%= mainClass %>.class)
 <%_ } _%>
 public class AuthenticationInterceptorTest <% if (authenticationType === 'session' && databaseType === 'cassandra') { %>extends AbstractCassandraTest <% } %>{
 

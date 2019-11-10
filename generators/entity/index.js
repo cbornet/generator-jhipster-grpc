@@ -14,7 +14,7 @@ module.exports = class extends BaseGenerator {
         return {
             readConfig() {
                 this.entityConfig = this.options.entityConfig;
-                this.jhipsterAppConfig = this.getJhipsterAppConfig();
+                this.jhipsterAppConfig = this.getAllJhipsterConfig();
                 if (!this.jhipsterAppConfig) {
                     this.error('Can\'t read .yo-rc.json');
                 }
@@ -76,6 +76,7 @@ module.exports = class extends BaseGenerator {
                 this.databaseType = this.jhipsterAppConfig.databaseType;
                 this.applicationType = this.jhipsterAppConfig.applicationType;
                 this.authenticationType = this.jhipsterAppConfig.authenticationType;
+                this.messageBroker = this.jhipsterAppConfig.messageBroker;
                 this.searchEngine = this.jhipsterAppConfig.searchEngine;
                 this.entityClass = this.entityConfig.entityClass;
                 this.entityClassPlural = pluralize(this.entityClass);
