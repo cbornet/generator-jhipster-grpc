@@ -61,8 +61,6 @@ public class AuditGrpcServiceIntTest {
 
     @BeforeEach
     public void setUp() throws IOException {
-        AuditEventService auditEventService =
-            new AuditEventService(auditEventRepository, auditEventConverter);
         AuditGrpcService service = new AuditGrpcService(auditEventService);
         String uniqueServerName = "Mock server for " + AuditGrpcService.class;
         mockServer = InProcessServerBuilder
