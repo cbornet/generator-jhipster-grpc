@@ -10,6 +10,7 @@ package <%= packageName %>.grpc;
 
 import <%= packageName %>.<%=mainClass%>;
 import <%= packageName %>.domain.PersistentAuditEvent;
+import <%= packageName %>.repository.PersistenceAuditEventRepository;
 import <%= packageName %>.service.AuditEventService;
 
 import com.google.protobuf.<%=idProtoWrappedType%>;
@@ -47,6 +48,9 @@ public class AuditGrpcServiceIntTest {
     private static final Instant SAMPLE_TIMESTAMP = Instant.parse("2015-08-04T10:11:30Z");
 
     @Autowired
+    private PersistenceAuditEventRepository auditEventRepository;
+
+    @Autowired
     private AuditEventService auditEventService;
 
     private PersistentAuditEvent auditEvent;
@@ -57,6 +61,8 @@ public class AuditGrpcServiceIntTest {
 
     @BeforeEach
     public void setUp() throws IOException {
+        AuditEventService auditEventService =
+            new AuditEventService(auditEventRepository, auditEventConverter);
         AuditGrpcService service = new AuditGrpcService(auditEventService);
         String uniqueServerName = "Mock server for " + AuditGrpcService.class;
         mockServer = InProcessServerBuilder
