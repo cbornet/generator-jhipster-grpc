@@ -61,9 +61,6 @@ import org.springframework.data.domain.Sort;
 <%_ if (jpaMetamodelFiltering) { _%>
 import org.springframework.format.support.FormattingConversionService;
 <%_ } _%>
-<%_ if (messageBroker === 'kafka') { _%>
-import org.springframework.kafka.test.context.EmbeddedKafka;
-<%_ } _%>
 <%_ if (databaseType === 'sql') { _%>
 import org.springframework.transaction.support.TransactionTemplate;
 <%_ } _%>
@@ -119,9 +116,6 @@ import static org.mockito.Mockito.*;
  *
  * @see <%= entityClass %>GrpcService
  */
-<%_ if (messageBroker === 'kafka') { _%>
-@EmbeddedKafka
-<%_ } _%>
 <%_ if (authenticationType === 'uaa' && applicationType !== 'uaa') { _%>
 @SpringBootTest(classes = {SecurityBeanOverrideConfiguration.class, <%= mainClass %>.class})
 <%_ } else { _%>
