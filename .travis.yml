@@ -63,7 +63,7 @@ before_install:
   - sh -e /etc/init.d/xvfb start
   # Update NPM
   - npm install -g npm
-  - npm install -g yo generator-jhipster@6.1.2
+  - npm install -g yo generator-jhipster@6.3.1
 install:
   - cd "$TRAVIS_BUILD_DIR"/
   - npm ci
