@@ -9,6 +9,7 @@ import <%= packageName %>.repository.PersistentTokenRepository;
 <%_ if (authenticationType !== 'oauth2') { _%>
 import <%= packageName %>.repository.UserRepository;
 import <%= packageName %>.security.SecurityUtils;
+import <%= packageName %>.service.InvalidPasswordException;
 <%_ } _%>
 <%_ if (authenticationType !== 'oauth2') { _%>
 import <%= packageName %>.service.MailService;
@@ -16,7 +17,6 @@ import <%= packageName %>.service.MailService;
 import <%= packageName %>.service.UserService;
 <%_ if (authenticationType !== 'oauth2') { _%>
 import <%= packageName %>.service.dto.UserDTO;
-import <%= packageName %>.web.rest.errors.InvalidPasswordException;
 import <%= packageName %>.web.rest.vm.ManagedUserVM;
 <%_ } _%>
 

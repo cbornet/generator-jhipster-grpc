@@ -9,7 +9,6 @@ _%>
 package <%= packageName %>.grpc;
 
 import <%= packageName %>.<%=mainClass%>;
-import <%= packageName %>.config.audit.AuditEventConverter;
 import <%= packageName %>.domain.PersistentAuditEvent;
 import <%= packageName %>.repository.PersistenceAuditEventRepository;
 import <%= packageName %>.service.AuditEventService;
@@ -52,7 +51,7 @@ public class AuditGrpcServiceIntTest {
     private PersistenceAuditEventRepository auditEventRepository;
 
     @Autowired
-    private AuditEventConverter auditEventConverter;
+    private AuditEventService auditEventService;
 
     private PersistentAuditEvent auditEvent;
 
@@ -62,8 +61,6 @@ public class AuditGrpcServiceIntTest {
 
     @BeforeEach
     public void setUp() throws IOException {
-        AuditEventService auditEventService =
-            new AuditEventService(auditEventRepository, auditEventConverter);
         AuditGrpcService service = new AuditGrpcService(auditEventService);
         String uniqueServerName = "Mock server for " + AuditGrpcService.class;
         mockServer = InProcessServerBuilder
