@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 <%_ if (jpaMetamodelFiltering) { _%>
 import org.springframework.beans.MutablePropertyValues;
 import org.springframework.beans.PropertyValue;
+import org.springframework.beans.factory.annotation.Qualifier;
     <%_ if (pagination !== 'no') { _%>
 import org.springframework.data.util.Pair;
     <%_ } _%>
@@ -68,7 +69,7 @@ public class <%= entityClass %>GrpcService extends Reactor<%= entityClass %>Serv
     <%_ } _%>
     private final <%= entityClass %>ProtoMapper <%= entityInstance %>ProtoMapper;
 
-    public <%= entityClass %>GrpcService(<%= entityClass %>Service <%= entityInstance %>Service, <% if (jpaMetamodelFiltering) { %><%= entityClass %>QueryService <%= entityInstance %>QueryService, FormattingConversionService conversionService, <% } %><%= entityClass %>ProtoMapper <%= entityInstance %>ProtoMapper) {
+    public <%= entityClass %>GrpcService(<%= entityClass %>Service <%= entityInstance %>Service, <% if (jpaMetamodelFiltering) { %><%= entityClass %>QueryService <%= entityInstance %>QueryService, @Qualifier("mvcConversionService") FormattingConversionService conversionService, <% } %><%= entityClass %>ProtoMapper <%= entityInstance %>ProtoMapper) {
         this.<%= entityInstance %>Service = <%= entityInstance %>Service;
         <%_ if (jpaMetamodelFiltering) { _%>
         this.<%= entityInstance %>QueryService = <%= entityInstance %>QueryService;

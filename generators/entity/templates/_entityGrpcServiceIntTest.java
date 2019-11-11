@@ -50,6 +50,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
+<%_ if (jpaMetamodelFiltering) { _%>
+import org.springframework.beans.factory.annotation.Qualifier;
+<%_ } _%>
 import org.springframework.boot.test.context.SpringBootTest;
 <%_ if (searchEngine === 'elasticsearch' && pagination !== 'no') { _%>
 import org.springframework.data.domain.PageImpl;
@@ -299,6 +302,7 @@ _%>
     private <%= entityClass %>QueryService <%= entityInstance %>QueryService;
 
     @Autowired
+    @Qualifier("mvcConversionService")
     private FormattingConversionService conversionService;
 
     <%_ } _%>
