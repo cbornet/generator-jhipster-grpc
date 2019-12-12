@@ -199,17 +199,6 @@
             ]
         },
         {
-            "fieldName": "durationMika",
-            "fieldType": "Duration"
-        },
-        {
-            "fieldName": "durationRequiredMika",
-            "fieldType": "Duration",
-            "fieldValidateRules": [
-                "required"
-            ]
-        },
-        {
             "fieldName": "booleanMika",
             "fieldType": "Boolean"
         },

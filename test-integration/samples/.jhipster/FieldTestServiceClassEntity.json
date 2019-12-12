@@ -199,17 +199,6 @@
             ]
         },
         {
-            "fieldName": "durationBob",
-            "fieldType": "Duration"
-        },
-        {
-            "fieldName": "durationRequiredBob",
-            "fieldType": "Duration",
-            "fieldValidateRules": [
-                "required"
-            ]
-        },
-        {
             "fieldName": "booleanBob",
             "fieldType": "Boolean"
         },

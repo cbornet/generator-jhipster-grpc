@@ -199,17 +199,6 @@
             ]
         },
         {
-            "fieldName": "durationAlice",
-            "fieldType": "Duration"
-        },
-        {
-            "fieldName": "durationRequiredAlice",
-            "fieldType": "Duration",
-            "fieldValidateRules": [
-                "required"
-            ]
-        },
-        {
             "fieldName": "booleanAlice",
             "fieldType": "Boolean"
         },

@@ -199,17 +199,6 @@
             ]
         },
         {
-            "fieldName": "durationEva",
-            "fieldType": "Duration"
-        },
-        {
-            "fieldName": "durationRequiredEva",
-            "fieldType": "Duration",
-            "fieldValidateRules": [
-                "required"
-            ]
-        },
-        {
             "fieldName": "booleanEva",
             "fieldType": "Boolean"
         },
