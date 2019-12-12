@@ -69,7 +69,7 @@
     "fields": [],
     "changelogDate": "20160208210534",
     "dto": "no",
-    "service": "no",
+    "service": "serviceImpl",
     "angularJSSuffix": "mySuffix",
     "pagination": "no"
 }

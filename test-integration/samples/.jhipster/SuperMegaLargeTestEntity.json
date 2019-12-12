@@ -53,7 +53,7 @@
     "fields": [],
     "changelogDate": "20181120190609",
     "dto": "no",
-    "service": "no",
+    "service": "serviceImpl",
     "jpaMetamodelFiltering": true,
     "angularJSSuffix": "mySuffixAlt",
     "pagination": "no"

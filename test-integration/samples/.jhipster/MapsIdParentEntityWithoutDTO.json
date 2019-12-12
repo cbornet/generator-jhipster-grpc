@@ -19,7 +19,7 @@
     "changelogDate": "20190117074315",
     "dto": "no",
     "searchEngine": false,
-    "service": "no",
+    "service": "serviceImpl",
     "entityTableName": "parent_entity_wo_dto",
     "databaseType": "sql",
     "jpaMetamodelFiltering": false,
