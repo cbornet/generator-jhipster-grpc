@@ -172,8 +172,8 @@ jobs:
         run: $JHI_SCRIPTS/11-generate-entities.sh
       - name: 'GENERATION: project'
         run: $JHI_SCRIPTS/12-generate-project.sh
-      - name: 'GENERATION: replace version in generated project'
-        run: $JHI_SCRIPTS/13-replace-version-generated-project.sh
+      #- name: 'GENERATION: replace version in generated project'
+      #  run: $JHI_SCRIPTS/13-replace-version-generated-project.sh
       - name: 'GENERATION: jhipster info'
         run: $JHI_SCRIPTS/14-jhipster-info.sh
       #----------------------------------------------------------------------
