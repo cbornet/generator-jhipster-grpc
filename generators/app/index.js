@@ -156,11 +156,11 @@ module.exports = class extends BaseGenerator {
                 this.template('_InfoService.java', javaDir + 'grpc/InfoService.java');
                 this.template('_InfoServiceIntTest.java', testDir + 'grpc/InfoServiceIntTest.java');
 
-                this.grpcVersion = '1.12.0';
-                this.protocVersion = '3.4.0';
+                this.grpcVersion = '1.25.0';
+                this.protocVersion = '3.9.0';
                 this.reactiveGrpcVersion = '1.0.0';
 
-                this.addCompileDependency('org.lognet', 'grpc-spring-boot-starter', '2.0.0', this.buildTool);
+                this.addCompileDependency('io.github.lognet', 'grpc-spring-boot-starter', '3.5.0', this.buildTool);
                 this.addCompileDependency('com.google.protobuf', 'protobuf-java', this.protocVersion, this.buildTool);
                 //this.addCompileDependency('io.grpc', 'grpc-core', this.grpcVersion, this.buildTool);
                 //this.addCompileDependency('io.grpc', 'grpc-context', this.grpcVersion, this.buildTool);
@@ -171,7 +171,7 @@ module.exports = class extends BaseGenerator {
                 this.addCompileDependency('com.salesforce.servicelibs', 'reactor-grpc-stub', this.reactiveGrpcVersion, this.buildTool);
 
                 if (this.buildTool === 'maven') {
-                    this.addMavenRepository('jcenter', 'https://jcenter.bintray.com');
+                    //this.addMavenRepository('jcenter', 'https://jcenter.bintray.com');
                     this.addMavenPlugin('org.xolstice.maven.plugins', 'protobuf-maven-plugin', '0.5.0',
                         '                ' +
                         '<configuration>' + '\n                ' +
@@ -213,7 +213,7 @@ module.exports = class extends BaseGenerator {
 
                 } else {
                     this.template('_grpc.gradle', 'gradle/grpc.gradle');
-                    this.addGradleMavenRepository('https://jcenter.bintray.com');
+                    //this.addGradleMavenRepository('https://jcenter.bintray.com');
                     this.addGradlePlugin('com.google.protobuf', 'protobuf-gradle-plugin', '0.8.10');
                     this.addGradlePluginToPluginsBlock('com.google.protobuf', '0.8.10');
                     this.applyFromGradleScript('gradle/grpc');
