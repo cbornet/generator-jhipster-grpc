@@ -1,26 +1,35 @@
-import org.gradle.internal.os.OperatingSystem
-
-/*
- * The protobuf-maven-plugin is used because
- * the reactive-grpc plugin is a native Java one (not directly executable) and this is
- * not supported by the gradle plugin at the moment
- */
-
-task generateProtobuf(type:Exec) {
-    if (OperatingSystem.current().isWindows()) {
-        commandLine 'cmd', '/c', '.mvn/mvnw.cmd generate-sources -f gradle/reactive-grpc-pom.xml'
-    } else {
-        commandLine 'sh', '-c', 'sh .mvn/mvnw generate-sources -f gradle/reactive-grpc-pom.xml'
+protobuf {
+    protoc {
+        // The artifact spec for the Protobuf Compiler
+        artifact = "com.google.protobuf:protoc:<%= protocVersion %>"
     }
-}
-
-sourceSets {
-    protobuf {
-        java {
-            srcDir file("${project.buildDir.path}/generated/source/proto/main/java")
+    clean {
+        delete protobuf.generatedFilesBaseDir
+    }
+    plugins {
+        grpc {
+            artifact = "io.grpc:protoc-gen-grpc-java:<%= grpcVersion %>"
+        }
+        reactor {
+            artifact = "com.salesforce.servicelibs:reactor-grpc:<%= reactiveGrpcVersion %>"
+        }
+    }
+    generateProtoTasks {
+        all()*.plugins {
+            grpc { }
+            reactor {}
         }
     }
 }
 
-compileJava.dependsOn generateProtobuf
-compileJava.source += sourceSets.protobuf.java
+sourceSets.main.java.srcDir new File(buildDir, 'generated/source/proto/main/grpc')
+sourceSets.main.java.srcDir new File(buildDir, 'generated/source/proto/main/reactor')
+sourceSets.main.java.srcDir new File(buildDir, 'generated/source/proto/main/java')
+idea {
+    module {
+        generatedSourceDirs += file("build/generated/source/proto/main/grpc")
+        generatedSourceDirs += file("build/generated/source/proto/main/reactor")
+        generatedSourceDirs += file("build/generated/source/proto/main/java")
+    }
+}
+

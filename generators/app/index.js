@@ -87,7 +87,7 @@ module.exports = class extends BaseGenerator {
 
                 this.addCompileDependency = function (groupId, artifactId, version, buildTool) {
                     if (buildTool === 'gradle') {
-                        this.addGradleDependency('compile', groupId, artifactId, version);
+                        this.addGradleDependency('implementation', groupId, artifactId, version);
                     } else {
                         this.addMavenDependency(groupId, artifactId, version);
                     }
@@ -156,18 +156,18 @@ module.exports = class extends BaseGenerator {
                 this.template('_InfoService.java', javaDir + 'grpc/InfoService.java');
                 this.template('_InfoServiceIntTest.java', testDir + 'grpc/InfoServiceIntTest.java');
 
-                this.grpcVersion = '1.6.1';
-                this.protocVersion = '3.1.0';
-                this.reactiveGrpcVersion = '0.7.2';
+                this.grpcVersion = '1.12.0';
+                this.protocVersion = '3.4.0';
+                this.reactiveGrpcVersion = '1.0.0';
 
                 this.addCompileDependency('org.lognet', 'grpc-spring-boot-starter', '2.0.0', this.buildTool);
                 this.addCompileDependency('com.google.protobuf', 'protobuf-java', this.protocVersion, this.buildTool);
-                this.addCompileDependency('io.grpc', 'grpc-core', this.grpcVersion, this.buildTool);
-                this.addCompileDependency('io.grpc', 'grpc-context', this.grpcVersion, this.buildTool);
-                this.addCompileDependency('io.grpc', 'grpc-netty', this.grpcVersion, this.buildTool);
+                //this.addCompileDependency('io.grpc', 'grpc-core', this.grpcVersion, this.buildTool);
+                //this.addCompileDependency('io.grpc', 'grpc-context', this.grpcVersion, this.buildTool);
+                //this.addCompileDependency('io.grpc', 'grpc-netty', this.grpcVersion, this.buildTool);
                 this.addCompileDependency('io.grpc', 'grpc-protobuf', this.grpcVersion, this.buildTool);
                 this.addCompileDependency('io.grpc', 'grpc-stub', this.grpcVersion, this.buildTool);
-                this.addCompileDependency('io.projectreactor', 'reactor-core', '3.1.1.RELEASE', this.buildTool);
+                //this.addCompileDependency('io.projectreactor', 'reactor-core', '3.1.1.RELEASE', this.buildTool);
                 this.addCompileDependency('com.salesforce.servicelibs', 'reactor-grpc-stub', this.reactiveGrpcVersion, this.buildTool);
 
                 if (this.buildTool === 'maven') {
@@ -212,14 +212,9 @@ module.exports = class extends BaseGenerator {
                     );
 
                 } else {
-                    this.copy('.mvn/mvnw', '.mvn/mvnw');
-                    this.copy('.mvn/mvnw.cmd', '.mvn/mvnw.cmd');
-                    this.copy('.mvn/wrapper/maven-wrapper.jar', '.mvn/wrapper/maven-wrapper.jar');
-                    this.copy('.mvn/wrapper/maven-wrapper.properties', '.mvn/wrapper/maven-wrapper.properties');
-                    this.template('_reactive-grpc-pom.xml', 'gradle/reactive-grpc-pom.xml');
                     this.template('_grpc.gradle', 'gradle/grpc.gradle');
                     this.addGradleMavenRepository('https://jcenter.bintray.com');
-                    this.addGradlePlugin('com.google.protobuf', 'protobuf-gradle-plugin', '0.8.1');
+                    this.addGradlePlugin('com.google.protobuf', 'protobuf-gradle-plugin', '0.8.10');
                     this.applyFromGradleScript('gradle/grpc');
                 }
 
