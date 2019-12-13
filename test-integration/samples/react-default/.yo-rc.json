@@ -67,7 +67,7 @@
         "serviceDiscoveryType": false,
         "clientPackageManager": "npm",
         "clientFramework": "react",
-        "entitySuffix": "Entity",
+        "entitySuffix": "",
         "dtoSuffix": "DTO",
         "jwtSecretKey": "MjJjOTA4ZWFjNmU5NTkyNjA4MGM4OGRmZjlmODM0M2Y3Y2UwYzYzZDJmNDMxNDM4ZmEwODlkY2MzMDc4YzZlOGM5MzZhNjVhMGFhNGM0MDlmMzUyM2I3MDdlZTZkY2UxMzkwMTc4MGU1Njc0YWY4OWY1NTk2MzIwMDRiYTg2MWQ=",
         "embeddableLaunchScript": false,
