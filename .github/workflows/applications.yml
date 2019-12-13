@@ -39,11 +39,11 @@ jobs:
           - react-maven-psql-es-noi18n-mapsid
           - react-maven-h2mem-memcached
           - react-maven-cassandra-session-redis
-          - react-maven-couchbase-caffeine
+          #- react-maven-couchbase-caffeine
           - react-gradle-psql-es-noi18n-mapsid
           - react-gradle-h2mem-memcached
           - react-gradle-cassandra-session-redis
-          - react-gradle-couchbase-caffeine
+          #- react-gradle-couchbase-caffeine
         include:
           - app-type: ngx-default
             entity: sql
@@ -115,11 +115,11 @@ jobs:
             profile: prod
             war: 0
             protractor: 1
-          # - app-type: react-maven-couchbase-caffeine
-          #   entity: couchbase
-          #   profile: prod
-          #   war: 0
-          #   protractor: 1
+          - app-type: react-maven-couchbase-caffeine
+            entity: couchbase
+            profile: prod
+            war: 0
+            protractor: 1
           - app-type: react-gradle-psql-es-noi18n-mapsid
             entity: sql # TODO: need change to sqlfull, when react is fixed
             profile: prod
@@ -135,11 +135,11 @@ jobs:
             profile: prod
             war: 0
             protractor: 0 # TODO: instead of sql, because of flacky tests
-          # - app-type: react-gradle-couchbase-caffeine
-          #   entity: couchbase
-          #   profile: prod
-          #   war: 0
-          #   protractor: 0 # TODO: instead of sql, because of flacky tests
+          - app-type: react-gradle-couchbase-caffeine
+            entity: couchbase
+            profile: prod
+            war: 0
+            protractor: 0 # TODO: instead of sql, because of flacky tests
     env:
       JHI_ENTITY: ${{ matrix.entity }}
       JHI_APP: ${{ matrix.app-type }}
