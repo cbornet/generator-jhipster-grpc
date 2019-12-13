@@ -215,6 +215,7 @@ module.exports = class extends BaseGenerator {
                     this.template('_grpc.gradle', 'gradle/grpc.gradle');
                     this.addGradleMavenRepository('https://jcenter.bintray.com');
                     this.addGradlePlugin('com.google.protobuf', 'protobuf-gradle-plugin', '0.8.10');
+                    this.addGradlePluginToPluginsBlock('com.google.protobuf', '0.8.10');
                     this.applyFromGradleScript('gradle/grpc');
                 }
 
