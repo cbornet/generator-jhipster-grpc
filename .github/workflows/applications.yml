@@ -162,7 +162,7 @@ jobs:
       - name: 'TOOLS: configure git'
         run: $JHI_SCRIPTS/04-git-config.sh
       - name: 'TOOLS: install tools'
-        run: npm install -g yo generator-jhipster@6.5.0
+        run: npm install -g yo generator-jhipster@6.5.1
       #----------------------------------------------------------------------
       # Install JHipster-gRPC and generate project+entities
       #----------------------------------------------------------------------
