@@ -110,11 +110,11 @@ elif [[ "$JHI_ENTITY" == "sqlfull" ]]; then
     moveEntity EntityWithServiceImplAndPagination
     moveEntity EntityWithServiceImplPaginationAndDTO
 
-    moveEntity MapsIdParentEntityWithoutDTO
-    moveEntity MapsIdChildEntityWithoutDTO
-    moveEntity MapsIdParentEntityWithDTO
-    moveEntity MapsIdChildEntityWithDTO
-    moveEntity MapsIdUserProfileWithDTO
+    #moveEntity MapsIdParentEntityWithoutDTO
+    #moveEntity MapsIdChildEntityWithoutDTO
+    #moveEntity MapsIdParentEntityWithDTO
+    #moveEntity MapsIdChildEntityWithDTO
+    #moveEntity MapsIdUserProfileWithDTO
 
 elif [[ "$JHI_ENTITY" == "sql" ]]; then
     moveEntity BankAccount
@@ -140,7 +140,7 @@ elif [[ "$JHI_ENTITY" == "sql" ]]; then
     moveEntity EntityWithServiceImplAndPagination
     moveEntity EntityWithServiceImplPaginationAndDTO
 
-    moveEntity MapsIdUserProfileWithDTO
+    #moveEntity MapsIdUserProfileWithDTO
 
 fi
 
