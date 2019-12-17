@@ -22,6 +22,9 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.io.IOException;
+<%_ if (databaseType === 'cassandra') { _%>
+import java.util.UUID;
+<%_ } _%>
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
@@ -60,10 +63,13 @@ public class JWTServiceIntTest <% if (databaseType === 'cassandra') { %>extends 
 
         userRepository.deleteAll();
         User user = new User();
+        <%_ if (databaseType === 'cassandra') { _%>
+        user.setId(UUID.randomUUID().toString());
+        <%_ } _%>
         user.setLogin(USER_LOGIN);
         user.setPassword(encoder.encode(USER_PASSWORD));
         user.setActivated(true);
-        userRepository.save(user);
+        userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(user);
     }
 
     @AfterEach

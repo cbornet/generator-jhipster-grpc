@@ -38,6 +38,10 @@ import <%= packageName %>.<%=mainClass%>;
 <%_ if (authenticationType === 'session' && databaseType === 'cassandra') { _%>
 import <%= packageName %>.AbstractCassandraTest;
 <%_ } _%>
+<%_ if (authenticationType === 'session') { _%>
+import <%= packageName %>.domain.User;
+import <%= packageName %>.repository.UserRepository;
+<%_ } _%>
 <%_ if (['uaa', 'jwt'].includes(authenticationType)) { _%>
 import <%= packageName %>.security.AuthoritiesConstants;
 <%_ } _%>
@@ -91,10 +95,16 @@ import org.springframework.security.oauth2.provider.token.TokenStore;
 <%_ if (authenticationType === 'oauth2') { _%>
 import org.springframework.security.oauth2.provider.token.ResourceServerTokenServices;
 <%_ } _%>
+<%_ if (authenticationType === 'session') { _%>
+import org.springframework.security.crypto.password.PasswordEncoder;
+<%_ } _%>
 
 <%_ if (authenticationType === 'session') { _%>
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+    <%_ if (databaseType === 'cassandra') { _%>
+import java.util.UUID;
+    <%_ } _%>
 <%_ } _%>
 <%_ if (['uaa', 'jwt'].includes(authenticationType)) { _%>
 import java.util.Collections;
@@ -116,6 +126,9 @@ import static org.mockito.Mockito.*;
 <%_ } _%>
 public class AuthenticationInterceptorIntTest <% if (authenticationType === 'session' && databaseType === 'cassandra') { %>extends AbstractCassandraTest <% } %>{
 
+    private static final String USER_LOGIN = "user";
+    private static final String USER_PASSWORD = "user-password";
+
     <%_ if (authenticationType === 'uaa') { _%>
     @Mock
     <%_ } _%>
@@ -124,6 +137,14 @@ public class AuthenticationInterceptorIntTest <% if (authenticationType === 'ses
     <%_ } _%>
     private <%=authClass%> <%=authInstance%>;
 
+    <%_ if (authenticationType === 'session') { _%>
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder encoder;
+
+    <%_ } _%>
     private Server fakeServer;
 
     private ManagedChannel inProcessChannel;
@@ -141,9 +162,21 @@ public class AuthenticationInterceptorIntTest <% if (authenticationType === 'ses
         <%_ } _%>
         <%_ if (authenticationType === 'uaa') { _%>
         MockitoAnnotations.initMocks(this);
-        doReturn(new OAuth2Authentication(null, new UsernamePasswordAuthenticationToken("user", "user",
+        doReturn(new OAuth2Authentication(null, new UsernamePasswordAuthenticationToken(USER_LOGIN, USER_PASSWORD,
             Collections.singletonList(new SimpleGrantedAuthority(AuthoritiesConstants.USER))))
-        ).when(<%=authInstance%>).<%=authMethod%>(<%=authMethodArgMatcher%>());
+        ).when(<%= authInstance %>).<%= authMethod %>(<%= authMethodArgMatcher %>());
+        <%_ } _%>
+        <%_ if (authenticationType === 'session') { _%>
+        userRepository.deleteAll();
+        User user = new User();
+            <%_ if (databaseType === 'cassandra') { _%>
+        user.setId(UUID.randomUUID().toString());
+            <%_ } _%>
+        user.setEmail("user@example.com");
+        user.setLogin(USER_LOGIN);
+        user.setPassword(encoder.encode(USER_PASSWORD));
+        user.setActivated(true);
+        userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(user);
         <%_ } _%>
 
         String uniqueServerName = "fake server for " + getClass();
@@ -166,10 +199,10 @@ public class AuthenticationInterceptorIntTest <% if (authenticationType === 'ses
     @Test
     public void testIntercept() {
         <%_ if (authenticationType === 'jwt') { _%>
-        String authToken = getJwt("user", AuthoritiesConstants.USER);
+        String authToken = getJwt(USER_LOGIN, AuthoritiesConstants.USER);
         <%_ } _%>
         <%_ if (authenticationType === 'session') { _%>
-        String authToken = Base64.getEncoder().encodeToString("user:user".getBytes(StandardCharsets.UTF_8));
+        String authToken = Base64.getEncoder().encodeToString((USER_LOGIN + ":" + USER_PASSWORD).getBytes(StandardCharsets.UTF_8));
         <%_ } _%>
         <%_ if (authenticationType === 'uaa') { _%>
         String authToken = "test_access_token";
@@ -178,16 +211,16 @@ public class AuthenticationInterceptorIntTest <% if (authenticationType === 'ses
         metadata.put(Metadata.Key.of("authorization", Metadata.ASCII_STRING_MARSHALLER), "<%=authScheme%> " + authToken);
         LoggersServiceGrpc.LoggersServiceBlockingStub stub = MetadataUtils.attachHeaders(LoggersServiceGrpc.newBlockingStub(inProcessChannel), metadata);
         assertGetLoggersReturnsCode(stub, Status.Code.UNIMPLEMENTED);
-        assertThat(SecurityContextHolder.getContext().getAuthentication().getName()).isEqualTo("user");
+        assertThat(SecurityContextHolder.getContext().getAuthentication().getName()).isEqualTo(USER_LOGIN);
     }
 
     @Test
     public void testCapitalizedAuthorizationHeader() {
         <%_ if (authenticationType === 'jwt') { _%>
-        String authToken = getJwt("user", AuthoritiesConstants.USER);
+        String authToken = getJwt(USER_LOGIN, AuthoritiesConstants.USER);
         <%_ } _%>
         <%_ if (authenticationType === 'session') { _%>
-        String authToken = Base64.getEncoder().encodeToString("user:user".getBytes(StandardCharsets.UTF_8));
+        String authToken = Base64.getEncoder().encodeToString((USER_LOGIN + ":" + USER_PASSWORD).getBytes(StandardCharsets.UTF_8));
         <%_ } _%>
         <%_ if (authenticationType === 'uaa') { _%>
         String authToken = "test_access_token";
@@ -196,7 +229,7 @@ public class AuthenticationInterceptorIntTest <% if (authenticationType === 'ses
         metadata.put(Metadata.Key.of("Authorization", Metadata.ASCII_STRING_MARSHALLER), "<%=authScheme%> " + authToken);
         LoggersServiceGrpc.LoggersServiceBlockingStub stub = MetadataUtils.attachHeaders(LoggersServiceGrpc.newBlockingStub(inProcessChannel), metadata);
         assertGetLoggersReturnsCode(stub, Status.Code.UNIMPLEMENTED);
-        assertThat(SecurityContextHolder.getContext().getAuthentication().getName()).isEqualTo("user");
+        assertThat(SecurityContextHolder.getContext().getAuthentication().getName()).isEqualTo(USER_LOGIN);
     }
 
     @Test
