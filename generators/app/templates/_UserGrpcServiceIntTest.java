@@ -37,6 +37,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 <%_ if (cacheManagerIsAvailable === true) { _%>
 import org.springframework.cache.CacheManager;
 <%_ } _%>
+<%_ if (cacheProvider === 'memcached' ) { _%>
+import org.springframework.cache.support.NoOpCacheManager;
+<%_ } _%>
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -393,8 +396,11 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
         assertThat(userProto.getImageUrl()).isEqualTo(DEFAULT_IMAGEURL);
         <%_ } _%>
         assertThat(userProto.getLangKey()).isEqualTo(DEFAULT_LANGKEY);
-        <%_ if (cacheManagerIsAvailable === true) { _%>
-
+        <%_ if (cacheProvider === 'memcached') { _%>
+        if (!(cacheManager instanceof NoOpCacheManager)) {
+            assertThat(cacheManager.getCache(UserRepository.USERS_BY_LOGIN_CACHE).get(user.getLogin())).isNotNull();
+        }
+        <%_ } else if (cacheManagerIsAvailable === true) { _%>
         assertThat(cacheManager.getCache(UserRepository.USERS_BY_LOGIN_CACHE).get(user.getLogin())).isNotNull();
         <%_ } _%>
     }
