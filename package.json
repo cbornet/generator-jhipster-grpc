@@ -35,7 +35,7 @@
     "fs-extra": "4.0.2",
     "mocha": "6.2.2",
     "yeoman-assert": "3.1.0",
-    "yeoman-test": "1.7.2"
+    "yeoman-test": "2.0.0"
   },
   "scripts": {
     "pretest": "eslint .",
