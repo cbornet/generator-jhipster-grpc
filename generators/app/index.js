@@ -106,7 +106,7 @@ module.exports = class extends BaseGenerator {
                     this.skipUserManagement = true;
                 }
                 this.buildTool = this.jhipsterAppConfig.buildTool;
-                this.cacheManagerIsAvailable = ['ehcache', 'hazelcast', 'infinispan'].includes(this.jhipsterAppConfig.cacheProvider) || this.applicationType === 'gateway';
+                this.cacheManagerIsAvailable = ['ehcache', 'caffeine', 'hazelcast', 'infinispan', 'memcached', 'redis'].includes(this.jhipsterAppConfig.cacheProvider) || this.applicationType === 'gateway';
                 this.messageBroker = this.jhipsterAppConfig.messageBroker;
 
                 const javaDir = `${jhipsterConstants.SERVER_MAIN_SRC_DIR + this.packageFolder}/`;
