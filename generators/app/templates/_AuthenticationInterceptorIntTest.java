@@ -114,7 +114,7 @@ import static org.mockito.Mockito.*;
 <%_ if (authenticationType === 'session') { _%>
 @SpringBootTest(classes = <%= mainClass %>.class)
 <%_ } _%>
-public class AuthenticationInterceptorTest <% if (authenticationType === 'session' && databaseType === 'cassandra') { %>extends AbstractCassandraTest <% } %>{
+public class AuthenticationInterceptorIntTest <% if (authenticationType === 'session' && databaseType === 'cassandra') { %>extends AbstractCassandraTest <% } %>{
 
     <%_ if (authenticationType === 'uaa') { _%>
     @Mock

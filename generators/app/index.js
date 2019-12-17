@@ -128,7 +128,7 @@ module.exports = class extends BaseGenerator {
                 this.template('_queryfilters.proto', protoDir + 'util/queryfilters.proto');
 
                 this.template('_AuthenticationInterceptor.java', javaDir + 'grpc/AuthenticationInterceptor.java');
-                this.template('_AuthenticationInterceptorTest.java', testDir + 'grpc/AuthenticationInterceptorTest.java');
+                this.template('_AuthenticationInterceptorIntTest.java', testDir + 'grpc/AuthenticationInterceptorIntTest.java');
 
                 this.template('_ProtobufMappers.java', javaDir + 'grpc/ProtobufMappers.java');
 
