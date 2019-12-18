@@ -53,7 +53,6 @@
             "relationshipName": "superMegaLargeTestEntity",
             "otherEntityName": "superMegaLargeTestEntity",
             "relationshipType": "many-to-one",
-            "relationshipValidateRules": "required",
             "otherEntityField": "id"
         }
     ],
