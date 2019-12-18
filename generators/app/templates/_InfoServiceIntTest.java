@@ -23,6 +23,7 @@ import org.springframework.test.context.TestPropertySource;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -55,8 +56,9 @@ public class InfoServiceIntTest <% if (databaseType === 'cassandra') { %>extends
     }
 
     @AfterEach
-    public void tearDown() {
+    public void tearDown() throws Exception {
         mockServer.shutdownNow();
+        mockServer.awaitTermination(10, TimeUnit.SECONDS);
     }
 
     @Test

@@ -20,6 +20,7 @@ import org.springframework.boot.logging.LoggingSystem;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 <%_ if (authenticationType === 'uaa' && applicationType !== 'uaa') { _%>
 @SpringBootTest(classes = {SecurityBeanOverrideConfiguration.class, <%= mainClass %>.class})
@@ -47,8 +48,9 @@ public class LoggersServiceIntTest <% if (databaseType === 'cassandra') { %>exte
     }
 
     @AfterEach
-    public void tearDown() {
+    public void tearDown() throws Exception {
         mockServer.shutdownNow();
+        mockServer.awaitTermination(10, TimeUnit.SECONDS);
     }
 
     @Test

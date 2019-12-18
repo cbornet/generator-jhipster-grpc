@@ -29,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
@@ -65,8 +66,9 @@ public class AuditGrpcServiceIntTest {
     }
 
     @AfterEach
-    public void tearDown() {
+    public void tearDown() throws Exception {
         mockServer.shutdownNow();
+        mockServer.awaitTermination(10, TimeUnit.SECONDS);
     }
 
     @BeforeEach

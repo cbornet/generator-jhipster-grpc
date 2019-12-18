@@ -108,8 +108,9 @@ import java.util.UUID;
 <%_ } _%>
 <%_ if (['uaa', 'jwt'].includes(authenticationType)) { _%>
 import java.util.Collections;
-
 <%_ } _%>
+import java.util.concurrent.TimeUnit;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 <%_ if (authenticationType === 'uaa') { _%>
@@ -191,9 +192,11 @@ public class AuthenticationInterceptorIntTest <% if (authenticationType === 'ses
     }
 
     @AfterEach
-    public void tearDown() {
+    public void tearDown() throws Exception {
         inProcessChannel.shutdownNow();
         fakeServer.shutdownNow();
+        inProcessChannel.awaitTermination(10, TimeUnit.SECONDS);
+        fakeServer.awaitTermination(10, TimeUnit.SECONDS);
     }
 
     @Test

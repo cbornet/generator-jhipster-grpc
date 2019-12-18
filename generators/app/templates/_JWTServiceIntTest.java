@@ -25,6 +25,7 @@ import java.io.IOException;
 <%_ if (databaseType === 'cassandra') { _%>
 import java.util.UUID;
 <%_ } _%>
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
@@ -73,8 +74,9 @@ public class JWTServiceIntTest <% if (databaseType === 'cassandra') { %>extends 
     }
 
     @AfterEach
-    public void tearDown() {
+    public void tearDown() throws Exception {
         mockServer.shutdownNow();
+        mockServer.awaitTermination(10, TimeUnit.SECONDS);
     }
 
     @Test

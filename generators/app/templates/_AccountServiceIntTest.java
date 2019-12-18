@@ -73,6 +73,7 @@ import java.util.UUID;
 <%_ } else { _%>
 import java.util.*;
 <%_ } _%>
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
@@ -192,8 +193,9 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
     }
 
     @AfterEach
-    public void tearDown() {
+    public void tearDown() throws Exception {
         mockServer.shutdownNow();
+        mockServer.awaitTermination(10, TimeUnit.SECONDS);
     }
 
     <%_ // For some reason, Travis tests fail on cassandra when the SecurityContextHolder is used.

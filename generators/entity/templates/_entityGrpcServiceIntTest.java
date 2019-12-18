@@ -96,6 +96,7 @@ import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 <%_ } _%>
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 <%_ if (searchEngine == 'elasticsearch') { _%>
 import java.util.stream.StreamSupport;
 <%_ } _%>
@@ -332,9 +333,10 @@ _%>
     }
 
     @AfterEach
-    public void tearDown() {
+    public void tearDown() throws Exception {
         <%= entityInstance %>Repository.deleteAll();
         mockServer.shutdownNow();
+        mockServer.awaitTermination(10, TimeUnit.SECONDS);
     }
 
     /**

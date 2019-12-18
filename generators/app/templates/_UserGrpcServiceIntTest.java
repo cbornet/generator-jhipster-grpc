@@ -51,6 +51,7 @@ import javax.persistence.EntityManager;
 <%_ } _%>
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.StreamSupport;
 
 <%_ if (searchEngine === 'elasticsearch') { _%>
@@ -145,8 +146,9 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
     }
 
     @AfterEach
-    public void tearDown() {
+    public void tearDown() throws Exception {
         mockServer.shutdownNow();
+        mockServer.awaitTermination(10, TimeUnit.SECONDS);
     }
 
     /**
