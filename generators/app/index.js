@@ -26,7 +26,7 @@ module.exports = class extends BaseGenerator {
             },
             checkJhipster() {
                 const currentJhipsterVersion = this.jhipsterAppConfig.jhipsterVersion;
-                const minimumJhipsterVersion = packagejs.dependencies['generator-jhipster'];
+                const minimumJhipsterVersion = '6.4.0';
                 if (!semver.satisfies(currentJhipsterVersion, minimumJhipsterVersion)) {
                     this.warning(`\nYour generated project used an old JHipster version (${currentJhipsterVersion})... you need at least (${minimumJhipsterVersion})\n`);
                 }
