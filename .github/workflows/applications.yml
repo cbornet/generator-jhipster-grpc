@@ -1,5 +1,8 @@
 name: Applications
-on: [push, pull_request]
+on:
+  push:
+  schedule:
+    - cron: '0 4 * * * '
 env:
   JHI_RUN_APP: 1
   JHI_JDK: 11
