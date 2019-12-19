@@ -99,10 +99,10 @@ public class UserGrpcService extends ReactorUserServiceGrpc.UserServiceImplBase 
     <%_ } _%>
 
     @Override
-    public Flux<UserProto> getAllUsers(Mono<<% if (databaseType === 'sql' || databaseType === 'mongodb') { %>PageRequest<% } else { %>Empty<% } %>> request) {
+    public Flux<UserProto> getAllUsers(Mono<<% if (['sql', 'mongodb', 'couchbase'].includes(databaseType)) { %>PageRequest<% } else { %>Empty<% } %>> request) {
         log.debug("gRPC request to get all users");
         return request
-            <%_ if (databaseType === 'sql' || databaseType === 'mongodb') { _%>
+            <%_ if (['sql', 'mongodb', 'couchbase'].includes(databaseType)) { _%>
             .map(ProtobufMappers::pageRequestProtoToPageRequest)
             .flatMapIterable(userService::getAllManagedUsers)
             <%_ } else { _%>
@@ -130,7 +130,7 @@ public class UserGrpcService extends ReactorUserServiceGrpc.UserServiceImplBase 
             .map(l -> Empty.newBuilder().build());
     }
     <%_ } _%>
-    <%_ if (databaseType === 'sql' || databaseType === 'mongodb') { _%>
+    <%_ if (['sql', 'mongodb', 'couchbase'].includes(databaseType)) { _%>
 
     @Override
     public Flux<StringValue> getAllAuthorities(Mono<Empty> request) {

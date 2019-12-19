@@ -60,7 +60,7 @@ import javax.persistence.EntityManager;
 import java.io.IOException;
 <%_ if (authenticationType !== 'oauth2') { _%>
 import java.time.Instant;
-    <%_ if (authenticationType === 'session' && (databaseType === 'sql' || databaseType === 'mongodb')) { _%>
+    <%_ if (authenticationType === 'session' && ['sql', 'mongodb', 'couchbase'].includes(databaseType)) { _%>
 import java.time.LocalDate;
     <%_ } _%>
 import java.time.temporal.ChronoUnit;
@@ -94,7 +94,7 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
     private static final String DEFAULT_LASTNAME = "doe";
     private static final String UPDATED_LASTNAME = "jhipsterLastName";
 
-    <%_ if (databaseType === 'mongodb' || databaseType === 'sql') { _%>
+    <%_ if (['sql', 'mongodb', 'couchbase'].includes(databaseType)) { _%>
     private static final String DEFAULT_IMAGEURL = "http://placehold.it/50x50";
     private static final String UPDATED_IMAGEURL = "http://placehold.it/40x40";
 
@@ -145,7 +145,7 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
         authority.setName(AuthoritiesConstants.ADMIN);
         authorities.add(authority);
         <%_ } _%>
-        <%_ if (databaseType === 'cassandra') { _%>
+        <%_ if (databaseType === 'cassandra' || databaseType === 'couchbase') { _%>
         Set<String> authorities = new HashSet<>();
         authorities.add(AuthoritiesConstants.ADMIN);
         <%_ } _%>
@@ -160,7 +160,7 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
         user.setFirstName(DEFAULT_FIRSTNAME);
         user.setLastName(DEFAULT_LASTNAME);
         user.setActivated(true);
-        <%_ if (databaseType === 'mongodb' || databaseType === 'sql') { _%>
+        <%_ if (['sql', 'mongodb', 'couchbase'].includes(databaseType)) { _%>
         user.setImageUrl(DEFAULT_IMAGEURL);
         <%_ } _%>
         user.setLangKey(DEFAULT_LANGKEY);
@@ -254,7 +254,7 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
         assertThat(userProto.getFirstName()).isEqualTo(DEFAULT_FIRSTNAME);
         assertThat(userProto.getLastName()).isEqualTo(DEFAULT_LASTNAME);
         assertThat(userProto.getEmail()).isEqualTo("grpc-existing-account@example.com");
-        <%_ if (databaseType === 'mongodb' || databaseType === 'sql') { _%>
+        <%_ if (['sql', 'mongodb', 'couchbase'].includes(databaseType)) { _%>
         // assertThat(userProto.getImageUrl()).isEqualTo(DEFAULT_IMAGEURL);
         <%_ } _%>
         assertThat(userProto.getLangKey()).isEqualTo(DEFAULT_LANGKEY);
@@ -281,8 +281,10 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
             .setFirstName(DEFAULT_FIRSTNAME)
             .setLastName(DEFAULT_LASTNAME)
             .setEmail("grpc-register-valid@example.com")
-            .setActivated(true)<% if (databaseType === 'mongodb' || databaseType === 'sql') { %>
-            .setImageUrl(DEFAULT_IMAGEURL)<% } %>
+            .setActivated(true)
+            <%_ if (['sql', 'mongodb', 'couchbase'].includes(databaseType)) { _%>
+            .setImageUrl(DEFAULT_IMAGEURL)
+            <%_ } _%>
             .setLangKey(DEFAULT_LANGKEY)
             .addAuthorities(AuthoritiesConstants.USER)
             .build();
@@ -300,8 +302,10 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
             .setFirstName(DEFAULT_FIRSTNAME)
             .setLastName(DEFAULT_LASTNAME)
             .setEmail("grpc-register-invalid@example.com")
-            .setActivated(true)<% if (databaseType === 'mongodb' || databaseType === 'sql') { %>
-            .setImageUrl(DEFAULT_IMAGEURL)<% } %>
+            .setActivated(true)
+            <%_ if (['sql', 'mongodb', 'couchbase'].includes(databaseType)) { _%>
+            .setImageUrl(DEFAULT_IMAGEURL)
+            <%_ } _%>
             .setLangKey(DEFAULT_LANGKEY)
             .addAuthorities(AuthoritiesConstants.USER)
             .build();
@@ -324,8 +328,10 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
             .setFirstName(DEFAULT_FIRSTNAME)
             .setLastName(DEFAULT_LASTNAME)
             .setEmail("grpc-register-null-password@example.com")
-            .setActivated(true)<% if (databaseType === 'mongodb' || databaseType === 'sql') { %>
-            .setImageUrl(DEFAULT_IMAGEURL)<% } %>
+            .setActivated(true)
+            <%_ if (['sql', 'mongodb', 'couchbase'].includes(databaseType)) { _%>
+            .setImageUrl(DEFAULT_IMAGEURL)
+            <%_ } _%>
             .setLangKey(DEFAULT_LANGKEY)
             .addAuthorities(AuthoritiesConstants.USER)
             .build();
@@ -350,8 +356,10 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
             .setFirstName(DEFAULT_FIRSTNAME)
             .setLastName(DEFAULT_LASTNAME)
             .setEmail("grpc-register-duplicate-login@example.com")
-            .setActivated(true)<% if (databaseType === 'mongodb' || databaseType === 'sql') { %>
-            .setImageUrl(DEFAULT_IMAGEURL)<% } %>
+            .setActivated(true)
+            <%_ if (['sql', 'mongodb', 'couchbase'].includes(databaseType)) { _%>
+            .setImageUrl(DEFAULT_IMAGEURL)
+            <%_ } _%>
             .setLangKey(DEFAULT_LANGKEY)
             .addAuthorities(AuthoritiesConstants.USER)
             .build();
@@ -364,13 +372,17 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
             .setFirstName(validUser.getFirstName())
             .setLastName(validUser.getLastName())
             .setEmail("grpc-register-duplicate-login2@example.com")
-            .setActivated(validUser.getActivated())<% if (databaseType === 'mongodb' || databaseType === 'sql') { %>
-            .setImageUrl(validUser.getImageUrl())<% } %>
-            .setLangKey(validUser.getLangKey())<% if (databaseType === 'mongodb' || databaseType === 'sql') { %>
+            .setActivated(validUser.getActivated())
+            <%_ if (['sql', 'mongodb', 'couchbase'].includes(databaseType)) { _%>
+            .setImageUrl(validUser.getImageUrl())
+            <%_ } _%>
+            .setLangKey(validUser.getLangKey())
+            <%_ if (['sql', 'mongodb', 'couchbase'].includes(databaseType)) { _%>
             .setCreatedBy(validUser.getCreatedBy())
             .setCreatedDate(validUser.getCreatedDate())
             .setLastModifiedBy(validUser.getLastModifiedBy())
-            .setLastModifiedDate(validUser.getLastModifiedDate())<% } %>
+            .setLastModifiedDate(validUser.getLastModifiedDate())
+            <%_ } _%>
             .addAuthorities(AuthoritiesConstants.USER)
             .build();
 
@@ -396,8 +408,10 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
             .setFirstName(DEFAULT_FIRSTNAME)
             .setLastName(DEFAULT_LASTNAME)
             .setEmail("grpc-register-duplicate-email@example.com")
-            .setActivated(true)<% if (databaseType === 'mongodb' || databaseType === 'sql') { %>
-            .setImageUrl(DEFAULT_IMAGEURL)<% } %>
+            .setActivated(true)
+            <%_ if (['sql', 'mongodb', 'couchbase'].includes(databaseType)) { _%>
+            .setImageUrl(DEFAULT_IMAGEURL)
+            <%_ } _%>
             .setLangKey(DEFAULT_LANGKEY)
             .addAuthorities(AuthoritiesConstants.USER)
             .build();
@@ -410,13 +424,17 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
             .setFirstName(validUser.getFirstName())
             .setLastName(validUser.getLastName())
             .setEmail(validUser.getEmail())
-            .setActivated(validUser.getActivated())<% if (databaseType === 'mongodb' || databaseType === 'sql') { %>
-            .setImageUrl(validUser.getImageUrl())<% } %>
-            .setLangKey(validUser.getLangKey())<% if (databaseType === 'mongodb' || databaseType === 'sql') { %>
+            .setActivated(validUser.getActivated())
+            <%_ if (['sql', 'mongodb', 'couchbase'].includes(databaseType)) { _%>
+            .setImageUrl(validUser.getImageUrl())
+            <%_ } _%>
+            .setLangKey(validUser.getLangKey())
+            <%_ if (['sql', 'mongodb', 'couchbase'].includes(databaseType)) { _%>
             .setCreatedBy(validUser.getCreatedBy())
             .setCreatedDate(validUser.getCreatedDate())
             .setLastModifiedBy(validUser.getLastModifiedBy())
-            .setLastModifiedDate(validUser.getLastModifiedDate())<% } %>
+            .setLastModifiedDate(validUser.getLastModifiedDate())
+            <%_ } _%>
             .addAuthorities(AuthoritiesConstants.USER)
             .build();
 
@@ -441,8 +459,10 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
             .setFirstName(DEFAULT_FIRSTNAME)
             .setLastName(DEFAULT_LASTNAME)
             .setEmail("grpc-register-admin-is-ignored@example.com")
-            .setActivated(true)<% if (databaseType === 'mongodb' || databaseType === 'sql') { %>
-            .setImageUrl(DEFAULT_IMAGEURL)<% } %>
+            .setActivated(true)
+            <%_ if (['sql', 'mongodb', 'couchbase'].includes(databaseType)) { _%>
+            .setImageUrl(DEFAULT_IMAGEURL)
+            <%_ } _%>
             .setLangKey(DEFAULT_LANGKEY)
             .addAuthorities(AuthoritiesConstants.ADMIN)
             .build();
@@ -453,7 +473,7 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
         assertThat(userDup).isPresent();
         assertThat(userDup.orElse(null).getAuthorities())
             .hasSize(1)
-            .containsExactly(<% if (databaseType === 'sql' || databaseType === 'mongodb') { %>authorityRepository.findById(AuthoritiesConstants.USER).orElseThrow(RuntimeException::new)<% } %><% if (databaseType === 'cassandra') { %>AuthoritiesConstants.USER<% } %>);
+            .containsExactly(<% if (databaseType === 'sql' || databaseType === 'mongodb') { %>authorityRepository.findById(AuthoritiesConstants.USER).orElseThrow(RuntimeException::new)<% } %><% if (databaseType === 'cassandra' || databaseType === 'couchbase') { %>AuthoritiesConstants.USER<% } %>);
     }
 
     @Test<% if (databaseType === 'sql') { %>
@@ -486,7 +506,7 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
 
     <%_ // For some reason, Travis tests fail on cassandra when the SecurityContextHolder is used.
         // For now those tests are removed
-        if (databaseType === 'sql' || databaseType === 'mongodb') { _%>
+         if (['sql', 'mongodb', 'couchbase'].includes(databaseType)) { _%>
     @Test<% if (databaseType === 'sql') { %>
     @Transactional<% } %>
     public void testSaveAccount() throws Exception {
@@ -506,8 +526,10 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
             .setFirstName(UPDATED_FIRSTNAME)
             .setLastName(UPDATED_LASTNAME)
             .setEmail("grpc-save-account-updated@example.com")
-            .setActivated(false)<% if (databaseType === 'mongodb' || databaseType === 'sql') { %>
-            .setImageUrl(UPDATED_IMAGEURL)<% } %>
+            .setActivated(false)
+            <%_ if (['sql', 'mongodb', 'couchbase'].includes(databaseType)) { _%>
+            .setImageUrl(UPDATED_IMAGEURL)
+            <%_ } _%>
             .setLangKey(UPDATED_LANGKEY)
             .addAuthorities(AuthoritiesConstants.ADMIN)
             .build();
@@ -519,8 +541,10 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
         assertThat(updatedUser.getLastName()).isEqualTo(UPDATED_LASTNAME);
         assertThat(updatedUser.getEmail()).isEqualTo(userProto.getEmail());
         assertThat(updatedUser.getLangKey()).isEqualTo(UPDATED_LANGKEY);
-        assertThat(updatedUser.getPassword()).isEqualTo(user.getPassword());<% if (databaseType === 'mongodb' || databaseType === 'sql') { %>
-        assertThat(updatedUser.getImageUrl()).isEqualTo(UPDATED_IMAGEURL);<% } %>
+        assertThat(updatedUser.getPassword()).isEqualTo(user.getPassword());
+        <%_ if (['sql', 'mongodb', 'couchbase'].includes(databaseType)) { _%>
+        assertThat(updatedUser.getImageUrl()).isEqualTo(UPDATED_IMAGEURL);
+        <%_ } _%>
         assertThat(updatedUser.getActivated()).isEqualTo(true);
         assertThat(updatedUser.getAuthorities()).isEmpty();
     }
@@ -542,8 +566,10 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
             .setFirstName(UPDATED_FIRSTNAME)
             .setLastName(UPDATED_LASTNAME)
             .setEmail("Invalid email")
-            .setActivated(false)<% if (databaseType === 'mongodb' || databaseType === 'sql') { %>
-            .setImageUrl(UPDATED_IMAGEURL)<% } %>
+            .setActivated(false)
+            <%_ if (['sql', 'mongodb', 'couchbase'].includes(databaseType)) { _%>
+            .setImageUrl(UPDATED_IMAGEURL)
+            <%_ } _%>
             .setLangKey(UPDATED_LANGKEY)
             .addAuthorities(AuthoritiesConstants.ADMIN)
             .build();
@@ -581,8 +607,10 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
             .setFirstName(UPDATED_FIRSTNAME)
             .setLastName(UPDATED_LASTNAME)
             .setEmail("grpc-save-account-existing-email2@localhost.com")
-            .setActivated(false)<% if (databaseType === 'mongodb' || databaseType === 'sql') { %>
-            .setImageUrl(UPDATED_IMAGEURL)<% } %>
+            .setActivated(false)
+            <%_ if (['sql', 'mongodb', 'couchbase'].includes(databaseType)) { _%>
+            .setImageUrl(UPDATED_IMAGEURL)
+            <%_ } _%>
             .setLangKey(UPDATED_LANGKEY)
             .addAuthorities(AuthoritiesConstants.ADMIN)
             .build();
@@ -702,7 +730,7 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
 
     <%_ // For some reason, Travis tests fail on cassandra when the SecurityContextHolder is used.
         // For now those tests are removed
-        if (databaseType === 'sql' || databaseType === 'mongodb') { _%>
+         if (['sql', 'mongodb', 'couchbase'].includes(databaseType)) { _%>
         <%_ if (authenticationType == 'session') { _%>
     @Test<% if (databaseType === 'sql') { %>
     @Transactional<% } %>
@@ -717,13 +745,20 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         PersistentToken token = new PersistentToken();
-        token.setSeries("grpc-1111-1111");<% if (databaseType === 'sql' || databaseType === 'mongodb') { %>
-        token.setUser(user);<% } else { %>
+        token.setSeries("grpc-1111-1111");
+        <%_ if (databaseType === 'sql' || databaseType === 'mongodb') { _%>
+        token.setUser(user);
+        <%_ } else if (databaseType === 'cassandra') { _%>
         token.setUserId(user.getId());
-        token.setLogin(user.getLogin());<% } %>
-        token.setTokenValue("1111-1111-data");<% if (databaseType === 'sql' || databaseType === 'mongodb') { %>
-        token.setTokenDate(LocalDate.of(2017, 3, 23));<% } else { %>
-        token.setTokenDate(new java.util.Date(1490714757123L));<% } %>
+        <%_ } else { _%>
+        token.setLogin(user.getLogin());
+        <%_ } _%>
+        token.setTokenValue("1111-1111-data");
+        <%_ if (['sql', 'mongodb', 'couchbase'].includes(databaseType)) { _%>
+        token.setTokenDate(LocalDate.of(2017, 3, 23));
+        <%_ } else { _%>
+        token.setTokenDate(new java.util.Date(1490714757123L));
+        <%_ } _%>
         token.setIpAddress("127.0.0.1");
         token.setUserAgent("Test agent");
         persistentTokenRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(token);
@@ -731,12 +766,15 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
         <%= packageName %>.grpc.PersistentToken tokenProto = stub.getCurrentSessions(Empty.newBuilder().build()).next();
         assertThat(tokenProto.getSeries()).isEqualTo("grpc-1111-1111");
         assertThat(tokenProto.getIpAddress()).isEqualTo("127.0.0.1");
-        assertThat(tokenProto.getUserAgent()).isEqualTo("Test agent");<% if (databaseType === 'sql' || databaseType === 'mongodb') { %>
+        assertThat(tokenProto.getUserAgent()).isEqualTo("Test agent");
+        <%_ if (['sql', 'mongodb', 'couchbase'].includes(databaseType)) { _%>
         assertThat(tokenProto.getTokenDate().getYear()).isEqualTo(2017);
         assertThat(tokenProto.getTokenDate().getMonth()).isEqualTo(3);
-        assertThat(tokenProto.getTokenDate().getDay()).isEqualTo(23);<% } else { %>
+        assertThat(tokenProto.getTokenDate().getDay()).isEqualTo(23);
+        <%_ } else { _%>
         assertThat(tokenProto.getTokenDate().getSeconds()).isEqualTo(1490714757);
-        assertThat(tokenProto.getTokenDate().getNanos() / 1000000).isEqualTo(123);<% } %>
+        assertThat(tokenProto.getTokenDate().getNanos() / 1000000).isEqualTo(123);
+        <%_ } _%>
     }
 
     @Test<% if (databaseType === 'sql') { %>
@@ -752,13 +790,20 @@ public class AccountServiceIntTest <% if (databaseType === 'cassandra') { %>exte
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         PersistentToken token = new PersistentToken();
-        token.setSeries("grpc-2222-2222");<% if (databaseType === 'sql' || databaseType === 'mongodb') { %>
-        token.setUser(user);<% } else { %>
+        token.setSeries("grpc-2222-2222");
+        <%_ if (databaseType === 'sql' || databaseType === 'mongodb') { _%>
+        token.setUser(user);
+        <%_ } else if (databaseType === 'cassandra') { _%>
         token.setUserId(user.getId());
-        token.setLogin(user.getLogin());<% } %>
-        token.setTokenValue("2222-2222-data");<% if (databaseType === 'sql' || databaseType === 'mongodb') { %>
-        token.setTokenDate(LocalDate.now());<% } else { %>
-        token.setTokenDate(new java.util.Date());<% } %>
+        <%_ } else { _%>
+        token.setLogin(user.getLogin());
+        <%_ } _%>
+        token.setTokenValue("2222-2222-data");
+        <%_ if (['sql', 'mongodb', 'couchbase'].includes(databaseType)) { _%>
+        token.setTokenDate(LocalDate.now());
+        <%_ } else { _%>
+        token.setTokenDate(new java.util.Date());
+        <%_ } _%>
         token.setIpAddress("127.0.0.1");
         token.setUserAgent("Test agent");
         persistentTokenRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(token);

@@ -64,6 +64,10 @@ import org.springframework.format.support.FormattingConversionService;
 <%_ if (databaseType === 'sql') { _%>
 import org.springframework.transaction.support.TransactionTemplate;
 <%_ } _%>
+<%_ if (databaseType === 'couchbase') { _%>
+import org.springframework.security.authentication.TestingAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+<%_ } _%>
 <%_ if (pagination === 'no' && jpaMetamodelFiltering) { _%>
 import reactor.core.publisher.Flux;
 <%_ } else { _%>
@@ -394,6 +398,10 @@ _%>
 
     @BeforeEach
     public void initTest() {
+        <%_ if (databaseType === 'couchbase') { _%>
+        SecurityContextHolder.setStrategyName(SecurityContextHolder.MODE_GLOBAL);
+        SecurityContextHolder.getContext().setAuthentication(new TestingAuthenticationToken("user", null));
+        <%_ } _%>
         <%_ for (field of fields.filter(f => f.fieldType === 'ByteBuffer')) { _%>
         <%='DEFAULT_' + field.fieldNameUnderscored.toUpperCase()%>.rewind();
         <%_ } _%>
@@ -439,7 +447,7 @@ _%>
         int databaseSizeBeforeCreate = <%= entityInstance %>Repository.findAll().size();
 
         // Create the <%= entityClass %> with an existing ID
-        <%= entityInstance %>.setId(<% if (databaseType === 'sql') { %>1L<% } else if (databaseType === 'mongodb') { %>"existing_id"<% } else if (databaseType === 'cassandra') { %>UUID.randomUUID()<% } %>);
+        <%= entityInstance %>.setId(<% if (databaseType === 'sql') { %>1L<% } else if (databaseType === 'mongodb' || databaseType === 'couchbase') { %>"existing_id"<% } else if (databaseType === 'cassandra') { %>UUID.randomUUID()<% } %>);
         <%_ if (dto == 'mapstruct') { _%>
         <%= entityClass %>DTO <%= entityInstance %>DTO = <%= entityInstance %>Mapper.toDto(<%= entityInstance %>);
         <%_ } _%>
@@ -714,7 +722,7 @@ _%>
     public void getNonExisting<%= entityClass %>() throws Exception {
         try {
             // Get the <%= entityInstance %>
-            stub.get<%= entityClass %>(<%=idProtoWrappedType%>.newBuilder().setValue(<% if (databaseType === 'sql') { %>Long.MAX_VALUE<% } else if (databaseType === 'mongodb') { %>String.valueOf(Long.MAX_VALUE)<% } else if (databaseType === 'cassandra') { %>UUID.randomUUID().toString()<% } %>).build());
+            stub.get<%= entityClass %>(<%=idProtoWrappedType%>.newBuilder().setValue(<% if (databaseType === 'sql') { %>Long.MAX_VALUE<% } else if (databaseType === 'mongodb' || databaseType === 'couchbase' ) { %>String.valueOf(Long.MAX_VALUE)<% } else if (databaseType === 'cassandra') { %>UUID.randomUUID().toString()<% } %>).build());
             failBecauseExceptionWasNotThrown(StatusRuntimeException.class);
         } catch (StatusRuntimeException e) {
             assertThat(e.getStatus().getCode()).isEqualTo(Status.Code.NOT_FOUND);

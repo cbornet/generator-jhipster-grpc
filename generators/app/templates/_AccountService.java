@@ -182,7 +182,7 @@ public class AccountService extends ReactorAccountServiceGrpc.AccountServiceImpl
                         user.getFirstName().isEmpty() ? null : user.getFirstName(),
                         user.getLastName().isEmpty() ? null : user.getLastName(),
                         user.getEmail().isEmpty() ? null : user.getEmail(),
-                        user.getLangKey().isEmpty() ? null : user.getLangKey()<% if (databaseType === 'mongodb' || databaseType === 'sql') { %>,
+                        user.getLangKey().isEmpty() ? null : user.getLangKey()<% if (['sql', 'mongodb', 'couchbase'].includes(databaseType)) { %>,
                         user.getImageUrl().isEmpty() ? null : user.getImageUrl()<% } %>
                     );
                 <%_ if (databaseType === 'sql') { _%>

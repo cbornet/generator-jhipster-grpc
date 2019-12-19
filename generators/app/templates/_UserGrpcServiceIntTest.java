@@ -54,6 +54,9 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.StreamSupport;
 
+<%_ if (databaseType === 'couchbase') { _%>
+import static <%= packageName %>.web.rest.TestUtil.mockAuthentication;
+<%_ } _%>
 <%_ if (searchEngine === 'elasticsearch') { _%>
 import static org.elasticsearch.index.query.QueryBuilders.queryStringQuery;
 <%_ } _%>
@@ -179,6 +182,9 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
 
     @BeforeEach
     public void initTest() {
+        <%_ if (databaseType === 'couchbase') { _%>
+        mockAuthentication();
+        <%_ } _%>
         <%_ if (databaseType !== 'sql') { _%>
         userRepository.deleteAll();
         <%_ } _%>
@@ -236,7 +242,7 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
         UserProto userProto = UserProto.newBuilder()
             <%_ if (databaseType === 'cassandra') { _%>
             .setId(UUID.randomUUID().toString())
-            <%_ } else if (databaseType === 'mongodb') { _%>
+            <%_ } else if (databaseType === 'mongodb' || databaseType === 'couchbase') { _%>
             .setId("1L")
             <%_ } else { _%>
             .setId(1L)
@@ -354,13 +360,13 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
         User savedUser = userRepository.save<% if (databaseType === 'sql') { %>AndFlush<% } %>(user);
 
         // Get all the users
-        <%_ if (databaseType == 'sql' || databaseType == 'mongodb') { _%>
+        <%_ if (['sql', 'mongodb', 'couchbase'].includes(databaseType)) { _%>
         PageRequest pageRequest = PageRequest.newBuilder()
             .addOrders(Order.newBuilder().setProperty("id").setDirection(Direction.DESC))
             .build();
         <%_ } _%>
         Optional<UserProto> maybeUser = StreamSupport.stream(
-            Spliterators.spliteratorUnknownSize(stub.getAllUsers(<% if (databaseType == 'sql' || databaseType == 'mongodb') { %>pageRequest<% } else { %>Empty.getDefaultInstance()<% } %>), Spliterator.ORDERED),
+            Spliterators.spliteratorUnknownSize(stub.getAllUsers(<% if (['sql', 'mongodb', 'couchbase'].includes(databaseType)) { %>pageRequest<% } else { %>Empty.getDefaultInstance()<% } %>), Spliterator.ORDERED),
             false)
             .filter(userProto -> savedUser.getId().equals(userProto.getId()))
             .findAny();
@@ -445,12 +451,6 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
             .setImageUrl(UPDATED_IMAGEURL)
             <%_ } _%>
             .setLangKey(UPDATED_LANGKEY)
-            <%_ if (databaseType !== 'cassandra') { _%>
-            .setCreatedBy(updatedUser.getCreatedBy())
-            .setCreatedDate(ProtobufMappers.instantToTimestamp(updatedUser.getCreatedDate()))
-            .setLastModifiedBy(updatedUser.getLastModifiedBy())
-            .setLastModifiedDate(ProtobufMappers.instantToTimestamp(updatedUser.getLastModifiedDate()))
-            <%_ } _%>
             .addAuthorities(AuthoritiesConstants.USER)
             .build();
 
@@ -493,12 +493,6 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
             .setImageUrl(UPDATED_IMAGEURL)
             <%_ } _%>
             .setLangKey(UPDATED_LANGKEY)
-            <%_ if (databaseType !== 'cassandra') { _%>
-            .setCreatedBy(updatedUser.getCreatedBy())
-            .setCreatedDate(ProtobufMappers.instantToTimestamp(updatedUser.getCreatedDate()))
-            .setLastModifiedBy(updatedUser.getLastModifiedBy())
-            .setLastModifiedDate(ProtobufMappers.instantToTimestamp(updatedUser.getLastModifiedDate()))
-            <%_ } _%>
             .addAuthorities(AuthoritiesConstants.USER)
             .build();
 
@@ -557,12 +551,6 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
             .setImageUrl(updatedUser.getImageUrl())
             <%_ } _%>
             .setLangKey(updatedUser.getLangKey())
-            <%_ if (databaseType !== 'cassandra') { _%>
-            .setCreatedBy(updatedUser.getCreatedBy())
-            .setCreatedDate(ProtobufMappers.instantToTimestamp(updatedUser.getCreatedDate()))
-            .setLastModifiedBy(updatedUser.getLastModifiedBy())
-            .setLastModifiedDate(ProtobufMappers.instantToTimestamp(updatedUser.getLastModifiedDate()))
-            <%_ } _%>
             .addAuthorities(AuthoritiesConstants.USER)
             .build();
 
@@ -614,12 +602,6 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
             .setImageUrl(updatedUser.getImageUrl())
             <%_ } _%>
             .setLangKey(updatedUser.getLangKey())
-            <%_ if (databaseType !== 'cassandra') { _%>
-            .setCreatedBy(updatedUser.getCreatedBy())
-            .setCreatedDate(ProtobufMappers.instantToTimestamp(updatedUser.getCreatedDate()))
-            .setLastModifiedBy(updatedUser.getLastModifiedBy())
-            .setLastModifiedDate(ProtobufMappers.instantToTimestamp(updatedUser.getLastModifiedDate()))
-            <%_ } _%>
             .addAuthorities(AuthoritiesConstants.USER)
             .build();
 
@@ -653,7 +635,8 @@ public class UserGrpcServiceIntTest <% if (databaseType === 'cassandra') { %>ext
         <%_ } _%>
     }
     <%_ } _%>
-    <%_ if (databaseType == 'sql' || databaseType == 'mongodb') { _%>
+    <%_ if ((databaseType === 'sql' || databaseType === 'mongodb' || databaseType === 'couchbase')
+        && (!(authenticationType === 'oauth2' && applicationType === 'microservice'))) { _%>
 
     @Test
     public void getAllAuthorities() throws Exception {

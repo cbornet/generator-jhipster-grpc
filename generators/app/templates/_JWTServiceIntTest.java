@@ -27,7 +27,9 @@ import java.util.UUID;
 <%_ } _%>
 import java.util.concurrent.TimeUnit;
 
-import static org.assertj.core.api.Assertions.assertThat;
+<%_ if (databaseType === 'couchbase') { _%>
+import static <%= packageName %>.web.rest.TestUtil.mockAuthentication;
+<%_ } _%>import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 
 @SpringBootTest(classes = <%=mainClass%>.class)
@@ -62,6 +64,9 @@ public class JWTServiceIntTest <% if (databaseType === 'cassandra') { %>extends 
             InProcessChannelBuilder.forName(uniqueServerName).directExecutor();
         stub = JWTServiceGrpc.newBlockingStub(channelBuilder.build());
 
+        <%_ if (databaseType === 'couchbase') { _%>
+        mockAuthentication();
+        <%_ } _%>
         userRepository.deleteAll();
         User user = new User();
         <%_ if (databaseType === 'cassandra') { _%>
