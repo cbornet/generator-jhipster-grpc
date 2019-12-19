@@ -35,7 +35,7 @@ Compatibility :
 - JHipster 6.0: module version 0.18.0
 - JHipster 6.1 and 6.2: module version 0.19.1
 - JHipster 6.3: module version 0.20.0
-- JHipster 6.4 and 6.5: module version 0.21.2
+- JHipster 6.4 and 6.5: module version 0.21.2 0.22.0
 - JHipster master : module branch next-jhipster (nightly build status : [![Build Status][travis-image-nightly]][travis-url])
 
 # Usage
