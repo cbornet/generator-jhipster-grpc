@@ -1,5 +1,5 @@
 # generator-jhipster-grpc
-[![NPM version][npm-image]][npm-url] [![Build Status][travis-image]][travis-url] [![Dependency Status][daviddm-image]][daviddm-url]
+[![NPM version][npm-image]][npm-url] [![Build Status][github-actions-image]][github-actions-url] [![Dependency Status][daviddm-image]][daviddm-url]
 > JHipster module, Adds support for gRPC and generates gRPC CRUD services
 
 # Introduction
@@ -36,7 +36,7 @@ Compatibility :
 - JHipster 6.1 and 6.2: module version 0.19.1
 - JHipster 6.3: module version 0.20.0
 - JHipster 6.4 and 6.5: module version 0.21.2 0.22.0
-- JHipster master : module branch next-jhipster (nightly build status : [![Build Status][travis-image-nightly]][travis-url])
+- JHipster master : module branch next-jhipster (nightly build status : [![Build Status][github-actions-image-nightly]][github-actions-url])
 
 # Usage
 
@@ -112,8 +112,9 @@ Apache-2.0 © [Christophe Bornet]
 
 [npm-image]: https://img.shields.io/npm/v/generator-jhipster-grpc.svg
 [npm-url]: https://npmjs.org/package/generator-jhipster-grpc
-[travis-image]: https://travis-ci.org/cbornet/generator-jhipster-grpc.svg?branch=master
-[travis-image-nightly]: https://travis-ci.org/cbornet/generator-jhipster-grpc.svg?branch=next-jhipster
-[travis-url]: https://travis-ci.org/cbornet/generator-jhipster-grpc
+[github-actions-image]: https://github.com/cbornet/generator-jhipster-grpc/workflows/Applications/badge.svg
+[github-actions-image-nightly]: https://github.com/cbornet/generator-jhipster-grpc/workflows/Applications/badge.svg?branch=next-jhipster
+[github-actions-url]: https://github.com/cbornet/generator-jhipster-grpc/actions
+
 [daviddm-image]: https://david-dm.org/cbornet/generator-jhipster-grpc.svg?theme=shields.io
 [daviddm-url]: https://david-dm.org/cbornet/generator-jhipster-module
