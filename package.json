@@ -21,7 +21,7 @@
     "url": "git+https://github.com/cbornet/generator-jhipster-grpc.git"
   },
   "dependencies": {
-    "chalk": "3.0.0",
+    "chalk": "4.1.0",
     "generator-jhipster": "6.6.0",
     "lodash": "4.17.15",
     "mkdirp": "0.5.1",
